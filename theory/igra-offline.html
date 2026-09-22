@@ -459,6 +459,13 @@ select.tree-sel.bad{border-color:var(--ember)}
 .blk.lit{color:#454A58}
 .boss-lesson{border:1px solid #3A2028;border-left:3px solid var(--ember);background:#180F12;padding:1em 1.1em;display:flex;flex-direction:column;gap:.5em}
 .boss-lesson h3{margin:0;color:var(--ember);font-family:var(--body);font-size:1em}
+/* Стаята на боса се минава само с клавиатура: показалецът изчезва, а
+   посочването с мишката не свети нищо. Кликовете спира game.js. */
+.kbd-only #stage,.kbd-only #stage *{cursor:none}
+.kbd-only #stage .blk:hover{border-color:#191C26}
+.kbd-only #stage .btn:hover{background:var(--stone-2);border-color:var(--edge-2)}
+.kbd-only #stage .btn-primary:hover{background:#2A2011;border-color:var(--torch-dim)}
+.kbd-only #stage .btn-ghost:hover{color:var(--muted);background:transparent;border-color:var(--edge)}
 
 /* ---------------- финал ---------------- */
 .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
@@ -756,6 +763,9 @@ bg: {
   'boss.exitLight': 'Излез на светло',
   'boss.announceFound': 'Намери целта.',
   'boss.announceFast': 'Готово за пет секунди.',
+  'boss.kbdOnly': 'Мишката тук не работи. Само Tab и Enter — както човек, който не вижда екрана.',
+  'boss.phoneH2': 'Тук не може от телефон',
+  'boss.phoneLead': 'Последната стая се минава само с клавиатура — Tab и Enter. На телефон няма как.\nОтвори играта в браузър на компютър.',
 
   'end.eyebrow': 'Излезе на светло',
   'end.h2': 'Осем атрибута',
@@ -930,6 +940,9 @@ en: {
   'boss.exitLight': 'Step back into the light',
   'boss.announceFound': 'Target found.',
   'boss.announceFast': 'Done in five seconds.',
+  'boss.kbdOnly': 'The mouse does not work here. Only Tab and Enter — like someone who cannot see the screen.',
+  'boss.phoneH2': 'You can’t do this on a phone',
+  'boss.phoneLead': 'The last room is keyboard-only — Tab and Enter. There is no way on a phone.\nOpen the game in a browser on a computer.',
 
   'end.eyebrow': 'You made it back into the light',
   'end.h2': 'Eight attributes',
@@ -1104,6 +1117,9 @@ fr: {
   'boss.exitLight': 'Ressortir à la lumière',
   'boss.announceFound': 'Cible trouvée.',
   'boss.announceFast': 'Fait en cinq secondes.',
+  'boss.kbdOnly': 'La souris ne marche pas ici. Seulement Tab et Entrée — comme quelqu’un qui ne voit pas l’écran.',
+  'boss.phoneH2': 'Impossible depuis un téléphone',
+  'boss.phoneLead': 'La dernière salle se joue uniquement au clavier — Tab et Entrée. Sur téléphone, c’est impossible.\nOuvre le jeu dans un navigateur sur un ordinateur.',
 
   'end.eyebrow': 'Te voilà ressorti à la lumière',
   'end.h2': 'Huit attributs',
@@ -3157,6 +3173,7 @@ boss: {
   /* ───────────────────────── екрани ───────────────────────── */
 
   function render() {
+    document.body.classList.toggle('kbd-only', S.screen === 'boss' && !noKeyboard());
     if (S.screen === 'title') return renderTitle();
     if (S.screen === 'hub') return renderHub();
     if (S.screen === 'wing') return renderWing();
@@ -3672,6 +3689,17 @@ boss: {
 
   /* ───────────────────────── босът ───────────────────────── */
 
+  /* Същият критерий като в style.css: устройство без мишка и клавиатура. */
+  function noKeyboard() {
+    return !!(window.matchMedia && window.matchMedia('(hover:none) and (pointer:coarse)').matches);
+  }
+
+  /* Мишката в стаята на боса не работи — клик, дошъл от клавиатурата
+     (Enter или интервал върху бутон), идва с detail 0; истинският клик — с 1 и нагоре. */
+  function mouseBlocked(e) {
+    return S.screen === 'boss' && !noKeyboard() && e.detail > 0;
+  }
+
   function bossLog(txt, cls) {
     S.boss.log.push({ t: txt, c: cls || '' });
     if (S.boss.log.length > 40) S.boss.log.shift();
@@ -3681,12 +3709,25 @@ boss: {
     var b = S.boss;
     var boss = G().boss;
 
+    if (noKeyboard()) {
+      paint(
+        '<div class="panel boss-stage">' +
+          '<div class="head"><p class="eyebrow">' + esc(t('boss.eyebrow')) + '</p>' +
+          '<h2 tabindex="-1">' + ico(ICONS.locked) + ' ' + esc(t('boss.phoneH2')) + '</h2></div>' +
+          '<p class="lead">' + nl2br(t('boss.phoneLead')) + '</p>' +
+          '<div class="row">' + btn('hub', esc(t('btn.hall')), 'btn-primary', true) + '</div>' +
+        '</div>'
+      );
+      return;
+    }
+
     if (b.phase === 'intro') {
       paint(
         '<div class="panel boss-stage">' +
           '<div class="head"><p class="eyebrow">' + esc(t('boss.eyebrow')) + '</p>' +
           '<h2 tabindex="-1">' + ico(ICONS.reader) + ' ' + esc(t('boss.h2')) + '</h2></div>' +
           '<p class="lead">' + nl2br(boss.intro) + '</p>' +
+          '<p class="muted">' + esc(t('boss.kbdOnly')) + '</p>' +
           '<div class="row">' +
             btn('boss-begin', esc(t('boss.begin')), 'btn-primary', true) +
             btn('hub', esc(t('boss.notYet')), 'btn-ghost') +
@@ -3902,6 +3943,7 @@ boss: {
   /* ───────────────────────── вход ───────────────────────── */
 
   stage.addEventListener('click', function (e) {
+    if (mouseBlocked(e)) { e.preventDefault(); return; }
     var b = e.target.closest('[data-act]');
     if (!b || b.disabled) return;
     handle(b.dataset.act, b.dataset);
@@ -3911,6 +3953,11 @@ boss: {
     var l = e.target.closest('[data-lang]');
     if (l) return setLang(l.dataset.lang);
     if (e.target.closest('#modebtn')) return toggleMode();
+  });
+
+  /* без това кликът с мишката ще сложи фокуса върху блока и той ще „проговори“ */
+  stage.addEventListener('mousedown', function (e) {
+    if (mouseBlocked(e)) e.preventDefault();
   });
 
   /* фокусът върху блок в стаята на боса „изговаря“ какво има там */

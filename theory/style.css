@@ -392,6 +392,13 @@ select.tree-sel.bad{border-color:var(--ember)}
 .blk.lit{color:#454A58}
 .boss-lesson{border:1px solid #3A2028;border-left:3px solid var(--ember);background:#180F12;padding:1em 1.1em;display:flex;flex-direction:column;gap:.5em}
 .boss-lesson h3{margin:0;color:var(--ember);font-family:var(--body);font-size:1em}
+/* Стаята на боса се минава само с клавиатура: показалецът изчезва, а
+   посочването с мишката не свети нищо. Кликовете спира game.js. */
+.kbd-only #stage,.kbd-only #stage *{cursor:none}
+.kbd-only #stage .blk:hover{border-color:#191C26}
+.kbd-only #stage .btn:hover{background:var(--stone-2);border-color:var(--edge-2)}
+.kbd-only #stage .btn-primary:hover{background:#2A2011;border-color:var(--torch-dim)}
+.kbd-only #stage .btn-ghost:hover{color:var(--muted);background:transparent;border-color:var(--edge)}
 
 /* ---------------- финал ---------------- */
 .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}

@@ -169,6 +169,9 @@ bg: {
   'boss.exitLight': 'Излез на светло',
   'boss.announceFound': 'Намери целта.',
   'boss.announceFast': 'Готово за пет секунди.',
+  'boss.kbdOnly': 'Мишката тук не работи. Само Tab и Enter — както човек, който не вижда екрана.',
+  'boss.phoneH2': 'Тук не може от телефон',
+  'boss.phoneLead': 'Последната стая се минава само с клавиатура — Tab и Enter. На телефон няма как.\nОтвори играта в браузър на компютър.',
 
   'end.eyebrow': 'Излезе на светло',
   'end.h2': 'Осем атрибута',
@@ -343,6 +346,9 @@ en: {
   'boss.exitLight': 'Step back into the light',
   'boss.announceFound': 'Target found.',
   'boss.announceFast': 'Done in five seconds.',
+  'boss.kbdOnly': 'The mouse does not work here. Only Tab and Enter — like someone who cannot see the screen.',
+  'boss.phoneH2': 'You can’t do this on a phone',
+  'boss.phoneLead': 'The last room is keyboard-only — Tab and Enter. There is no way on a phone.\nOpen the game in a browser on a computer.',
 
   'end.eyebrow': 'You made it back into the light',
   'end.h2': 'Eight attributes',
@@ -517,6 +523,9 @@ fr: {
   'boss.exitLight': 'Ressortir à la lumière',
   'boss.announceFound': 'Cible trouvée.',
   'boss.announceFast': 'Fait en cinq secondes.',
+  'boss.kbdOnly': 'La souris ne marche pas ici. Seulement Tab et Entrée — comme quelqu’un qui ne voit pas l’écran.',
+  'boss.phoneH2': 'Impossible depuis un téléphone',
+  'boss.phoneLead': 'La dernière salle se joue uniquement au clavier — Tab et Entrée. Sur téléphone, c’est impossible.\nOuvre le jeu dans un navigateur sur un ordinateur.',
 
   'end.eyebrow': 'Te voilà ressorti à la lumière',
   'end.h2': 'Huit attributs',

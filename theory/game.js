@@ -252,6 +252,7 @@
   /* ───────────────────────── екрани ───────────────────────── */
 
   function render() {
+    document.body.classList.toggle('kbd-only', S.screen === 'boss' && !noKeyboard());
     if (S.screen === 'title') return renderTitle();
     if (S.screen === 'hub') return renderHub();
     if (S.screen === 'wing') return renderWing();
@@ -767,6 +768,17 @@
 
   /* ───────────────────────── босът ───────────────────────── */
 
+  /* Същият критерий като в style.css: устройство без мишка и клавиатура. */
+  function noKeyboard() {
+    return !!(window.matchMedia && window.matchMedia('(hover:none) and (pointer:coarse)').matches);
+  }
+
+  /* Мишката в стаята на боса не работи — клик, дошъл от клавиатурата
+     (Enter или интервал върху бутон), идва с detail 0; истинският клик — с 1 и нагоре. */
+  function mouseBlocked(e) {
+    return S.screen === 'boss' && !noKeyboard() && e.detail > 0;
+  }
+
   function bossLog(txt, cls) {
     S.boss.log.push({ t: txt, c: cls || '' });
     if (S.boss.log.length > 40) S.boss.log.shift();
@@ -776,12 +788,25 @@
     var b = S.boss;
     var boss = G().boss;
 
+    if (noKeyboard()) {
+      paint(
+        '<div class="panel boss-stage">' +
+          '<div class="head"><p class="eyebrow">' + esc(t('boss.eyebrow')) + '</p>' +
+          '<h2 tabindex="-1">' + ico(ICONS.locked) + ' ' + esc(t('boss.phoneH2')) + '</h2></div>' +
+          '<p class="lead">' + nl2br(t('boss.phoneLead')) + '</p>' +
+          '<div class="row">' + btn('hub', esc(t('btn.hall')), 'btn-primary', true) + '</div>' +
+        '</div>'
+      );
+      return;
+    }
+
     if (b.phase === 'intro') {
       paint(
         '<div class="panel boss-stage">' +
           '<div class="head"><p class="eyebrow">' + esc(t('boss.eyebrow')) + '</p>' +
           '<h2 tabindex="-1">' + ico(ICONS.reader) + ' ' + esc(t('boss.h2')) + '</h2></div>' +
           '<p class="lead">' + nl2br(boss.intro) + '</p>' +
+          '<p class="muted">' + esc(t('boss.kbdOnly')) + '</p>' +
           '<div class="row">' +
             btn('boss-begin', esc(t('boss.begin')), 'btn-primary', true) +
             btn('hub', esc(t('boss.notYet')), 'btn-ghost') +
@@ -997,6 +1022,7 @@
   /* ───────────────────────── вход ───────────────────────── */
 
   stage.addEventListener('click', function (e) {
+    if (mouseBlocked(e)) { e.preventDefault(); return; }
     var b = e.target.closest('[data-act]');
     if (!b || b.disabled) return;
     handle(b.dataset.act, b.dataset);
@@ -1006,6 +1032,11 @@
     var l = e.target.closest('[data-lang]');
     if (l) return setLang(l.dataset.lang);
     if (e.target.closest('#modebtn')) return toggleMode();
+  });
+
+  /* без това кликът с мишката ще сложи фокуса върху блока и той ще „проговори“ */
+  stage.addEventListener('mousedown', function (e) {
+    if (mouseBlocked(e)) e.preventDefault();
   });
 
   /* фокусът върху блок в стаята на боса „изговаря“ какво има там */
