@@ -89,15 +89,19 @@ git remote add origin https://github.com/bob4o-afk/tues-game.git
 git push -u origin main
 ```
 
-Pages се включва сам: стъпката `configure-pages` е с `enablement: true` и при първото
-пускане създава сайта с източник „GitHub Actions“.
+След първия push включи Pages **веднъж, ръчно**:
 
-Ако въпреки това деплоят падне с **`Get Pages site failed … Not Found`**, включи го ръчно:
-**Settings → Pages → Build and deployment → Source: `GitHub Actions`** и пусни наново
-последния workflow от раздела Actions.
+**Settings → Pages → Build and deployment → Source: `GitHub Actions`** → Save.
+
+Това не може да се автоматизира: `configure-pages` има вход `enablement: true`, но
+токенът на workflow-а няма право да създаде Pages сайт и стъпката пада с
+`Resource not accessible by integration`. Един клик, веднъж за живота на репото.
 
 Не избирай „Deploy from a branch“ — workflow-ът качва `dist/`, а не самото репо,
 за да не тръгнат `node_modules` и тестовете нагоре.
+
+След включването пусни наново последния workflow: **Actions → последния run →
+Re-run failed jobs**.
 
 Следи хода в раздела **Actions**. При първия успешен деплой адресът се появява там
 и в **Settings → Pages**.
