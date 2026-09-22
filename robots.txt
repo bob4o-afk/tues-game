@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bob4o-afk.github.io/tues-game/sitemap.xml

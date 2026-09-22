@@ -3,8 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Интерактивни уроци</title>
-<meta name="description" content="Уроци, които се играят вместо да се гледат.">
+<title>TUES Game — интерактивни уроци по уеб технологии</title>
+<meta name="description" content="Уроци по уеб технологии, които се играят вместо да се гледат. Урок 2: HTML, семантика и ARIA — подземие с 35 врати, четири ключа и финал, в който екранът изгасва. Безплатно, в браузъра, на български.">
+<meta name="author" content="bob4o-afk">
+<meta name="keywords" content="tues game, tues, ТУЕС, интерактивен урок, HTML, семантика, ARIA, достъпност, уеб технологии, български, bob4o-afk">
+<link rel="canonical" href="https://bob4o-afk.github.io/tues-game/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#0E0F14">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TUES Game">
+<meta property="og:locale" content="bg_BG">
+<meta property="og:url" content="https://bob4o-afk.github.io/tues-game/">
+<meta property="og:title" content="TUES Game — уроци, които се играят">
+<meta property="og:description" content="Урок 2: HTML, семантика и ARIA в подземие с 35 врати, четири ключа и бос, който те кара да минеш страницата без да я виждаш.">
+<meta property="og:image" content="https://bob4o-afk.github.io/tues-game/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Уроци, които се играят — картата на подземието с врати и ключ">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TUES Game — уроци, които се играят">
+<meta name="twitter:description" content="HTML, семантика и ARIA в подземие с врати, ключове и бос.">
+<meta name="twitter:image" content="https://bob4o-afk.github.io/tues-game/og.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "TUES Game",
+  "alternateName": "Интерактивни уроци по уеб технологии",
+  "url": "https://bob4o-afk.github.io/tues-game/",
+  "inLanguage": "bg",
+  "description": "Уроци по уеб технологии, които се играят вместо да се гледат.",
+  "author": {
+    "@type": "Person",
+    "name": "bob4o-afk",
+    "url": "https://github.com/bob4o-afk"
+  },
+  "hasPart": {
+    "@type": "LearningResource",
+    "name": "Подземието на DOM-а",
+    "url": "https://bob4o-afk.github.io/tues-game/theory/",
+    "description": "Интерактивен урок по HTML, семантика и ARIA.",
+    "inLanguage": "bg",
+    "learningResourceType": "Game",
+    "educationalLevel": "Средно образование",
+    "teaches": ["HTML", "семантичен HTML", "ARIA", "уеб достъпност"],
+    "isAccessibleForFree": true
+  }
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Golos+Text:wght@400;500&display=swap">
@@ -45,6 +95,7 @@ h1{
 footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--edge);color:var(--muted);font-size:.85em}
 footer a{color:var(--torch)}
 :focus-visible{outline:3px solid var(--torch);outline-offset:3px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style>
 </head>
 <body>
@@ -55,13 +106,14 @@ footer a{color:var(--torch)}
     <p class="sub">Всеки урок е отделна игра в браузъра. Без инсталация, без регистрация —
     отваряш и играеш. Работят и на телефон.</p>
 
-    <ul class="lessons">
+    <h2 class="sr-only" id="lessons-title">Уроци</h2>
+    <ul class="lessons" aria-labelledby="lessons-title">
       <li>
         <a class="lesson" href="./theory/">
-          <span class="n">🏰 Урок 2 — Подземието на DOM-а</span>
+          <span class="n"><span aria-hidden="true">🏰</span> Урок 2 — Подземието на DOM-а</span>
           <span class="d">HTML, семантика и ARIA. Четири крила, 35 врати и финал,
           в който екранът изгасва.</span>
-          <span class="m">Играй →</span>
+          <span class="m" aria-hidden="true">Играй →</span>
         </a>
       </li>
     </ul>

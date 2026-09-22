@@ -16,16 +16,20 @@
 ```
 tues-game/
 ├── index.html              начална страница със списъка на уроците
+├── og.png                  картинката, която излиза при споделяне на линка
+├── robots.txt sitemap.xml  за търсачките
 ├── build.js                сглобява dist/ — това, което отива на Pages
 ├── package.json            npm test, npm run build
 ├── .nojekyll               GitHub Pages да не пуска Jekyll
 ├── vercel.json             ако решиш да го качиш и на Vercel
+├── tools/                  изходниците на og.png — не се качват
 ├── .github/workflows/ci.yml
 └── theory/                 ← урок 2; всеки следващ урок е своя папка
     ├── index.html style.css data.js game.js    самата игра
     ├── bundle.js           слепва играта в един офлайн файл
     ├── igra-offline.html   ← генериран; за двоен клик и за раздаване
-    ├── tests/              20 теста
+    ├── og.png              картинката за споделяне на този урок
+    ├── tests/              36 теста
     └── README.md           как работи играта и как се добавят въпроси
 ```
 
@@ -105,6 +109,45 @@ Re-run failed jobs**.
 
 Следи хода в раздела **Actions**. При първия успешен деплой адресът се появява там
 и в **Settings → Pages**.
+
+---
+
+## Търсачки и споделяне
+
+Всяка страница носи `title`, `description`, каноничен адрес, Open Graph, Twitter Card
+и JSON-LD (`WebSite` за началната, `LearningResource` за урока). В корена стоят
+`robots.txt` и `sitemap.xml`.
+
+`og.png` (1200×630) е това, което се показва като карта, когато линкът се сподели в
+Messenger, Discord, Slack, LinkedIn или Twitter.
+
+### Да се появиш в Google
+
+Мета таговете **не те индексират** — те решават само как изглеждаш, след като те намерят.
+За да те намерят:
+
+1. **Google Search Console** → Add property → URL prefix → `https://bob4o-afk.github.io/tues-game/`.
+   GitHub Pages не позволява DNS запис, затова потвърди собствеността с HTML файла, който
+   Search Console дава: сложи го в корена и добави името му в `ROOT_FILES` в `build.js`.
+2. Там: **Sitemaps → подай** `sitemap.xml`, после **URL Inspection → Request indexing**.
+3. Попълни полето **Website** в About на репото — това е реален входящ линк от домейн,
+   който Google обхожда постоянно.
+
+Индексирането отнема от няколко дни до седмици. За заявка като „bob4o-afk“ шансът е добър;
+за „tues game“ се конкурираш с всичко останало с тези думи.
+
+### Пресъздаване на картинките
+
+Изходниците са в `tools/`. След промяна:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless --disable-gpu --hide-scrollbars --window-size=1200,630 \
+  --screenshot=og.png "file://$PWD/tools/og-root.html"
+```
+
+Същото с `tools/og-theory.html` за `theory/og.png`. Тестовете проверяват, че файловете
+съществуват и са точно 1200×630.
 
 ---
 

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Golos+Text:wght@400;500&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1200px;height:630px;overflow:hidden}
+body{
+  background:#0E0F14;
+  color:#EDE9E2;
+  font-family:"Golos Text",system-ui,sans-serif;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:64px 72px;
+  position:relative;
+}
+body::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(900px 420px at 15% -10%, rgba(240,168,54,.16), transparent 70%);
+}
+.top,.bottom{position:relative}
+.eyebrow{
+  font-family:"JetBrains Mono",monospace;
+  font-size:22px;letter-spacing:.24em;text-transform:uppercase;color:#F0A836;font-weight:700;
+}
+h1{
+  font-family:"Philosopher",Georgia,serif;font-weight:700;
+  font-size:92px;line-height:1.04;margin-top:22px;letter-spacing:-.01em;
+}
+h1 .b{color:#F0A836}
+p.sub{
+  font-size:29px;color:#9A94A6;margin-top:22px;max-width:34ch;line-height:1.45;
+}
+.dots{display:flex;gap:10px;align-items:center;margin-bottom:26px}
+.dot{
+  width:46px;height:46px;display:grid;place-items:center;
+  font-family:"JetBrains Mono",monospace;font-size:19px;
+  background:#0A0B0F;border:2px solid #2C3040;color:#9A94A6;
+}
+.dot.ok{border-color:#7ED694;color:#7ED694}
+.dot.now{background:#1F2230;color:#EDE9E2;border-color:#3D4356;box-shadow:inset 0 -5px 0 #F0A836}
+.dot.todo{border-color:#8A6423;color:#F0A836}
+.dot.room{border-style:dotted}
+.dot.key{margin-left:14px;border-color:#7ED694;font-size:24px}
+.url{
+  font-family:"JetBrains Mono",monospace;font-size:26px;color:#6FD3C7;
+  border-top:2px solid #2C3040;padding-top:24px;letter-spacing:.01em;
+}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="eyebrow">Урок 2 · HTML · семантика · ARIA</div>
+    <h1>Подземието<br>на <span class="b">DOM</span>-а</h1>
+    <p class="sub">35 врати, четири ключа и финал, в който екранът изгасва.</p>
+  </div>
+  <div class="bottom">
+    <div class="dots">
+      <div class="dot room">1</div>
+      <div class="dot ok">2</div>
+      <div class="dot room">3</div>
+      <div class="dot now">4</div>
+      <div class="dot todo">5</div>
+      <div class="dot todo">6</div>
+      <div class="dot key">🔑</div>
+    </div>
+    <div class="url">bob4o-afk.github.io/tues-game/theory</div>
+  </div>
+</body>
+</html>

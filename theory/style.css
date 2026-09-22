@@ -56,7 +56,10 @@ h1,h2,h3{text-wrap:balance}
   gap:14px;
 }
 main{flex:1 0 auto;padding-bottom:8px}
+/* целта на skip link-а: при програмен фокус без пръстен, при клавиатура — с пръстен,
+   за да се вижда къде е попаднал човекът */
 main:focus{outline:none}
+main:focus-visible{outline:3px solid var(--torch);outline-offset:4px}
 
 /* ---------------- горна лента ---------------- */
 .topbar{
@@ -241,7 +244,7 @@ ul.points li::before{content:"▸";position:absolute;left:0;color:var(--torch)}
   font:inherit;font-family:var(--mono);background:var(--ink-2);color:var(--torch);
   border:1px solid var(--edge-2);padding:.5em .7em;min-width:12ch;max-width:100%;
 }
-.fill-in:focus{border-color:var(--torch);outline:none}
+.fill-in:focus{border-color:var(--torch)}
 .fill-in.good{border-color:var(--moss)}
 .fill-in.bad{border-color:var(--ember)}
 .treegrid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
@@ -373,6 +376,13 @@ select.tree-sel.bad{border-color:var(--ember)}
 .footbar kbd{
   font-family:var(--mono);background:var(--stone-2);border:1px solid var(--edge-2);
   padding:.15em .45em;color:var(--text);
+}
+
+/* Устройство без клавиатура: легендата изброява клавиши, които ги няма.
+   Критерият е възможностите на устройството, не ширината — тесен прозорец
+   на лаптоп си има клавиатура и легендата му трябва. */
+@media (hover:none) and (pointer:coarse){
+  .footbar{display:none}
 }
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

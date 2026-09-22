@@ -8,9 +8,9 @@ const fs = require('fs');
 const path = require('path');
 
 const LESSONS = [
-  { dir: 'theory', files: ['index.html', 'style.css', 'data.js', 'game.js', 'igra-offline.html', 'README.md'] }
+  { dir: 'theory', files: ['index.html', 'style.css', 'data.js', 'game.js', 'igra-offline.html', 'og.png', 'README.md'] }
 ];
-const ROOT_FILES = ['index.html', '.nojekyll'];
+const ROOT_FILES = ['index.html', 'og.png', 'robots.txt', 'sitemap.xml', '.nojekyll'];
 
 const root = __dirname;
 const dist = path.join(root, 'dist');

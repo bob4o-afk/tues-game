@@ -4,8 +4,56 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Генериран файл. Редактирай източниците и пусни: node build.js -->
-<title>Подземието на DOM-а</title>
-<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA — подземие с четири крила, скрити стаи и финален бос.">
+<title>Подземието на DOM-а — интерактивен урок по HTML, семантика и ARIA</title>
+<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA на български. Четири крила, 35 врати в осем типа задачи, скрити стаи и финален бос, в който екранът изгасва и минаваш страницата само по това, което чете екранният четец.">
+<meta name="author" content="bob4o-afk">
+<meta name="keywords" content="HTML, семантичен HTML, ARIA, достъпност, a11y, WCAG, екранен четец, интерактивен урок, tues game, ТУЕС, български">
+<link rel="canonical" href="https://bob4o-afk.github.io/tues-game/theory/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#0E0F14">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="TUES Game">
+<meta property="og:locale" content="bg_BG">
+<meta property="og:url" content="https://bob4o-afk.github.io/tues-game/theory/">
+<meta property="og:title" content="Подземието на DOM-а — HTML, семантика и ARIA">
+<meta property="og:description" content="35 врати, четири ключа и финал, в който екранът изгасва. Интерактивен урок по уеб достъпност на български.">
+<meta property="og:image" content="https://bob4o-afk.github.io/tues-game/theory/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Подземието на DOM-а — картата на крилото с врати и ключ">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Подземието на DOM-а — HTML, семантика и ARIA">
+<meta name="twitter:description" content="35 врати, четири ключа и финал, в който екранът изгасва.">
+<meta name="twitter:image" content="https://bob4o-afk.github.io/tues-game/theory/og.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LearningResource",
+  "name": "Подземието на DOM-а",
+  "url": "https://bob4o-afk.github.io/tues-game/theory/",
+  "description": "Интерактивен урок по HTML, семантика и ARIA — четири крила, 35 врати, скрити стаи и финален бос.",
+  "inLanguage": "bg",
+  "learningResourceType": "Game",
+  "educationalUse": "instruction",
+  "educationalLevel": "Средно образование",
+  "teaches": ["HTML", "семантичен HTML", "ARIA", "уеб достъпност", "дърво на достъпността"],
+  "isAccessibleForFree": true,
+  "author": {
+    "@type": "Person",
+    "name": "bob4o-afk",
+    "url": "https://github.com/bob4o-afk"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "TUES Game",
+    "url": "https://bob4o-afk.github.io/tues-game/"
+  }
+}
+</script>
+
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230E0F14'/%3E%3Ctext y='24' x='4' font-size='22'%3E%F0%9F%8F%B0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,7 +117,10 @@ h1,h2,h3{text-wrap:balance}
   gap:14px;
 }
 main{flex:1 0 auto;padding-bottom:8px}
+/* целта на skip link-а: при програмен фокус без пръстен, при клавиатура — с пръстен,
+   за да се вижда къде е попаднал човекът */
 main:focus{outline:none}
+main:focus-visible{outline:3px solid var(--torch);outline-offset:4px}
 
 /* ---------------- горна лента ---------------- */
 .topbar{
@@ -254,7 +305,7 @@ ul.points li::before{content:"▸";position:absolute;left:0;color:var(--torch)}
   font:inherit;font-family:var(--mono);background:var(--ink-2);color:var(--torch);
   border:1px solid var(--edge-2);padding:.5em .7em;min-width:12ch;max-width:100%;
 }
-.fill-in:focus{border-color:var(--torch);outline:none}
+.fill-in:focus{border-color:var(--torch)}
 .fill-in.good{border-color:var(--moss)}
 .fill-in.bad{border-color:var(--ember)}
 .treegrid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
@@ -386,6 +437,13 @@ select.tree-sel.bad{border-color:var(--ember)}
 .footbar kbd{
   font-family:var(--mono);background:var(--stone-2);border:1px solid var(--edge-2);
   padding:.15em .45em;color:var(--text);
+}
+
+/* Устройство без клавиатура: легендата изброява клавиши, които ги няма.
+   Критерият е възможностите на устройството, не ширината — тесен прозорец
+   на лаптоп си има клавиатура и легендата му трябва. */
+@media (hover:none) and (pointer:coarse){
+  .footbar{display:none}
 }
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
