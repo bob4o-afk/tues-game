@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
@@ -47,7 +47,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
@@ -55,7 +55,11 @@ jobs:
       - name: Сглобяване на dist/
         run: npm run build
 
+      # enablement: true включва Pages сам, ако още не е включен в настройките —
+      # иначе стъпката пада с „Get Pages site failed / Not Found“
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

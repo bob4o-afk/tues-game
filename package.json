@@ -9,6 +9,6 @@
     "build": "npm run bundle && node build.js",
     "serve": "python3 -m http.server 8000"
   },
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "devDependencies": { "jsdom": "^24.1.3" }
 }
