@@ -66,7 +66,7 @@ test('повторният опит не разваля вече записан�
 
   click('[data-act="back"]');
   click('[data-act="goto"][data-i="1"]');
-  assert.match($('.verdict.rev').textContent, /от първи опит/,
+  assert.ok($('.verdict.rev').textContent.includes(ctx.T['v.gradeFirst']),
     'грешният повторен опит е презаписал първия резултат');
 });
 
@@ -84,8 +84,8 @@ test('ключът не се вижда и не се стига, докато и
   if ($('[data-act="secret"]')) { click('[data-act="secret"]'); click('[data-act="secret-close"]'); }
   click('[data-act="next"]');
 
-  assert.ok(!txt().includes('Ключът е твой'), 'краят на коридора раздаде ключ предсрочно');
-  assert.match(txt(), /Тук би трябвало да има ключ/, 'няма обяснение защо нишата е празна');
+  assert.ok(!txt().includes(ctx.T['tr.h2']), 'краят на коридора раздаде ключ предсрочно');
+  assert.ok(txt().includes(ctx.T['lock.h2']), 'няма обяснение защо нишата е празна');
   assert.ok($('[data-act="goto"]'), 'няма път обратно към незатворената врата');
   assert.equal($$('#keyring .keyslot.has').length, 0, 'ключ се е появил на колана предсрочно');
 });
@@ -105,7 +105,7 @@ test('ключът се появява чак след последната за
 
   assert.ok($('.mapdot.end:not(.locked)'), 'ключът не се появи след последната врата');
   click('.mapdot.end');
-  assert.match(txt(), /Ключът е твой/, 'съкровищницата не се отвори');
+  assert.ok(txt().includes(ctx.T['tr.h2']), 'съкровищницата не се отвори');
   assert.equal($$('#keyring .keyslot.has').length, 1, 'ключът не влезе на колана');
 });
 
@@ -115,14 +115,46 @@ test('състоянието на всяка точка се чете и без 
   answer(ctx, ctx.steps[1]);
   ctx.click('[data-act="check"]');
 
+  // сравняваме срещу речника, не срещу български текст — тестът важи и за другите езици
+  const fmt = (key, p) => Object.keys(p).reduce(
+    (s, k) => s.split('{' + k + '}').join(p[k]), ctx.T[key]);
+
   const labels = ctx.$$('.mapdot[data-act]').map(d => d.getAttribute('aria-label'));
-  assert.ok(labels.some(l => /отворена от първи опит/.test(l)), 'няма състояние „отворена“');
-  assert.ok(labels.some(l => /още заключена/.test(l)), 'няма състояние „заключена“');
+  assert.ok(labels.includes(fmt('map.doorFirst', { i: 2 })), 'няма състояние „отворена от първи опит“');
+  assert.ok(labels.some(l => l === fmt('map.doorTodo', { i: labels.indexOf(l) + 1 })),
+    'няма състояние „още заключена“');
   assert.ok(labels.every(l => l && l.length > 3), 'кликаема точка без достъпно име');
 
   // заключената съкровищница е скрита от четеца, но обяснението до нея не е
   const locked = ctx.$('.mapdot.end.locked');
   assert.equal(locked.getAttribute('aria-hidden'), 'true', 'декоративната точка не е скрита от четеца');
-  assert.match(ctx.$('.map .sr-only').textContent, /след като са отворени всички врати/,
+  assert.equal(ctx.$('.map .sr-only').textContent,
+    fmt('map.treasureLocked', { n: ctx.steps.filter(s => s.t === 'door').length - 1 }),
     'няма обяснение за четеца защо съкровищницата е заключена');
+});
+
+test('действие вътре в екрана не пререндерира панела и не анимира наново', () => {
+  const ctx = openWing();
+  const { $, click } = ctx;
+  click('[data-act="next"]');                       // на първата врата
+
+  // изборът на отговор не бива да строи панела наново
+  const before = $('.panel');
+  click('[data-act="opt"][data-i="0"]');
+  assert.strictEqual($('.panel'), before, 'изборът на отговор е пресъздал целия панел');
+  assert.equal($('[data-act="opt"][data-i="0"]').getAttribute('aria-pressed'), 'true',
+    'изборът не се отбеляза');
+
+  // подсказката пререндерира, но е същият екран → без входяща анимация
+  click('[data-act="hint"]');
+  assert.ok($('.hintbox'), 'подсказката не се показа');
+  assert.ok(!$('.panel').classList.contains('reveal'),
+    'оставането на същия екран изигра входящата анимация наново');
+
+  // а преминаването към нов екран трябва да се анимира
+  click('[data-act="opt"][data-i="' + ctx.steps[1].correct + '"]');
+  click('[data-act="check"]');
+  click('[data-act="next"]');
+  assert.ok($('.panel').classList.contains('reveal'),
+    'влизането в нов екран не се анимира');
 });

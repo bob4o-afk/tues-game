@@ -1,28 +1,82 @@
 /* Подземието на DOM-а — двигател.
    Нула зависимости. Класически скрипт, за да работи и през file:// без сървър.
 
-   Кои полета в data.js се рендерират като HTML и кои се екранират:
-     q, options            → HTML (може да ползваш <b> и &lt;tag&gt;)
+   Нищо тук не е текст и нищо не е икона:
+     текстът на интерфейса  →  i18n.js        (t('ключ', {n: 3}))
+     иконите                →  icons.js       (ICONS.door)
+     съдържанието на урока  →  content.<език>.js
+
+   Кои полета от съдържанието се рендерират като HTML и кои се екранират:
+     q, options            → HTML (може <b> и &lt;tag&gt;)
      всичко останало       → чист текст (пиши <div> направо, екранира се само) */
 
 (function () {
   'use strict';
 
-  var G = window.GAME;
+  var I18N = window.I18N;
+  var LANGS = window.LANGS;
+  var ICONS = window.ICONS;
   var STORE = 'dom-dungeon-v1';
+  var DEFAULT_LANG = 'bg';
 
   var stage = document.getElementById('stage');
   var live = document.getElementById('live');
+  var topbar = document.getElementById('topbar');
+  var brand = document.getElementById('brand');
+  var langbar = document.getElementById('langs');
   var keyring = document.getElementById('keyring');
   var modebtn = document.getElementById('modebtn');
   var footbar = document.getElementById('footbar');
   var progress = document.getElementById('progress');
+  var skiplink = document.getElementById('skiplink');
+
+  /* ───────────────────────── език ───────────────────────── */
+
+  function knownLang(code) {
+    for (var i = 0; i < LANGS.length; i++) if (LANGS[i].code === code) return code;
+    return null;
+  }
+
+  /** Ред на предпочитание: ?lang= → запазеното → езикът на браузъра → български. */
+  function pickLang(saved) {
+    var q = null;
+    try {
+      q = knownLang(new URLSearchParams(location.search).get('lang'));
+    } catch (e) { /* стар браузър — просто пропускаме */ }
+    if (q) return q;
+    if (saved && knownLang(saved)) return saved;
+    var nav = (navigator.languages || [navigator.language || '']).map(function (l) {
+      return String(l).slice(0, 2).toLowerCase();
+    });
+    for (var i = 0; i < nav.length; i++) if (knownLang(nav[i])) return nav[i];
+    return DEFAULT_LANG;
+  }
+
+  function t(key, p) {
+    var dict = I18N[S.lang] || I18N[DEFAULT_LANG];
+    var s = dict[key];
+    if (s === undefined) s = I18N[DEFAULT_LANG][key];
+    if (s === undefined) return key;
+    if (p) for (var k in p) s = s.split('{' + k + '}').join(p[k]);
+    return s;
+  }
+
+  /** Съдържанието на текущия език; ако липсва — българското. */
+  function G() {
+    return (window.CONTENT && window.CONTENT[S.lang]) || window.CONTENT[DEFAULT_LANG];
+  }
+
+  function langName(code) {
+    for (var i = 0; i < LANGS.length; i++) if (LANGS[i].code === code) return LANGS[i].name;
+    return code;
+  }
 
   /* ───────────────────────── състояние ───────────────────────── */
 
   var S = null;
   function fresh() {
     return {
+      lang: DEFAULT_LANG,
       mode: 'solo',
       route: 'full',
       screen: 'title',
@@ -32,7 +86,6 @@
       answered: {},   // id на врата → 'first' | 'hint' | 'wrong'
       secrets: {},    // id на крило → намерена скрита стая
       pendingSecret: null,
-      returnTo: null,
       boss: { stage: 0, phase: 'intro', tries: 0, log: [] },
       ui: {}
     };
@@ -68,16 +121,19 @@
       .replace(/"/g, '&quot;');
   }
   function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+  function ico(name) { return '<span aria-hidden="true">' + name + '</span>'; }
   function announce(msg) { live.textContent = ''; setTimeout(function () { live.textContent = msg; }, 60); }
+
   function wingById(id) {
-    for (var i = 0; i < G.wings.length; i++) if (G.wings[i].id === id) return G.wings[i];
+    var w = G().wings;
+    for (var i = 0; i < w.length; i++) if (w[i].id === id) return w[i];
     return null;
   }
   function shuffle(a) {
     var r = a.slice();
     for (var i = r.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
-      var t = r[i]; r[i] = r[j]; r[j] = t;
+      var t2 = r[i]; r[i] = r[j]; r[j] = t2;
     }
     return r;
   }
@@ -89,10 +145,13 @@
   function doorsOf(w) { return steps(w).filter(function (s) { return s.t === 'door'; }); }
   function allDoors() {
     var n = 0;
-    G.wings.forEach(function (w) { n += doorsOf(w).length; });
+    G().wings.forEach(function (w) { n += doorsOf(w).length; });
     return n;
   }
   function answeredCount() { return Object.keys(S.answered).length; }
+  function keyCount() {
+    return G().wings.filter(function (w) { return S.keys[w.id]; }).length;
+  }
   function doorsLeft(w) {
     return steps(w).filter(function (st) { return st.t === 'door' && !S.answered[st.id]; });
   }
@@ -104,56 +163,90 @@
     }
     return 0;
   }
-  function keyCount() {
-    return G.wings.filter(function (w) { return S.keys[w.id]; }).length;
-  }
-
-  var TYPE_LABEL = {
-    choice: 'Избери отговор', sr: 'Какво чете екранният четец', fix: 'Поправи разметката',
-    fill: 'Попълни атрибута', match: 'Свържи', order: 'Подреди',
-    tab: 'Пътят на Tab', tree: 'Дървото на достъпността'
-  };
 
   /* ───────────────────────── рамка ───────────────────────── */
 
   function paintChrome() {
     document.documentElement.dataset.mode = S.mode;
+    document.documentElement.lang = S.lang;
+    document.title = t('html.title');
 
-    var html = '';
-    G.wings.forEach(function (w) {
-      var has = S.keys[w.id];
-      html += '<span class="keyslot' + (has ? ' has' : '') + '" title="' + esc(w.artifact) + '">' +
-        (has ? '🔑' : '·') + '</span>';
+    if (skiplink) skiplink.textContent = t('skip.link');
+
+    brand.innerHTML = esc(t('brand.title')) + '<small>' + esc(t('brand.sub')) + '</small>';
+
+    var lh = '';
+    LANGS.forEach(function (l) {
+      var on = l.code === S.lang;
+      lh += '<button class="langbtn" type="button" data-lang="' + l.code + '" lang="' + l.code + '" ' +
+        'aria-pressed="' + on + '" aria-label="' + esc(t('lang.switchTo', { name: l.name })) + '">' +
+        esc(l.label) + '</button>';
     });
-    keyring.innerHTML = html +
-      '<span class="sr-only">' + keyCount() + ' от 4 ключа</span>';
+    langbar.innerHTML = lh;
+    langbar.setAttribute('aria-label', t('lang.label'));
 
-    modebtn.textContent = S.mode === 'projector' ? '🎥 Проектор' : '💻 Соло';
-    modebtn.setAttribute('aria-label', 'Смени режима. Сега: ' +
-      (S.mode === 'projector' ? 'проектор' : 'соло'));
+    var kh = '';
+    G().wings.forEach(function (w) {
+      var has = S.keys[w.id];
+      kh += '<span class="keyslot' + (has ? ' has' : '') + '" title="' + esc(w.artifact) + '" aria-hidden="true">' +
+        (has ? ICONS.key : '·') + '</span>';
+    });
+    keyring.innerHTML = kh + '<span class="sr-only">' + esc(t('keys.count', { n: keyCount() })) + '</span>';
+    keyring.setAttribute('aria-label', t('keys.ring'));
 
-    var pct = allDoors() ? Math.round(answeredCount() / allDoors() * 100) : 0;
-    progress.style.width = pct + '%';
+    var modeName = t(S.mode === 'projector' ? 'mode.projector' : 'mode.solo');
+    modebtn.innerHTML = ico(S.mode === 'projector' ? ICONS.projector : ICONS.solo) + ' ' + esc(modeName);
+    modebtn.setAttribute('aria-label', t('mode.switch', { mode: modeName }));
+
+    progress.style.width = (allDoors() ? Math.round(answeredCount() / allDoors() * 100) : 0) + '%';
 
     footbar.innerHTML =
-      '<span><kbd>Tab</kbd> навигация</span>' +
-      '<span><kbd>1</kbd>–<kbd>4</kbd> отговор</span>' +
-      '<span><kbd>→</kbd> напред</span>' +
-      '<span><kbd>H</kbd> подсказка</span>' +
-      '<span><kbd>Esc</kbd> залата</span>' +
-      '<span><kbd>P</kbd> режим</span>' +
-      '<span><kbd>R</kbd> отначало</span>';
+      '<span><kbd>Tab</kbd> ' + esc(t('foot.nav')) + '</span>' +
+      '<span><kbd>1</kbd>–<kbd>4</kbd> ' + esc(t('foot.answer')) + '</span>' +
+      '<span><kbd>' + ICONS.next + '</kbd> ' + esc(t('foot.forward')) + '</span>' +
+      '<span><kbd>' + ICONS.back + '</kbd> ' + esc(t('foot.back')) + '</span>' +
+      '<span><kbd>H</kbd> ' + esc(t('foot.hint')) + '</span>' +
+      '<span><kbd>Esc</kbd> ' + esc(t('foot.hall')) + '</span>' +
+      '<span><kbd>P</kbd> ' + esc(t('foot.mode')) + '</span>' +
+      '<span><kbd>R</kbd> ' + esc(t('foot.restart')) + '</span>';
   }
 
+  /* Кой екран гледаме. Всяко кликване вътре в един и същи екран (избор на отговор,
+     подреждане, подсказка) не е навигация и не бива да изиграва входящата анимация
+     наново — иначе всяко действие изглежда като презареждане. */
+  function viewKey() {
+    return [S.screen, S.wing, S.step, S.lang, S.mode, S.route,
+            S.boss.phase, S.boss.stage].join('|');
+  }
+  var lastView = null;
+
   function paint(html, focusSel) {
+    var key = viewKey();
+    var moved = key !== lastView;
+    lastView = key;
+
+    // ако оставаме на същия екран, фокусът трябва да се върне там, където беше
+    var prevId = document.activeElement && document.activeElement.id;
+
     stage.innerHTML = html;
+    if (moved) {
+      var panel = stage.querySelector('.panel');
+      if (panel) panel.classList.add('reveal');
+    }
     paintChrome();
+
     var f = null;
     if (S.ui.focusId) f = document.getElementById(S.ui.focusId);
     if (!f && focusSel) f = stage.querySelector(focusSel);
-    if (!f) f = stage.querySelector('h2');
+    if (!f && moved) f = stage.querySelector('h2');
+    if (!f && !moved && prevId) f = document.getElementById(prevId);
     if (f) f.focus();
     S.ui.focusId = null;
+  }
+
+  function btn(act, label, cls, primary) {
+    return '<button class="btn ' + (cls || '') + '" data-act="' + act + '"' +
+      (primary ? ' data-primary="1"' : '') + '>' + label + '</button>';
   }
 
   /* ───────────────────────── екрани ───────────────────────── */
@@ -167,101 +260,108 @@
     if (S.screen === 'end') return renderEnd();
   }
 
+  /* двата маршрута са еднакви на вид: заглавие + пояснение под него,
+     за да не зависи ширината на бутона от дължината на текста */
+  function route(id, cls, n, primary) {
+    var cap = id === 'short' ? 'title.routeShort' : 'title.routeFull';
+    var note = id === 'short' ? 'title.routeShortNote' : 'title.routeFullNote';
+    var aria = id === 'short' ? 'title.routeShortAria' : 'title.routeFullAria';
+    return '<button class="btn route ' + cls + '" data-act="start" data-route="' + id + '"' +
+      (primary ? ' data-primary="1"' : '') +
+      ' aria-label="' + esc(t(aria, { n: n })) + '">' +
+      '<span class="rt">' + esc(t(cap, { n: n })) + '</span>' +
+      '<span class="rn">' + esc(t(note)) + '</span></button>';
+  }
+
   function renderTitle() {
     var core = 0, total = 0;
-    G.wings.forEach(function (w) {
+    G().wings.forEach(function (w) {
       w.steps.forEach(function (s) {
         if (s.t === 'door') { total++; if (s.core) core++; }
       });
     });
-    var hasSave = !!loadSave();
 
     paint(
-      '<div class="panel reveal">' +
+      '<div class="panel">' +
         '<div class="head">' +
-          '<p class="eyebrow">Урок 2 · интерактивна презентация</p>' +
-          '<h2 tabindex="-1">Слизаш в подземие, построено от лош HTML</h2>' +
+          '<p class="eyebrow">' + esc(t('title.eyebrow')) + '</p>' +
+          '<h2 tabindex="-1">' + esc(t('title.h2')) + '</h2>' +
         '</div>' +
-        '<p class="lead">Четири крила, всяко заключено. Всяка врата иска отговор, всяко крило дава ключ. ' +
-        'Четирите ключа отварят последната стая — и там екранът изгасва.</p>' +
-        '<p class="muted">Нищо не се губи при грешка. Единственото, което се брои, е от кой опит си отворил вратата.</p>' +
+        '<p class="lead">' + esc(t('title.lead')) + '</p>' +
+        '<p class="muted">' + esc(t('title.note')) + '</p>' +
         '<hr class="divider">' +
-        '<p class="eyebrow">Избери маршрут</p>' +
-        '<div class="row">' +
-          '<button class="btn btn-primary" data-act="start" data-route="short" data-primary="1">' +
-            'Кратък · ' + core + ' врати <span class="muted">(за час от 45 мин)</span></button>' +
-          '<button class="btn" data-act="start" data-route="full">Пълен · ' + total + ' врати</button>' +
-          (hasSave ? '<button class="btn btn-ghost" data-act="resume">Продължи запазеното</button>' : '') +
+        '<p class="eyebrow">' + esc(t('title.routePick')) + '</p>' +
+        '<div class="routes">' +
+          route('short', 'btn-primary', core, true) +
+          route('full', '', total, false) +
         '</div>' +
+        (loadSave() ? '<div class="row">' + btn('resume', esc(t('title.resume')), 'btn-ghost') + '</div>' : '') +
       '</div>'
     );
   }
 
   function renderHub() {
     var keys = keyCount();
-    var html = '<div class="panel reveal">' +
+    var html = '<div class="panel">' +
       '<div class="head">' +
-        '<p class="eyebrow">Централна зала</p>' +
-        '<h2 tabindex="-1">Валидаторът те чака</h2>' +
+        '<p class="eyebrow">' + esc(t('hub.eyebrow')) + '</p>' +
+        '<h2 tabindex="-1">' + esc(t('hub.h2')) + '</h2>' +
       '</div>' +
-      '<p class="lead">' +
-        (keys === 0 ? 'Четири крила. Ти избираш откъде да започнеш — редът е твой.' :
-         keys < 4 ? 'Имаш ' + keys + ' от 4 ключа. Последната врата още мълчи.' :
-         'Четирите ключа са у теб. Последната врата се отваря.') +
-      '</p>' +
+      '<p class="lead">' + esc(
+        keys === 0 ? t('hub.lead0') : keys < 4 ? t('hub.leadSome', { n: keys }) : t('hub.leadAll')
+      ) + '</p>' +
       '<button class="boss-door" data-act="boss" ' + (keys < 4 ? 'disabled' : 'data-primary="1"') + '>' +
-        '<span class="dn">' + (keys < 4 ? '🔒' : '🔓') + ' Последната стая — Четецът</span>' +
-        '<span class="dd">' + (keys < 4 ? 'Иска четири ключа. Имаш ' + keys + '.' : 'Екранът ще изгасне. Влизаш ли?') + '</span>' +
+        '<span class="dn">' + ico(keys < 4 ? ICONS.locked : ICONS.unlocked) + ' ' + esc(t('hub.bossName')) + '</span>' +
+        '<span class="dd">' + esc(keys < 4 ? t('hub.bossLocked', { n: keys }) : t('hub.bossOpen')) + '</span>' +
       '</button>' +
       '<div class="hub-grid">';
 
-    G.wings.forEach(function (w) {
+    G().wings.forEach(function (w) {
       var d = doorsOf(w);
       var done = d.filter(function (x) { return S.answered[x.id]; }).length;
       var got = S.keys[w.id];
       html += '<button class="door' + (got ? ' done' : '') + '" data-act="wing" data-id="' + w.id + '">' +
-        '<span class="dn"><span aria-hidden="true">' + w.icon + '</span> ' + esc(w.name) + '</span>' +
+        '<span class="dn">' + ico(ICONS.wings[w.id] || '') + ' ' + esc(w.name) + '</span>' +
         '<span class="dd">' + esc(w.blurb) + '</span>' +
-        '<span class="dp">' + (got ? '🔑 ' + esc(w.artifact) : done + ' / ' + d.length + ' врати') +
-        (S.secrets[w.id] ? ' · 💡 тайна стая' : '') + '</span>' +
+        '<span class="dp">' +
+          (got ? ico(ICONS.key) + ' ' + esc(w.artifact) : esc(t('hub.doors', { done: done, all: d.length }))) +
+          (S.secrets[w.id] ? ' · ' + ico(ICONS.hint) + ' ' + esc(t('hub.secret')) : '') +
+        '</span>' +
       '</button>';
     });
 
-    html += '</div></div>';
-    paint(html);
-    announce('Централна зала. ' + keys + ' от 4 ключа.');
+    paint(html + '</div></div>');
+    announce(t('hub.announce', { n: keys }));
   }
 
   /* ── карта на крилото: скок до всяка стая и всяка врата ── */
 
   function renderMap(w, list) {
-    var h = '<nav class="map" aria-label="Карта на крилото ' + esc(w.name) + '">';
+    var h = '<nav class="map" aria-label="' + esc(t('map.nav', { wing: w.name })) + '">';
     list.forEach(function (st, i) {
-      var cls = 'mapdot', label, mark = String(i + 1);
+      var cls = 'mapdot', label;
       if (st.t === 'room') {
         cls += ' room';
-        label = 'Стая ' + (i + 1) + ': ' + st.title;
+        label = t('map.room', { i: i + 1, title: st.title });
       } else {
         var g = S.answered[st.id];
         cls += g === 'first' ? ' ok' : g === 'hint' ? ' hint' : g === 'wrong' ? ' wr' : ' todo';
-        label = 'Врата ' + (i + 1) + ': ' + (
-          g === 'first' ? 'отворена от първи опит' :
-          g === 'hint' ? 'отворена с подсказка' :
-          g === 'wrong' ? 'отворена след грешка' : 'още заключена');
+        label = t(g === 'first' ? 'map.doorFirst' : g === 'hint' ? 'map.doorHint'
+          : g === 'wrong' ? 'map.doorWrong' : 'map.doorTodo', { i: i + 1 });
       }
       h += '<button class="' + cls + '" data-act="goto" data-i="' + i + '"' +
         (i === S.step ? ' aria-current="step"' : '') +
-        ' aria-label="' + esc(label) + '">' + mark + '</button>';
+        ' aria-label="' + esc(label) + '">' + (i + 1) + '</button>';
     });
+
     if (wingDone(w)) {
       h += '<button class="mapdot end ok" data-act="goto" data-i="' + list.length + '"' +
         (S.step >= list.length ? ' aria-current="step"' : '') +
-        ' aria-label="Съкровищница в края на коридора' +
-        (S.keys[w.id] ? ': ключът е взет' : ': ключът те чака') + '">🔑</button>';
+        ' aria-label="' + esc(t(S.keys[w.id] ? 'map.treasureTaken' : 'map.treasureReady')) + '">' +
+        ICONS.key + '</button>';
     } else {
       h += '<span class="mapdot end locked" aria-hidden="true">·</span>' +
-        '<span class="sr-only">Съкровищницата в края на коридора се отваря, ' +
-        'след като са отворени всички врати. Остават ' + doorsLeft(w).length + '.</span>';
+        '<span class="sr-only">' + esc(t('map.treasureLocked', { n: doorsLeft(w).length })) + '</span>';
     }
     h += '<span class="mapbreak" aria-hidden="true"></span>';
     return h + '</nav>';
@@ -269,8 +369,8 @@
 
   function navRow(extra) {
     return '<div class="row">' + (extra || '') +
-      (S.step > 0 ? '<button class="btn btn-ghost" data-act="back">← Назад</button>' : '') +
-      '<button class="btn btn-ghost" data-act="hub">Обратно в залата</button></div>';
+      (S.step > 0 ? btn('back', ICONS.back + ' ' + esc(t('btn.back')), 'btn-ghost') : '') +
+      btn('hub', esc(t('btn.hall')), 'btn-ghost') + '</div>';
   }
 
   /* ── крило: стая, врата, съкровищница ── */
@@ -284,9 +384,9 @@
   }
 
   function renderRoom(w, s, list) {
-    var html = '<div class="panel reveal">' +
+    var html = '<div class="panel">' +
       '<div class="head">' +
-        '<p class="eyebrow">' + esc(w.name) + ' · стая ' + (S.step + 1) + ' от ' + list.length + '</p>' +
+        '<p class="eyebrow">' + esc(t('wing.room', { wing: w.name, i: S.step + 1, n: list.length })) + '</p>' +
         '<h2 tabindex="-1">' + esc(s.title) + '</h2>' +
       '</div>' +
       renderMap(w, list) +
@@ -297,9 +397,29 @@
       s.points.forEach(function (p) { html += '<li>' + esc(p) + '</li>'; });
       html += '</ul>';
     }
-    html += navRow('<button class="btn btn-primary" data-act="next" data-primary="1">Напред →</button>') + '</div>';
+    html += navRow(btn('next', esc(t('btn.next')) + ' ' + ICONS.next, 'btn-primary', true)) + '</div>';
     paint(html);
-    announce(w.name + ', стая ' + (S.step + 1) + ' от ' + list.length + '. ' + s.title);
+    announce(t('wing.roomAnnounce', { wing: w.name, i: S.step + 1, n: list.length, title: s.title }));
+  }
+
+  /* вече отговорена врата се отваря с показан верен отговор, не празна */
+  function hydrateReview(s, u) {
+    u.checked = true;
+    u.review = true;
+    u.ok = S.answered[s.id] !== 'wrong';
+    switch (s.kind) {
+      case 'choice': case 'sr': case 'fix': u.pick = s.correct; break;
+      case 'fill': u.typed = s.accept[0]; break;
+      case 'match':
+        u.assign = s.pairs.map(function (_, i) {
+          for (var k = 0; k < u.tokens.length; k++) if (u.tokens[k].idx === i) return k;
+          return null;
+        });
+        break;
+      case 'order': u.order = s.items.map(function (_, i) { return i; }); break;
+      case 'tab': u.seq = s.correct.slice(); break;
+      case 'tree': u.tree = { role: s.role.correct, name: s.name.correct, state: s.state.correct }; break;
+    }
   }
 
   function renderDoor(w, s, list) {
@@ -320,56 +440,36 @@
       if (S.answered[s.id] && !replay) hydrateReview(s, u);
     }
 
-    var html = '<div class="panel reveal">' +
+    var html = '<div class="panel">' +
       '<div class="head">' +
-        '<p class="eyebrow">' + esc(w.name) + ' · врата ' + (S.step + 1) + ' от ' + list.length + '</p>' +
-        '<h2 tabindex="-1">' + (u.review ? '🗝️ Вече отворена врата' : '🚪 Вратата е заключена') + '</h2>' +
+        '<p class="eyebrow">' + esc(t('wing.door', { wing: w.name, i: S.step + 1, n: list.length })) + '</p>' +
+        '<h2 tabindex="-1">' + ico(u.review ? ICONS.doorOpened : ICONS.door) + ' ' +
+          esc(t(u.review ? 'wing.doorReview' : 'wing.doorLocked')) + '</h2>' +
       '</div>' +
       renderMap(w, list) +
       '<div class="doorframe">' +
-        '<span class="qtype">' + esc(TYPE_LABEL[s.kind] || '') + '</span>' +
+        '<span class="qtype">' + esc(t('type.' + s.kind)) + '</span>' +
         '<p class="q">' + s.q + '</p>' +
         (s.code ? '<pre class="code">' + esc(s.code) + '</pre>' : '') +
         widget(s, u) +
       '</div>';
 
     if (u.hint && !u.checked && s.hint) {
-      html += '<div class="hintbox">💡 ' + esc(s.hint) + '</div>';
+      html += '<div class="hintbox">' + ico(ICONS.hint) + ' ' + esc(s.hint) + '</div>';
     }
 
     if (u.checked) {
-      html += verdict(s, u, w);
+      html += verdict(s, u);
     } else {
       html += navRow(
-        '<button class="btn btn-primary" data-act="check" data-primary="1">Опитай вратата</button>' +
-        (s.hint && !u.hint ? '<button class="btn btn-ghost" data-act="hint">💡 Подсказка</button>' : ''));
+        btn('check', esc(t('btn.check')), 'btn-primary', true) +
+        (s.hint && !u.hint ? btn('hint', ico(ICONS.hint) + ' ' + esc(t('btn.hint')), 'btn-ghost') : ''));
     }
 
-    html += '</div>';
-    paint(html, u.checked ? '.verdict h3' : null);
+    paint(html + '</div>', u.checked ? '.verdict h3' : null);
     if (!u.announced) {
       u.announced = true;
-      announce('Врата ' + (S.step + 1) + ' от ' + list.length + '. ' + TYPE_LABEL[s.kind] + '.');
-    }
-  }
-
-  /* вече отговорена врата се отваря с показан верен отговор, не празна */
-  function hydrateReview(s, u) {
-    u.checked = true;
-    u.review = true;
-    u.ok = S.answered[s.id] !== 'wrong';
-    switch (s.kind) {
-      case 'choice': case 'sr': case 'fix': u.pick = s.correct; break;
-      case 'fill': u.typed = s.accept[0]; break;
-      case 'match':
-        u.assign = s.pairs.map(function (_, i) {
-          for (var t = 0; t < u.tokens.length; t++) if (u.tokens[t].idx === i) return t;
-          return null;
-        });
-        break;
-      case 'order': u.order = s.items.map(function (_, i) { return i; }); break;
-      case 'tab': u.seq = s.correct.slice(); break;
-      case 'tree': u.tree = { role: s.role.correct, name: s.name.correct, state: s.state.correct }; break;
+      announce(t('wing.doorAnnounce', { i: S.step + 1, n: list.length, type: t('type.' + s.kind) }));
     }
   }
 
@@ -377,60 +477,62 @@
     var left = doorsLeft(w);
     if (left.length) {
       paint(
-        '<div class="panel reveal">' +
+        '<div class="panel">' +
           '<div class="head">' +
-            '<p class="eyebrow">Край на коридора · ' + esc(w.name) + '</p>' +
-            '<h2 tabindex="-1">Тук би трябвало да има ключ</h2>' +
+            '<p class="eyebrow">' + esc(t('lock.eyebrow', { wing: w.name })) + '</p>' +
+            '<h2 tabindex="-1">' + esc(t('lock.h2')) + '</h2>' +
           '</div>' +
           renderMap(w, steps(w)) +
-          '<p class="lead">Нишата в стената е празна. Ключът се появява чак когато коридорът ' +
-          'е извървян докрай — а зад теб ' + (left.length === 1 ? 'е останала една незатворена врата.'
-            : 'са останали ' + left.length + ' незатворени врати.') + '</p>' +
+          '<p class="lead">' + esc(t('lock.lead', {
+            rest: left.length === 1 ? t('lock.rest1') : t('lock.restN', { n: left.length })
+          })) + '</p>' +
           '<div class="row">' +
             '<button class="btn btn-primary" data-act="goto" data-i="' + firstOpenIndex(w) + '" data-primary="1">' +
-              'Към първата незатворена врата</button>' +
-            '<button class="btn btn-ghost" data-act="back">← Назад</button>' +
-            '<button class="btn btn-ghost" data-act="hub">Обратно в залата</button>' +
+              esc(t('lock.toDoor')) + '</button>' +
+            btn('back', ICONS.back + ' ' + esc(t('btn.back')), 'btn-ghost') +
+            btn('hub', esc(t('btn.hall')), 'btn-ghost') +
           '</div>' +
         '</div>'
       );
-      announce('Съкровищницата е празна. Остават ' + left.length + ' незатворени врати.');
+      announce(t('lock.announce', { n: left.length }));
       return;
     }
+
     if (!S.keys[w.id]) { S.keys[w.id] = true; save(); }
     paint(
-      '<div class="panel secret reveal">' +
+      '<div class="panel secret">' +
         '<div class="head">' +
-          '<p class="eyebrow">Съкровищница · ' + esc(w.name) + '</p>' +
-          '<h2 tabindex="-1">Ключът е твой</h2>' +
+          '<p class="eyebrow">' + esc(t('tr.eyebrow', { wing: w.name })) + '</p>' +
+          '<h2 tabindex="-1">' + esc(t('tr.h2')) + '</h2>' +
         '</div>' +
         renderMap(w, steps(w)) +
-        '<p class="artifact" aria-hidden="true">🔑</p>' +
-        '<p class="lead">Взимаш <b>' + esc(w.artifact) + '</b>. ' +
-        (keyCount() === 4 ? 'Това беше четвъртият. Последната врата вече не е заключена.'
-                          : 'Остават още ' + (4 - keyCount()) + '.') + '</p>' +
-        '<div class="row"><button class="btn btn-primary" data-act="hub" data-primary="1">Обратно в залата</button>' +
-        '<button class="btn btn-ghost" data-act="back">← Назад в крилото</button></div>' +
+        '<p class="artifact" aria-hidden="true">' + ICONS.key + '</p>' +
+        '<p class="lead">' + t('tr.take', { artifact: esc(w.artifact) }) + ' ' +
+          esc(keyCount() === 4 ? t('tr.last') : t('tr.left', { n: 4 - keyCount() })) + '</p>' +
+        '<div class="row">' +
+          btn('hub', esc(t('btn.hall')), 'btn-primary', true) +
+          btn('back', ICONS.back + ' ' + esc(t('btn.backToWing')), 'btn-ghost') +
+        '</div>' +
       '</div>'
     );
-    announce('Получаваш ключ: ' + w.artifact + '. ' + keyCount() + ' от 4.');
+    announce(t('tr.announce', { artifact: w.artifact, n: keyCount() }));
   }
 
   function renderSecret() {
     var w = wingById(S.pendingSecret);
     var sec = w.secret;
     paint(
-      '<div class="panel secret reveal">' +
+      '<div class="panel secret">' +
         '<div class="head">' +
-          '<p class="eyebrow">Скрита стая · ' + esc(w.name) + '</p>' +
-          '<h2 tabindex="-1">💡 ' + esc(sec.title) + '</h2>' +
+          '<p class="eyebrow">' + esc(t('sec.eyebrow', { wing: w.name })) + '</p>' +
+          '<h2 tabindex="-1">' + ico(ICONS.hint) + ' ' + esc(sec.title) + '</h2>' +
         '</div>' +
         '<p class="lead">' + esc(sec.text) + '</p>' +
         (sec.code ? '<pre class="code">' + esc(sec.code) + '</pre>' : '') +
-        '<div class="row"><button class="btn btn-primary" data-act="secret-close" data-primary="1">Обратно в коридора</button></div>' +
+        '<div class="row">' + btn('secret-close', esc(t('sec.back')), 'btn-primary', true) + '</div>' +
       '</div>'
     );
-    announce('Скрита стая. ' + sec.title);
+    announce(t('sec.announce', { title: sec.title }));
   }
 
   /* ───────────────────────── джаджи по тип ───────────────────────── */
@@ -451,7 +553,7 @@
   var LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
   function wChoice(s, u) {
-    var h = '<div class="opts" role="group" aria-label="Възможни отговори">';
+    var h = '<div class="opts" role="group" aria-label="' + esc(t('w.options')) + '">';
     s.options.forEach(function (o, i) {
       var cls = 'opt';
       if (u.checked) {
@@ -466,7 +568,7 @@
   }
 
   function wFix(s, u) {
-    var h = '<div class="lines" role="group" aria-label="Редове от кода — избери сгрешения">';
+    var h = '<div class="lines" role="group" aria-label="' + esc(t('w.lines')) + '">';
     s.lines.forEach(function (l, i) {
       var cls = 'lineb';
       if (u.checked) {
@@ -484,7 +586,7 @@
   function wFill(s, u) {
     var cls = u.checked ? (u.ok ? 'good' : 'bad') : '';
     return '<div class="fill-wrap">' +
-      '<label class="sr-only" for="fill">Попълни липсващото</label>' +
+      '<label class="sr-only" for="fill">' + esc(t('w.fill')) + '</label>' +
       '<span>' + esc(s.before) + '</span>' +
       '<input class="fill-in ' + cls + '" id="fill" type="text" autocomplete="off" autocapitalize="off" ' +
       'spellcheck="false" value="' + esc(u.typed || '') + '"' + (u.checked ? ' disabled' : '') + '>' +
@@ -501,21 +603,21 @@
         '<div class="slotlabel">' + esc(p[0]) + '</div>' +
         '<button id="slot-' + i + '" class="' + cls + '" data-act="slot" data-i="' + i + '"' +
         (u.checked ? ' disabled' : '') + '>' +
-        (a !== null ? esc(u.tokens[a].txt) : '— пусни тук —') + '</button>' +
+        (a !== null ? esc(u.tokens[a].txt) : esc(t('w.slotEmpty'))) + '</button>' +
       '</div>';
     });
-    h += '</div><div class="tray"><span class="tray-label">Парчета — кликни едно, после кликни мястото му</span>';
-    u.tokens.forEach(function (t, i) {
+    h += '</div><div class="tray"><span class="tray-label">' + esc(t('w.tray')) + '</span>';
+    u.tokens.forEach(function (tok, i) {
       var used = u.assign.indexOf(i) !== -1;
       h += '<button id="token-' + i + '" class="token" data-act="token" data-i="' + i + '" ' +
         'draggable="' + (!used && !u.checked) + '" aria-pressed="' + (u.sel === i ? 'true' : 'false') + '"' +
-        (used || u.checked ? ' disabled' : '') + '>' + esc(t.txt) + '</button>';
+        (used || u.checked ? ' disabled' : '') + '>' + esc(tok.txt) + '</button>';
     });
     return h + '</div>';
   }
 
   function wOrder(s, u) {
-    var h = '<div class="orderlist" role="group" aria-label="Подреди с бутоните нагоре и надолу">';
+    var h = '<div class="orderlist" role="group" aria-label="' + esc(t('w.order')) + '">';
     u.order.forEach(function (it, pos) {
       var cls = 'orderitem';
       if (u.checked) cls += (it === pos ? ' good' : ' bad');
@@ -523,10 +625,10 @@
         '<span class="num" aria-hidden="true">' + (pos + 1) + '</span>' +
         '<span class="txt">' + esc(s.items[it]) + '</span>' +
         '<button id="up-' + pos + '" class="mini" data-act="up" data-i="' + pos + '" ' +
-        'aria-label="Премести „' + esc(s.items[it]) + '“ нагоре"' +
+        'aria-label="' + esc(t('w.moveUp', { item: s.items[it] })) + '"' +
         (pos === 0 || u.checked ? ' disabled' : '') + '>↑</button>' +
         '<button id="down-' + pos + '" class="mini" data-act="down" data-i="' + pos + '" ' +
-        'aria-label="Премести „' + esc(s.items[it]) + '“ надолу"' +
+        'aria-label="' + esc(t('w.moveDown', { item: s.items[it] })) + '"' +
         (pos === u.order.length - 1 || u.checked ? ' disabled' : '') + '>↓</button>' +
       '</div>';
     });
@@ -534,7 +636,7 @@
   }
 
   function wTab(s, u) {
-    var h = '<div class="formsim" role="group" aria-label="Кликай полетата в реда на клавиша Tab">';
+    var h = '<div class="formsim" role="group" aria-label="' + esc(t('w.tab')) + '">';
     s.fields.forEach(function (f, i) {
       var pos = u.seq.indexOf(i);
       var cls = 'fieldbtn' + (pos !== -1 ? ' picked' : '');
@@ -548,23 +650,22 @@
     });
     h += '</div>';
     if (!u.checked && u.seq.length) {
-      h += '<div class="row"><button class="btn btn-ghost" data-act="tab-reset">Изчисти реда</button></div>';
+      h += '<div class="row">' + btn('tab-reset', esc(t('w.tabClear')), 'btn-ghost') + '</div>';
     }
     return h;
   }
 
   function wTree(s, u) {
-    var parts = [['role', 'Роля', s.role], ['name', 'Име', s.name], ['state', 'Състояние', s.state]];
+    var parts = [['role', t('w.treeRole'), s.role], ['name', t('w.treeName'), s.name], ['state', t('w.treeState'), s.state]];
     var h = '<div class="treegrid">';
     parts.forEach(function (p) {
       var key = p[0], got = u.checked ? (u.tree && u.tree[key]) : null;
       var cls = u.checked ? (got === p[2].correct ? 'good' : 'bad') : '';
-      h += '<div><label for="tree-' + key + '">' + p[1] + '</label>' +
+      h += '<div><label for="tree-' + key + '">' + esc(p[1]) + '</label>' +
         '<select class="tree-sel ' + cls + '" id="tree-' + key + '"' + (u.checked ? ' disabled' : '') + '>' +
-        '<option value="">— избери —</option>';
+        '<option value="">' + esc(t('w.select')) + '</option>';
       p[2].options.forEach(function (o) {
-        var sel = got === o ? ' selected' : '';
-        h += '<option value="' + esc(o) + '"' + sel + '>' + esc(o) + '</option>';
+        h += '<option value="' + esc(o) + '"' + (got === o ? ' selected' : '') + '>' + esc(o) + '</option>';
       });
       h += '</select></div>';
     });
@@ -574,8 +675,7 @@
   /* ───────────────────────── проверка ───────────────────────── */
 
   function norm(s) {
-    return String(s || '').toLowerCase().trim()
-      .replace(/["'`=]/g, '').replace(/\s+/g, '');
+    return String(s || '').toLowerCase().trim().replace(/["'`=]/g, '').replace(/\s+/g, '');
   }
 
   function evaluate(s, u) {
@@ -590,12 +690,12 @@
         return s.accept.some(function (a) { return norm(a) === norm(u.typed); });
       case 'match':
         if (u.assign.indexOf(null) !== -1) return null;
-        return u.assign.every(function (t, i) { return u.tokens[t].idx === i; });
+        return u.assign.every(function (tok, i) { return u.tokens[tok].idx === i; });
       case 'order':
-        return u.order.every(function (v, i) { return v === i; });
+        return u.order.every(function (v2, i) { return v2 === i; });
       case 'tab':
         if (u.seq.length !== s.fields.length) return null;
-        return u.seq.every(function (v, i) { return v === s.correct[i]; });
+        return u.seq.every(function (v2, i) { return v2 === s.correct[i]; });
       case 'tree':
         u.tree = {
           role: document.getElementById('tree-role').value,
@@ -610,29 +710,25 @@
     return null;
   }
 
-  var GRADE_TXT = {
-    first: 'Отвори я от първи опит.',
-    hint: 'Отвори я с подсказка.',
-    wrong: 'Отвори я след грешка.'
-  };
-
-  function verdict(s, u, w) {
+  function verdict(s, u) {
+    var gradeKey = { first: 'v.gradeFirst', hint: 'v.gradeHint', wrong: 'v.gradeWrong' }[S.answered[s.id]];
     var h = '<div class="verdict ' + (u.review ? 'rev' : u.ok ? 'ok' : 'no') + '">' +
-      '<h3 tabindex="-1">' + (u.review ? '🗝️ Тази врата вече е зад гърба ти'
-        : u.ok ? '✅ Вратата се отваря' : '❌ Вратата не помръдва') + '</h3>' +
-      (u.review ? '<p class="muted">' + GRADE_TXT[S.answered[s.id]] + ' Верният отговор е показан по-горе.</p>' : '') +
+      '<h3 tabindex="-1">' + ico(u.review ? ICONS.doorOpened : u.ok ? ICONS.ok : ICONS.no) + ' ' +
+        esc(t(u.review ? 'v.review' : u.ok ? 'v.ok' : 'v.no')) + '</h3>' +
+      (u.review ? '<p class="muted">' + esc(t(gradeKey) + ' ' + t('v.reviewShown')) + '</p>' : '') +
       '<p>' + esc(s.explain) + '</p>';
     if (S.mode === 'projector' && s.teach) {
-      h += '<p class="teach"><b>Бележка за водещия</b>' + esc(s.teach) + '</p>';
+      h += '<p class="teach"><b>' + esc(t('v.teacher')) + '</b>' + esc(s.teach) + '</p>';
     }
     h += '</div>';
 
     if (S.pendingSecret && !S.secrets[S.pendingSecret]) {
-      h += '<button class="crack" data-act="secret">🕳️ Забелязваш пукнатина в стената…</button>';
+      h += '<button class="crack" data-act="secret">' + ico(ICONS.crack) + ' ' + esc(t('btn.crack')) + '</button>';
     }
-    h += navRow('<button class="btn btn-primary" data-act="next" data-primary="1">Напред →</button>' +
-      (u.review ? '<button class="btn" data-act="retry">↻ Опитай наново</button>' : ''));
-    if (u.review) h += '<p class="muted note">Записаният резултат остава първият — повтарянето е за упражнение.</p>';
+    h += navRow(
+      btn('next', esc(t('btn.next')) + ' ' + ICONS.next, 'btn-primary', true) +
+      (u.review ? btn('retry', ICONS.retry + ' ' + esc(t('btn.retry')), '') : ''));
+    if (u.review) h += '<p class="muted note">' + esc(t('v.reviewNote')) + '</p>';
     return h;
   }
 
@@ -642,7 +738,7 @@
     var u = S.ui;
     var res = evaluate(s, u);
 
-    if (res === null) { announce('Дай отговор, преди да опиташ вратата.'); return; }
+    if (res === null) { announce(t('v.needAnswer')); return; }
 
     if (res) {
       u.checked = true; u.ok = true;
@@ -651,16 +747,16 @@
         S.answered[s.id] = grade;
         if (grade === 'first' && !S.secrets[w.id]) S.pendingSecret = w.id;
       }
-      announce('Вярно. ' + s.explain);
+      announce(t('v.announceOk', { explain: s.explain }));
     } else {
       u.tries++;
       if (u.tries >= 2) {
         u.checked = true; u.ok = false;
         if (!S.answered[s.id]) S.answered[s.id] = 'wrong';
-        announce('Грешно. Вратата се отваря така или иначе. ' + s.explain);
+        announce(t('v.announceNo', { explain: s.explain }));
       } else {
         u.hint = true;
-        announce('Не още. Ето подсказка: ' + (s.hint || ''));
+        announce(t('v.announceHint', { hint: s.hint || '' }));
         var p = stage.querySelector('.doorframe');
         if (p) { p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); }
       }
@@ -678,44 +774,47 @@
 
   function renderBoss() {
     var b = S.boss;
+    var boss = G().boss;
 
     if (b.phase === 'intro') {
       paint(
-        '<div class="panel boss-stage reveal">' +
-          '<div class="head"><p class="eyebrow">Последната стая</p>' +
-          '<h2 tabindex="-1">🔊 Четецът</h2></div>' +
-          '<p class="lead">' + nl2br(G.boss.intro) + '</p>' +
-          '<div class="row"><button class="btn btn-primary" data-act="boss-begin" data-primary="1">Влез в тъмното</button>' +
-          '<button class="btn btn-ghost" data-act="hub">Не още</button></div>' +
+        '<div class="panel boss-stage">' +
+          '<div class="head"><p class="eyebrow">' + esc(t('boss.eyebrow')) + '</p>' +
+          '<h2 tabindex="-1">' + ico(ICONS.reader) + ' ' + esc(t('boss.h2')) + '</h2></div>' +
+          '<p class="lead">' + nl2br(boss.intro) + '</p>' +
+          '<div class="row">' +
+            btn('boss-begin', esc(t('boss.begin')), 'btn-primary', true) +
+            btn('hub', esc(t('boss.notYet')), 'btn-ghost') +
+          '</div>' +
         '</div>'
       );
       return;
     }
+
+    var st = boss.stages[b.stage];
 
     if (b.phase === 'done') {
-      var st0 = G.boss.stages[b.stage];
       paint(
-        '<div class="panel boss-stage reveal">' +
-          '<div class="head"><p class="eyebrow">' + esc(st0.title) + '</p>' +
-          '<h2 tabindex="-1">Пет секунди</h2></div>' +
-          '<p class="lead">Същата задача. Същият човек. Разликата е в разметката.</p>' +
-          '<pre class="code">' + esc(st0.fix) + '</pre>' +
-          '<div class="row"><button class="btn btn-primary" data-act="boss-next" data-primary="1">' +
-          (b.stage + 1 < G.boss.stages.length ? 'Следващ етап →' : 'Излез на светло') + '</button></div>' +
+        '<div class="panel boss-stage">' +
+          '<div class="head"><p class="eyebrow">' + esc(st.title) + '</p>' +
+          '<h2 tabindex="-1">' + esc(t('boss.fast')) + '</h2></div>' +
+          '<p class="lead">' + esc(t('boss.fastLead')) + '</p>' +
+          '<pre class="code">' + esc(st.fix) + '</pre>' +
+          '<div class="row">' + btn('boss-next',
+            esc(b.stage + 1 < boss.stages.length ? t('boss.nextStage') + ' ' + ICONS.next : t('boss.exitLight')),
+            'btn-primary', true) + '</div>' +
         '</div>'
       );
       return;
     }
-
-    var st = G.boss.stages[b.stage];
 
     if (b.phase === 'lesson') {
       paint(
-        '<div class="panel boss-stage reveal">' +
+        '<div class="panel boss-stage">' +
           '<div class="head"><p class="eyebrow">' + esc(st.title) + '</p>' +
-          '<h2 tabindex="-1">Ето защо</h2></div>' +
-          '<div class="boss-lesson"><h3>Какво се случи</h3><p>' + esc(st.lesson) + '</p></div>' +
-          '<div class="row"><button class="btn btn-primary" data-act="boss-fix" data-primary="1">Поправи страницата</button></div>' +
+          '<h2 tabindex="-1">' + esc(t('boss.why')) + '</h2></div>' +
+          '<div class="boss-lesson"><h3>' + esc(t('boss.whatHappened')) + '</h3><p>' + esc(st.lesson) + '</p></div>' +
+          '<div class="row">' + btn('boss-fix', esc(t('boss.fix')), 'btn-primary', true) + '</div>' +
         '</div>'
       );
       return;
@@ -723,54 +822,53 @@
 
     var broken = b.phase === 'broken';
     var items = broken ? st.items : st.fixedItems;
-    var task = broken ? st.task : st.fixedTask;
 
     var h = '<div class="panel boss-stage">' +
-      '<div class="head"><p class="eyebrow">' + esc(st.title) + ' · етап ' + (b.stage + 1) + ' от ' + G.boss.stages.length + '</p>' +
-      '<h2 tabindex="-1" class="boss-task">' + esc(task) + '</h2></div>' +
+      '<div class="head"><p class="eyebrow">' +
+        esc(t('boss.stage', { title: st.title, i: b.stage + 1, n: boss.stages.length })) + '</p>' +
+      '<h2 tabindex="-1" class="boss-task">' + esc(broken ? st.task : st.fixedTask) + '</h2></div>' +
       '<div class="log" aria-hidden="true">';
-    if (!S.boss.log.length) bossLog('Екранът е тъмен. Движи се с Tab, задействай с Enter.', 'sys');
-    S.boss.log.forEach(function (l) {
-      h += '<p class="' + l.c + '">' + esc(l.t) + '</p>';
-    });
+    if (!b.log.length) bossLog(t('boss.logStart'), 'sys');
+    b.log.forEach(function (l) { h += '<p class="' + l.c + '">' + esc(l.t) + '</p>'; });
     h += '</div><div class="blocks">';
     items.forEach(function (it, i) {
       h += '<button id="blk-' + i + '" class="blk" data-act="blk" data-i="' + i + '">' +
-        '<span class="shape" aria-hidden="true">▮▮▮▮▮▮▮▮▮▮▮▮</span>' +
+        '<span class="shape" aria-hidden="true">' + ICONS.block + '</span>' +
         '<span class="sr-only">' + esc(it.say) + '</span></button>';
     });
-    h += '</div><div class="row"><button class="btn btn-ghost" data-act="hub">Излез от подземието</button></div></div>';
+    h += '</div><div class="row">' + btn('hub', esc(t('boss.exit')), 'btn-ghost') + '</div></div>';
 
     paint(h);
   }
 
   function bossActivate(i) {
     var b = S.boss;
-    var st = G.boss.stages[b.stage];
+    var st = G().boss.stages[b.stage];
     var broken = b.phase === 'broken';
     var it = (broken ? st.items : st.fixedItems)[i];
 
     if (it.goal) {
       if (broken) {
-        bossLog('✓ Намери го. Но мина през всичко останало, за да стигнеш дотук.', 'good');
+        bossLog(ICONS.yes + ' ' + t('boss.found'), 'good');
         b.phase = 'lesson';
       } else {
-        if (it.onGoal) bossLog('🔊 ' + it.onGoal, 'good');
-        bossLog('✓ Готово. Отне пет секунди.', 'good');
+        if (it.onGoal) bossLog(ICONS.reader + ' ' + it.onGoal, 'good');
+        bossLog(ICONS.yes + ' ' + t('boss.done'), 'good');
         b.phase = 'done';
       }
       save(); render();
-      announce(broken ? 'Намери целта.' : 'Готово за пет секунди.');
+      announce(broken ? t('boss.announceFound') : t('boss.announceFast'));
       return;
     }
 
     b.tries++;
     S.ui.focusId = 'blk-' + i;
-    bossLog('✗ ' + (st.wrongMsg || 'Нищо не се случва.'), 'bad');
-    var max = st.unknowable ? 2 : 6;
-    if (b.tries >= max) { b.phase = 'lesson'; b.tries = 0; }
+    bossLog(ICONS.nope + ' ' + (st.wrongMsg || t('boss.nothing')), 'bad');
+    if (b.tries >= (st.unknowable ? 2 : 6)) { b.phase = 'lesson'; b.tries = 0; }
     save(); render();
   }
+
+  /* ───────────────────────── финал ───────────────────────── */
 
   function renderEnd() {
     var first = 0, hinted = 0, wrong = 0;
@@ -780,85 +878,86 @@
     });
     var total = first + hinted + wrong;
     var ratio = total ? first / total : 0;
-    var rank = ratio === 1 ? '🏅 Майстор архитект'
-      : ratio >= 0.8 ? '🥈 Старши строител'
-      : ratio >= 0.55 ? '🥉 Чирак'
-      : '🧱 Зидар';
-    var secrets = Object.keys(S.secrets).length;
+    var rankKey = ratio === 1 ? 'rank100' : ratio >= 0.8 ? 'rank80' : ratio >= 0.55 ? 'rank55' : 'rank0';
+    var rank = ICONS.ranks[rankKey] + ' ' + t('end.' + rankKey);
 
     paint(
-      '<div class="panel reveal">' +
-        '<div class="head"><p class="eyebrow">Излезе на светло</p>' +
-        '<h2 tabindex="-1">Осем атрибута</h2></div>' +
-        '<p class="lead">' + nl2br(G.boss.outro) + '</p>' +
+      '<div class="panel">' +
+        '<div class="head"><p class="eyebrow">' + esc(t('end.eyebrow')) + '</p>' +
+        '<h2 tabindex="-1">' + esc(t('end.h2')) + '</h2></div>' +
+        '<p class="lead">' + nl2br(G().boss.outro) + '</p>' +
         '<hr class="divider">' +
-        '<p class="rank">' + rank + '</p>' +
+        '<p class="rank">' + esc(rank) + '</p>' +
         '<div class="score">' +
-          tile(total, 'отворени врати') +
-          tile(first, 'от първи опит') +
-          tile(hinted, 'с подсказка') +
-          tile(secrets + ' / 4', 'тайни стаи') +
+          tile(total, t('end.tileDoors')) +
+          tile(first, t('end.tileFirst')) +
+          tile(hinted, t('end.tileHint')) +
+          tile(Object.keys(S.secrets).length + ' / 4', t('end.tileSecrets')) +
         '</div>' +
-        '<p class="muted">Трите въпроса, с които излизаш: <b>Какво е това?</b> (роля) · ' +
-        '<b>Как се казва?</b> (име) · <b>В какво състояние е?</b> (състояние)</p>' +
+        '<p class="muted">' + t('end.three') + '</p>' +
         '<div class="row">' +
-          '<button class="btn btn-primary" data-act="hub" data-primary="1">Обратно в залата</button>' +
-          '<button class="btn btn-ghost" data-act="restart">Започни отначало</button>' +
+          btn('hub', esc(t('btn.hall')), 'btn-primary', true) +
+          btn('restart', esc(t('btn.restart')), 'btn-ghost') +
         '</div>' +
       '</div>'
     );
-    announce('Край. ' + rank + '. ' + first + ' от ' + total + ' врати от първи опит.');
+    announce(t('end.announce', { rank: t('end.' + rankKey), first: first, total: total }));
   }
   function tile(n, l) {
-    return '<div class="scoretile"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>';
+    return '<div class="scoretile"><div class="n">' + esc(n) + '</div><div class="l">' + esc(l) + '</div></div>';
   }
 
   /* ───────────────────────── действия ───────────────────────── */
 
-  function handle(act, ds, node) {
+  function handle(act, ds) {
     var u = S.ui;
     var i = ds.i !== undefined ? parseInt(ds.i, 10) : null;
 
     switch (act) {
-      case 'start':
-        S.route = ds.route; S.screen = 'hub'; save(); return render();
+      case 'start': S.route = ds.route; S.screen = 'hub'; save(); return render();
       case 'resume':
-        var d = loadSave(); if (d) { S = d; S.screen = 'hub'; } return render();
+        var d = loadSave();
+        if (d) { var lang = S.lang; S = d; S.lang = lang; S.screen = 'hub'; }
+        return render();
       case 'restart':
-        wipe(); var m = S.mode; S = fresh(); S.mode = m; return render();
-      case 'hub':
-        S.screen = 'hub'; S.ui = {}; save(); return render();
-      case 'wing':
-        S.wing = ds.id; S.step = 0; S.screen = 'wing'; S.ui = {}; save(); return render();
-      case 'next':
-        S.step++; S.ui = {}; save(); return render();
-      case 'back':
-        if (S.step > 0) S.step--; S.ui = {}; save(); return render();
+        wipe();
+        var keep = { mode: S.mode, lang: S.lang };
+        S = fresh(); S.mode = keep.mode; S.lang = keep.lang;
+        return render();
+      case 'hub': S.screen = 'hub'; S.ui = {}; save(); return render();
+      case 'wing': S.wing = ds.id; S.step = 0; S.screen = 'wing'; S.ui = {}; save(); return render();
+      case 'next': S.step++; S.ui = {}; save(); return render();
+      case 'back': if (S.step > 0) S.step--; S.ui = {}; save(); return render();
       case 'goto': {
         var gw = wingById(S.wing), glist = steps(gw);
         S.step = (i >= glist.length && !wingDone(gw)) ? glist.length - 1 : i;
         S.ui = {}; save(); return render();
       }
-      case 'retry':
-        S.ui = { doorId: null, replay: true }; return render();
+      case 'retry': S.ui = { doorId: null, replay: true }; return render();
       case 'check': return check();
       case 'hint': u.hint = true; return render();
 
-      case 'opt': u.pick = i; S.ui.focusId = 'opt-' + i; return render();
-      case 'token':
-        u.sel = (u.sel === i ? null : i); S.ui.focusId = 'token-' + i; return render();
+      /* Изборът на отговор не променя нищо друго на екрана, затова само
+         пребоядисваме бутоните вместо да строим целия панел наново. */
+      case 'opt': {
+        u.pick = i;
+        var opts = stage.querySelectorAll('[data-act="opt"]');
+        for (var k = 0; k < opts.length; k++) {
+          opts[k].setAttribute('aria-pressed', String(parseInt(opts[k].dataset.i, 10) === i));
+        }
+        return;
+      }
+      case 'token': u.sel = (u.sel === i ? null : i); u.focusId = 'token-' + i; return render();
       case 'slot':
         if (u.sel !== null && u.sel !== undefined) { u.assign[i] = u.sel; u.sel = null; }
         else if (u.assign[i] !== null) { u.assign[i] = null; }
-        S.ui.focusId = 'slot-' + i; return render();
-      case 'up':
-        swap(u.order, i, i - 1); S.ui.focusId = 'up-' + (i - 1); return render();
-      case 'down':
-        swap(u.order, i, i + 1); S.ui.focusId = 'down-' + (i + 1); return render();
+        u.focusId = 'slot-' + i; return render();
+      case 'up': swap(u.order, i, i - 1); u.focusId = 'up-' + (i - 1); return render();
+      case 'down': swap(u.order, i, i + 1); u.focusId = 'down-' + (i + 1); return render();
       case 'field':
         var at = u.seq.indexOf(i);
         if (at !== -1) u.seq.splice(at, 1); else u.seq.push(i);
-        S.ui.focusId = 'field-' + i; return render();
+        u.focusId = 'field-' + i; return render();
       case 'tab-reset': u.seq = []; return render();
 
       case 'secret': S.screen = 'secret'; return render();
@@ -866,54 +965,71 @@
         S.secrets[S.pendingSecret] = true; S.pendingSecret = null;
         S.screen = 'wing'; save(); return render();
 
-      case 'boss':
-        S.screen = 'boss'; S.boss = { stage: 0, phase: 'intro', tries: 0, log: [] }; return render();
-      case 'boss-begin':
-        S.boss.phase = 'broken'; S.boss.log = []; return render();
-      case 'boss-fix':
-        S.boss.phase = 'fixed'; S.boss.tries = 0; S.boss.log = []; return render();
+      case 'boss': S.screen = 'boss'; S.boss = { stage: 0, phase: 'intro', tries: 0, log: [] }; return render();
+      case 'boss-begin': S.boss.phase = 'broken'; S.boss.log = []; return render();
+      case 'boss-fix': S.boss.phase = 'fixed'; S.boss.tries = 0; S.boss.log = []; return render();
       case 'boss-next':
-        if (S.boss.stage + 1 < G.boss.stages.length) {
+        if (S.boss.stage + 1 < G().boss.stages.length) {
           S.boss.stage++; S.boss.phase = 'broken'; S.boss.tries = 0; S.boss.log = [];
         } else { S.screen = 'end'; }
         save(); return render();
       case 'blk': return bossActivate(i);
     }
   }
-  function swap(a, i, j) { var t = a[i]; a[i] = a[j]; a[j] = t; }
+  function swap(a, i, j) { var x = a[i]; a[i] = a[j]; a[j] = x; }
+
+  function setLang(code) {
+    if (!knownLang(code) || code === S.lang) return;
+    S.lang = code;
+    S.ui = {};
+    S.boss.log = [];
+    save();
+    render();
+    announce(t('lang.changed'));
+  }
+
+  function toggleMode() {
+    S.mode = S.mode === 'solo' ? 'projector' : 'solo';
+    render();
+    announce(t('mode.announce', { mode: t(S.mode === 'projector' ? 'mode.projector' : 'mode.solo') }));
+  }
 
   /* ───────────────────────── вход ───────────────────────── */
 
   stage.addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]');
     if (!b || b.disabled) return;
-    handle(b.dataset.act, b.dataset, b);
+    handle(b.dataset.act, b.dataset);
+  });
+
+  topbar.addEventListener('click', function (e) {
+    var l = e.target.closest('[data-lang]');
+    if (l) return setLang(l.dataset.lang);
+    if (e.target.closest('#modebtn')) return toggleMode();
   });
 
   /* фокусът върху блок в стаята на боса „изговаря“ какво има там */
   stage.addEventListener('focusin', function (e) {
     var b = e.target.closest('.blk');
     if (!b || S.screen !== 'boss') return;
-    var st = G.boss.stages[S.boss.stage];
-    var items = S.boss.phase === 'broken' ? st.items : st.fixedItems;
-    var it = items[parseInt(b.dataset.i, 10)];
+    var st = G().boss.stages[S.boss.stage];
+    var it = (S.boss.phase === 'broken' ? st.items : st.fixedItems)[parseInt(b.dataset.i, 10)];
     if (!it) return;
     b.classList.add('lit');
     var logEl = stage.querySelector('.log');
     if (!logEl) return;
     var p = document.createElement('p');
-    p.textContent = '🔊 ' + it.say;
+    p.textContent = ICONS.reader + ' ' + it.say;
     logEl.appendChild(p);
     logEl.scrollTop = logEl.scrollHeight;
-    S.boss.log.push({ t: '🔊 ' + it.say, c: '' });
-    if (S.boss.log.length > 40) S.boss.log.shift();
+    bossLog(ICONS.reader + ' ' + it.say);
   });
 
   /* drag & drop за свързването — клавиатурният път (клик → клик) остава водещ */
   stage.addEventListener('dragstart', function (e) {
-    var t = e.target.closest('.token');
-    if (!t || t.disabled) return;
-    e.dataTransfer.setData('text/plain', t.dataset.i);
+    var tk = e.target.closest('.token');
+    if (!tk || tk.disabled) return;
+    e.dataTransfer.setData('text/plain', tk.dataset.i);
     e.dataTransfer.effectAllowed = 'move';
   });
   stage.addEventListener('dragover', function (e) {
@@ -940,22 +1056,12 @@
     render();
   });
 
-  modebtn.addEventListener('click', toggleMode);
-  function toggleMode() {
-    S.mode = S.mode === 'solo' ? 'projector' : 'solo';
-    paintChrome();
-    render();
-    announce('Режим: ' + (S.mode === 'projector' ? 'проектор' : 'соло'));
-  }
-
   document.addEventListener('keydown', function (e) {
-    var t = e.target;
-    var typing = t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA');
+    var target = e.target;
+    var typing = target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA');
     if (e.metaKey || e.ctrlKey || e.altKey) return;
 
-    if (e.key === 'Escape' && S.screen !== 'title') {
-      e.preventDefault(); return handle('hub', {});
-    }
+    if (e.key === 'Escape' && S.screen !== 'title') { e.preventDefault(); return handle('hub', {}); }
     if (typing) {
       if (e.key === 'Enter' && S.screen === 'wing') { e.preventDefault(); check(); }
       return;
@@ -964,7 +1070,7 @@
     if (e.code === 'KeyP') { e.preventDefault(); return toggleMode(); }
     if (e.code === 'KeyR') {
       e.preventDefault();
-      if (confirm('Да започнем ли отначало? Прогресът се изтрива.')) handle('restart', {});
+      if (confirm(t('confirm.restart'))) handle('restart', {});
       return;
     }
     if (e.code === 'KeyH') {
@@ -972,17 +1078,19 @@
       if (hb) { e.preventDefault(); hb.click(); }
       return;
     }
-    var onChrome = (t === document.body || t === stage || t.tagName === 'H2');
+
+    var onChrome = (target === document.body || target === stage || target.tagName === 'H2');
     if (e.key === 'ArrowLeft' && onChrome) {
       var bb = stage.querySelector('[data-act="back"]');
       if (bb) { e.preventDefault(); bb.click(); }
       return;
     }
-    if ((e.key === 'ArrowRight' && onChrome) || (e.key === 'Enter' && t === document.body)) {
+    if ((e.key === 'ArrowRight' && onChrome) || (e.key === 'Enter' && target === document.body)) {
       var pb = stage.querySelector('[data-primary]');
       if (pb && !pb.disabled) { e.preventDefault(); pb.click(); }
       return;
     }
+
     var n = null;
     if (/^[1-5]$/.test(e.key)) n = parseInt(e.key, 10) - 1;
     else if (/^Key[A-E]$/.test(e.code)) n = e.code.charCodeAt(3) - 65;
@@ -995,5 +1103,7 @@
   /* ───────────────────────── старт ───────────────────────── */
 
   S = fresh();
+  var saved = loadSave();
+  S.lang = pickLang(saved && saved.lang);
   render();
 })();

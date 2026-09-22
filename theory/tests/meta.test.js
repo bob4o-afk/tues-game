@@ -69,7 +69,8 @@ for (const page of PAGES) {
     const data = JSON.parse(m[1]);
     assert.equal(data['@context'], 'https://schema.org');
     assert.ok(data['@type'], 'няма @type');
-    assert.equal(data.inLanguage, 'bg');
+    var langs = [].concat(data.inLanguage);
+    assert.ok(langs.includes('bg'), 'българският не е обявен в inLanguage');
     assert.match(JSON.stringify(data), /bob4o-afk/, 'авторът не е отбелязан');
   });
 }

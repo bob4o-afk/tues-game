@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Врата с ключалка">
+  <rect width="64" height="64" fill="#0E0F14"/>
+  <!-- сводеста врата: рамката е от факлен цвят, вътрешността остава тъмна -->
+  <path d="M14 58V26a18 18 0 0 1 36 0v32z" fill="none" stroke="#F0A836" stroke-width="6"/>
+  <!-- ключалка: кръг и прорез -->
+  <circle cx="32" cy="34" r="5" fill="#F0A836"/>
+  <path d="M32 38l3.2 11h-6.4z" fill="#F0A836"/>
+</svg>

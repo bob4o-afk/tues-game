@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Слепва index.html + style.css + data.js + game.js в един файл.
+/* Слепва index.html, style.css и всички скриптове в един файл.
    Нужен е, защото Safari и Firefox третират всеки file:// като отделен произход
    и блокират зареждането на съседните файлове при двоен клик.
 
@@ -12,31 +12,21 @@ const dir = __dirname;
 const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
 const OUT = 'igra-offline.html';
 
-let html = read('index.html');
-const css = read('style.css');
-const data = read('data.js');
-const game = read('game.js');
-
-// скриптовете влизат както са; единствената опасност е литерал, който затваря тага
+// единственият риск при вграждане е литерал, който затваря тага
 const guard = s => s.replace(/<\/script>/gi, '<\\/script>');
 
-html = html
-  .replace(
-    /[ \t]*<link rel="stylesheet" href="\.\/style\.css">\r?\n?/,
-    '<style>\n' + css + '\n</style>\n'
-  )
-  .replace(
-    /[ \t]*<script src="\.\/data\.js"><\/script>\r?\n?/,
-    '<script>\n' + guard(data) + '\n</script>\n'
-  )
-  .replace(
-    /[ \t]*<script src="\.\/game\.js"><\/script>\r?\n?/,
-    '<script>\n' + guard(game) + '\n</script>\n'
-  )
-  .replace(
-    '<title>',
-    '<!-- Генериран файл. Редактирай източниците и пусни: node build.js -->\n<title>'
-  );
+let html = read('index.html');
+
+// <link rel="stylesheet" href="./нещо.css">  →  <style>…</style>
+html = html.replace(/[ \t]*<link rel="stylesheet" href="\.\/([^"]+)">\r?\n?/g,
+  (_, file) => '<style>\n' + read(file) + '\n</style>\n');
+
+// <script src="./нещо.js"></script>  →  <script>…</script>
+html = html.replace(/[ \t]*<script src="\.\/([^"]+)"><\/script>\r?\n?/g,
+  (_, file) => '<script>\n' + guard(read(file)) + '\n</script>\n');
+
+html = html.replace('<title>',
+  '<!-- Генериран файл. Редактирай източниците и пусни: npm run bundle -->\n<title>');
 
 const left = html.match(/(?:src|href)="\.\/[^"]+"/g);
 if (left) {

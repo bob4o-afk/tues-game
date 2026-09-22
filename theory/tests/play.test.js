@@ -9,7 +9,7 @@ test('играта се преиграва докрай по пълния мар
   const { $, $$, click, txt, G } = ctx;
 
   click('[data-act="start"][data-route="full"]');
-  assert.ok(txt().includes('Валидаторът'), 'не се стигна до централната зала');
+  assert.ok(txt().includes(ctx.T['hub.h2']), 'не се стигна до централната зала');
 
   for (const w of G.wings) clearWing(ctx, w);
 
@@ -17,7 +17,7 @@ test('играта се преиграва докрай по пълния мар
   assert.ok(!$('[data-act="boss"]').disabled, 'босът остана заключен с четири ключа');
 
   clearBoss(ctx);
-  assert.ok(txt().includes('Осем атрибута'), 'няма финален екран');
+  assert.ok(txt().includes(ctx.T['end.h2']), 'няма финален екран');
   assert.deepEqual(ctx.errors, [], 'страницата е хвърлила грешка');
 });
 

@@ -13,10 +13,14 @@
 ## Файлове
 
 ```
-igra/
-├── index.html      скелет — само рамката, нищо съдържателно
+theory/
+├── index.html      скелет — само рамката, нито един текст вътре
 ├── style.css       всичко визуално
-├── data.js         съдържанието: крила, стаи, въпроси, босът
+├── icons.js        всички икони и символи
+├── i18n.js         интерфейсът на трите езика
+├── content.bg.js   съдържанието: крила, стаи, въпроси, босът
+├── content.en.js   същото на английски
+├── content.fr.js   същото на френски
 ├── game.js         двигателят: състояние, рендер, клавиатура
 ├── bundle.js       слепва всичко в един офлайн файл
 ├── tests/          тестовете на играта
@@ -24,6 +28,9 @@ igra/
 
 igra-offline.html   ← генерира се от bundle.js; за двоен клик и за раздаване
 ```
+
+**Нищо не е зашито в кода.** `game.js` не съдържа нито един видим текст и нито една
+икона — всичко минава през `t('ключ')` и `ICONS`.
 
 Пътищата са **относителни** (`./style.css`), затова сайтът работи и в корена на домейн,
 и в подпапка като `https://ime.github.io/repo/`.
@@ -34,7 +41,7 @@ igra-offline.html   ← генерира се от bundle.js; за двоен к
 
 **Двоен клик върху `index.html` не работи навсякъде.** Safari и Firefox третират всеки
 `file://` адрес като отделен произход и блокират зареждането на съседните `style.css`,
-`data.js` и `game.js`. В конзолата се вижда `ERR_ACCESS_DENIED` и страницата остава празна.
+съдържанието и `game.js`. В конзолата се вижда `ERR_ACCESS_DENIED` и страницата остава празна.
 Chrome го допуска, но не разчитай на това.
 
 Два начина, които работят винаги:
@@ -52,97 +59,48 @@ npm run serve
 npm run bundle       # → theory/igra-offline.html
 ```
 
-`igra-offline.html` е около 110 KB, съдържа CSS-а и JavaScript-а вътре в себе си и няма
-нито една препратка към съседен файл. Отваря се с двоен клик във всеки браузър.
-Пускай `npm run bundle` наново след всяка промяна по `data.js` или `style.css`.
+`igra-offline.html` съдържа CSS-а и JavaScript-а вътре в себе си и няма нито една
+препратка към съседен файл. Отваря се с двоен клик във всеки браузър.
+Пускай `npm run bundle` наново след всяка промяна по съдържанието или стиловете.
 
 > Шрифтовете се теглят от Google Fonts, така че без интернет играта минава на системни
 > заместители. Всичко останало работи офлайн.
 
 ---
 
-## Деплой на GitHub Pages
+## Езици
 
-### Вариант А — съдържанието на `igra/` е в корена на репото
+Играта е на **български, английски и френски**. Превключвателят е горе вляво — три бутона
+`BG · EN · FR`, отбелязани с `aria-pressed`.
 
-```bash
-cd igra
-git init
-git add -A
-git commit -m "Подземието на DOM-а"
-git branch -M main
-git remote add origin git@github.com:ПОТРЕБИТЕЛ/РЕПО.git
-git push -u origin main
-```
+Езикът се избира в този ред:
 
-После: **Settings → Pages → Build and deployment → Source: Deploy from a branch →
-Branch: `main` / `(root)` → Save.**
+1. `?lang=en` в адреса — за линк, който отваря играта направо на даден език
+2. запазеното от миналия път (`localStorage`)
+3. езикът на браузъра
+4. български
 
-Адресът е `https://ПОТРЕБИТЕЛ.github.io/РЕПО/` след около минута.
+**Прогресът е общ.** Идентификаторите на вратите (`I.1`, `II.5`…) са еднакви и на трите
+езика, затова смяната на езика насред играта не губи нищо — тестът го проверява.
 
-### Вариант Б — играта е в подпапка на по-голямо репо
+Смяната сменя и `<html lang>`, така че екранният четец превключва гласа си. Това е
+буквално въпрос I.3 от самата игра, приложен върху нея.
 
-Pages може да сервира само от корена или от `/docs`. Или преименувай папката на `docs`,
-или сложи този workflow в **корена** на репото като `.github/workflows/pages.yml`:
+### Добавяне на език
 
-```yaml
-name: Deploy to Pages
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+1. Нов ред в `LANGS` в началото на `i18n.js`.
+2. Нов блок в `I18N` със **същите ключове** — тестът пада, ако липсва един.
+3. Нов `content.<код>.js` със същите `id`-та, същите `kind`-ове и същите позиции
+   на верните отговори — това също се проверява.
+4. Един `<script>` ред в `index.html` и един в `build.js`.
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./urok_2/igra        # ← папката с index.html
-      - id: deployment
-        uses: actions/deploy-pages@v4
-```
-
-После: **Settings → Pages → Source: GitHub Actions.**
-
----
-
-## Деплой на Vercel
-
-### С CLI
-
-```bash
-npm i -g vercel
-cd igra
-vercel          # преглед
-vercel --prod   # продукция
-```
-
-На въпроса за framework отговори **Other**, а за build команда остави празно —
-няма какво да се билдва.
-
-### През браузъра
-
-vercel.com → **Add New → Project → Import Git Repository** → избери репото.
-Ако играта е в подпапка, задай **Root Directory** = `urok_2/igra`.
-
-Или най-бързото: влачиш папката върху `vercel.com/new` (drag & drop деплой).
+Иконите не се превеждат — те са в `icons.js` и важат за всички езици.
 
 ---
 
 ## Как се добавя въпрос
 
-Всичко е в `data.js`. Намираш крилото и вмъкваш обект в `steps`:
+Всичко е в `content.<език>.js`. Намираш крилото и вмъкваш обект в `steps`:
 
 ```js
 { t:'door', id:'II.10', core:true, kind:'choice',
@@ -178,7 +136,7 @@ vercel.com → **Add New → Project → Import Git Repository** → избер�
 | `tab` | кликва полетата в реда на Tab | `fields`, `correct[]` |
 | `tree` | попълва роля / име / състояние | `role`, `name`, `state` |
 
-Босът се редактира в `GAME.boss` — всеки етап има счупена страница, поука и поправена версия.
+Босът се редактира в `CONTENT.<език>.boss` — всеки етап има счупена страница, поука и поправена версия.
 
 ---
 

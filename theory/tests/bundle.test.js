@@ -25,6 +25,6 @@ test('слепеният файл се преиграва докрай', () => {
   ctx.click('[data-act="start"][data-route="full"]');
   for (const w of ctx.G.wings) clearWing(ctx, w);
   clearBoss(ctx);
-  assert.match(ctx.txt(), /Осем атрибута/, 'няма финален екран');
+  assert.ok(ctx.txt().includes(ctx.T['end.h2']), 'няма финален екран');
   assert.deepEqual(ctx.errors, [], 'страницата е хвърлила грешка');
 });

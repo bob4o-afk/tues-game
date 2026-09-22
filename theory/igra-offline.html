@@ -3,21 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Генериран файл. Редактирай източниците и пусни: node build.js -->
+<!-- Генериран файл. Редактирай източниците и пусни: npm run bundle -->
 <title>Подземието на DOM-а — интерактивен урок по HTML, семантика и ARIA</title>
-<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA на български. Четири крила, 35 врати в осем типа задачи, скрити стаи и финален бос, в който екранът изгасва и минаваш страницата само по това, което чете екранният четец.">
+<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA на български, английски и френски. Четири крила, 35 врати в осем типа задачи, скрити стаи и финален бос, в който екранът изгасва и минаваш страницата само по това, което чете екранният четец.">
 <meta name="author" content="bob4o-afk">
 <meta name="keywords" content="HTML, семантичен HTML, ARIA, достъпност, a11y, WCAG, екранен четец, интерактивен урок, tues game, ТУЕС, български">
 <link rel="canonical" href="https://bob4o-afk.github.io/tues-game/theory/">
+<link rel="alternate" hreflang="bg" href="https://bob4o-afk.github.io/tues-game/theory/?lang=bg">
+<link rel="alternate" hreflang="en" href="https://bob4o-afk.github.io/tues-game/theory/?lang=en">
+<link rel="alternate" hreflang="fr" href="https://bob4o-afk.github.io/tues-game/theory/?lang=fr">
+<link rel="alternate" hreflang="x-default" href="https://bob4o-afk.github.io/tues-game/theory/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#0E0F14">
 
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="TUES Game">
 <meta property="og:locale" content="bg_BG">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale:alternate" content="fr_FR">
 <meta property="og:url" content="https://bob4o-afk.github.io/tues-game/theory/">
 <meta property="og:title" content="Подземието на DOM-а — HTML, семантика и ARIA">
-<meta property="og:description" content="35 врати, четири ключа и финал, в който екранът изгасва. Интерактивен урок по уеб достъпност на български.">
+<meta property="og:description" content="35 врати, четири ключа и финал, в който екранът изгасва. Интерактивен урок по уеб достъпност на три езика.">
 <meta property="og:image" content="https://bob4o-afk.github.io/tues-game/theory/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -35,7 +41,7 @@
   "name": "Подземието на DOM-а",
   "url": "https://bob4o-afk.github.io/tues-game/theory/",
   "description": "Интерактивен урок по HTML, семантика и ARIA — четири крила, 35 врати, скрити стаи и финален бос.",
-  "inLanguage": "bg",
+  "inLanguage": ["bg", "en", "fr"],
   "learningResourceType": "Game",
   "educationalUse": "instruction",
   "educationalLevel": "Средно образование",
@@ -54,7 +60,7 @@
 }
 </script>
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230E0F14'/%3E%3Ctext y='24' x='4' font-size='22'%3E%F0%9F%8F%B0%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%230E0F14%22%2F%3E%3Cpath%20d%3D%22M14%2058V26a18%2018%200%200%201%2036%200v32z%22%20fill%3D%22none%22%20stroke%3D%22%23F0A836%22%20stroke-width%3D%226%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2234%22%20r%3D%225%22%20fill%3D%22%23F0A836%22%2F%3E%3Cpath%20d%3D%22M32%2038l3.2%2011h-6.4z%22%20fill%3D%22%23F0A836%22%2F%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
@@ -163,8 +169,12 @@ main:focus-visible{outline:3px solid var(--torch);outline-offset:4px}
   font-family:var(--display);font-weight:700;
   font-size:clamp(1.45rem,3.6vw,1.9rem);line-height:1.15;margin:0;
 }
-.panel h2:focus{outline:none}
-.panel h2:focus-visible{outline:3px solid var(--torch);outline-offset:6px}
+/* Заглавието се фокусира програмно след всяко пререндериране, за да го прочете
+   екранният четец. Човекът не е искал този фокус, затова не му рисуваме пръстен —
+   съобщението през aria-live върши работата. Пръстенът остава там, където
+   фокусът е поискан: бутоните, полетата и целта на skip link-а. */
+.panel h2:focus,.panel h2:focus-visible,
+.verdict h3:focus,.verdict h3:focus-visible{outline:none}
 .eyebrow{
   font-size:.74em;letter-spacing:.14em;text-transform:uppercase;
   color:var(--torch);font-weight:600;margin:0;
@@ -206,6 +216,35 @@ ul.points li::before{content:"▸";position:absolute;left:0;color:var(--torch)}
 .btn-ghost:hover{color:var(--text);background:transparent}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 :focus-visible{outline:3px solid var(--torch);outline-offset:2px}
+
+/* двата маршрута с еднаква ширина — иначе по-дългият текст прави единия
+   бутон двойно по-широк и изборът изглежда предрешен */
+.routes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:620px){.routes{grid-template-columns:1fr}}
+.route{display:flex;flex-direction:column;gap:.25em;text-align:left;padding:.85em 1.2em}
+.route .rt{font-weight:600}
+.route .rn{font-size:.85em;color:var(--muted);font-weight:400}
+.route.btn-primary .rn{color:var(--torch-dim)}
+
+/* превключвател на езика */
+.langs{display:flex;gap:4px}
+.langbtn{
+  font:inherit;font-family:var(--mono);font-size:.78em;letter-spacing:.06em;
+  background:transparent;border:1px solid var(--edge);color:var(--muted);
+  padding:.45em .7em;cursor:pointer;min-width:3.2em;
+}
+.langbtn:hover{color:var(--text);border-color:var(--edge-2)}
+.langbtn[aria-pressed="true"]{
+  background:#2A2011;border-color:var(--torch-dim);color:var(--torch);font-weight:700;
+}
+
+/* На тесен екран ключодържателят не бива да бута останалото надясно:
+   auto полето изяжда свободното място и изхвърля бутона извън страницата,
+   а с него и цялото оформление се разширява. */
+@media (max-width:620px){
+  .topbar{gap:8px 12px}
+  .keyring{margin-inline-start:0}
+}
 
 /* ---------------- централната зала ---------------- */
 .hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -443,14 +482,20 @@ select.tree-sel.bad{border-color:var(--ember)}
    Критерият е възможностите на устройството, не ширината — тесен прозорец
    на лаптоп си има клавиатура и легендата му трябва. */
 @media (hover:none) and (pointer:coarse){
+  /* легендата изброява клавиши, които ги няма */
   .footbar{display:none}
+  /* режимът „проектор“ е за водещия на голям екран, не за телефон */
+  .modebtn{display:none}
 }
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .skip-link{position:absolute;left:-9999px;top:0;z-index:10;background:var(--torch);color:#111;padding:.6em 1em;font-weight:600}
 .skip-link:focus{left:8px;top:8px}
 
+/* Анимира се само влизането в нов екран. Новото, което изниква вътре в същия
+   екран — резултатът и подсказката — има собствена, по-кратка поява. */
 .reveal{animation:reveal .3s ease-out}
+.verdict,.hintbox{animation:reveal .2s ease-out}
 @keyframes reveal{from{opacity:.25;transform:translateY(6px)}to{opacity:1;transform:none}}
 .shake{animation:shake .3s}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
@@ -462,13 +507,14 @@ select.tree-sel.bad{border-color:var(--ember)}
 </style>
 </head>
 <body>
-<a class="skip-link" href="#stage">Прескочи към съдържанието</a>
+<a class="skip-link" id="skiplink" href="#stage">Прескочи към съдържанието</a>
 
 <div class="shell">
-  <header class="topbar">
-    <h1 class="brand">Подземието на DOM-а<small>Урок 2 · HTML, семантика и ARIA</small></h1>
-    <div class="keyring" id="keyring" aria-label="Събрани ключове"></div>
-    <button class="modebtn" id="modebtn" type="button">Режим</button>
+  <header class="topbar" id="topbar">
+    <h1 class="brand" id="brand"></h1>
+    <div class="langs" id="langs" role="group"></div>
+    <div class="keyring" id="keyring"></div>
+    <button class="modebtn" id="modebtn" type="button"></button>
   </header>
 
   <div class="progressbar" aria-hidden="true"><span id="progress" style="width:0%"></span></div>
@@ -481,19 +527,618 @@ select.tree-sel.bad{border-color:var(--ember)}
 <div class="sr-only" id="live" role="status" aria-live="polite"></div>
 
 <script>
-/* Подземието на DOM-а — съдържание.
+/* Всички икони и символи на едно място.
+   Не влизат нито в превода, нито в съдържанието — те не са текст и не се променят
+   от език на език. Смяната на една икона се прави тук и важи за трите езика.
+
+   В разметката се слагат в <span aria-hidden="true">, защото значението им
+   винаги го носи текстът до тях. */
+
+window.ICONS = {
+  // навигация и действия
+  next: '→',
+  back: '←',
+  retry: '↻',
+  hint: '💡',
+  crack: '🕳️',
+
+  // врати и ключове
+  door: '🚪',
+  doorOpened: '🗝️',
+  key: '🔑',
+  locked: '🔒',
+  unlocked: '🔓',
+
+  // резултат
+  ok: '✅',
+  no: '❌',
+  yes: '✓',
+  nope: '✗',
+
+  // режими
+  solo: '💻',
+  projector: '🎥',
+
+  // босът
+  reader: '🔊',
+  block: '▮▮▮▮▮▮▮▮▮▮▮▮',
+
+  // крилата — ключът съвпада с id на крилото в content.<език>.js
+  wings: {
+    basics: '📜',
+    semantics: '🧭',
+    forms: '🔏',
+    aria: '🔮'
+  },
+
+  // ранговете накрая — ключът съвпада с този в i18n.js
+  ranks: {
+    rank100: '🏅',
+    rank80: '🥈',
+    rank55: '🥉',
+    rank0: '🧱'
+  },
+
+  // началната страница
+  game: '🏰'
+};
+
+</script>
+<script>
+/* Интерфейсът на трите езика. Само текст — иконите са в icons.js,
+   съдържанието на урока е в content.<език>.js.
+
+   Плейсхолдъри: {n}, {wing}, {title}… — заместват се от t('ключ', {n: 3}).
+   Добавяне на език: нов ключ тук + нов content.<език>.js + ред в LANGS. */
+
+window.LANGS = [
+  { code: 'bg', label: 'BG', name: 'Български' },
+  { code: 'en', label: 'EN', name: 'English' },
+  { code: 'fr', label: 'FR', name: 'Français' }
+];
+
+window.I18N = {
+
+/* ═══════════════════════════ БЪЛГАРСКИ ═══════════════════════════ */
+bg: {
+  'html.title': 'Подземието на DOM-а',
+  'html.desc': 'Интерактивен урок по HTML, семантика и ARIA.',
+  'brand.title': 'Подземието на DOM-а',
+  'brand.sub': 'Урок 2 · HTML, семантика и ARIA',
+
+  'lang.label': 'Език',
+  'lang.switchTo': 'Превключи на {name}',
+  'lang.changed': 'Езикът е сменен на български.',
+
+  'keys.ring': 'Събрани ключове',
+  'keys.count': '{n} от 4 ключа',
+  'mode.solo': 'Соло',
+  'mode.projector': 'Проектор',
+  'mode.switch': 'Смени режима. Сега: {mode}',
+  'mode.announce': 'Режим: {mode}',
+
+  'foot.nav': 'навигация',
+  'foot.answer': 'отговор',
+  'foot.forward': 'напред',
+  'foot.back': 'назад',
+  'foot.hint': 'подсказка',
+  'foot.hall': 'залата',
+  'foot.mode': 'режим',
+  'foot.restart': 'отначало',
+
+  'skip.link': 'Прескочи към съдържанието',
+
+  'title.eyebrow': 'Урок 2 · интерактивна презентация',
+  'title.h2': 'Слизаш в подземие, построено от лош HTML',
+  'title.lead': 'Четири крила, всяко заключено. Всяка врата иска отговор, всяко крило дава ключ. Четирите ключа отварят последната стая — и там екранът изгасва.',
+  'title.note': 'Нищо не се губи при грешка. Единственото, което се брои, е от кой опит си отворил вратата.',
+  'title.routePick': 'Избери маршрут',
+  'title.routeShort': 'Кратък · {n} врати',
+  'title.routeShortNote': 'за час от 45 минути',
+  'title.routeShortAria': 'Кратък маршрут: {n} врати, за час от 45 минути',
+  'title.routeFull': 'Пълен · {n} врати',
+  'title.routeFullNote': 'цялото съдържание, без бързане',
+  'title.routeFullAria': 'Пълен маршрут: {n} врати, цялото съдържание',
+  'title.resume': 'Продължи запазеното',
+
+  'hub.eyebrow': 'Централна зала',
+  'hub.h2': 'Валидаторът те чака',
+  'hub.lead0': 'Четири крила. Ти избираш откъде да започнеш — редът е твой.',
+  'hub.leadSome': 'Имаш {n} от 4 ключа. Последната врата още мълчи.',
+  'hub.leadAll': 'Четирите ключа са у теб. Последната врата се отваря.',
+  'hub.bossName': 'Последната стая — Четецът',
+  'hub.bossLocked': 'Иска четири ключа. Имаш {n}.',
+  'hub.bossOpen': 'Екранът ще изгасне. Влизаш ли?',
+  'hub.doors': '{done} / {all} врати',
+  'hub.secret': 'тайна стая',
+  'hub.announce': 'Централна зала. {n} от 4 ключа.',
+
+  'wing.room': '{wing} · стая {i} от {n}',
+  'wing.door': '{wing} · врата {i} от {n}',
+  'wing.doorLocked': 'Вратата е заключена',
+  'wing.doorReview': 'Вече отворена врата',
+  'wing.roomAnnounce': '{wing}, стая {i} от {n}. {title}',
+  'wing.doorAnnounce': 'Врата {i} от {n}. {type}.',
+
+  'btn.next': 'Напред',
+  'btn.back': 'Назад',
+  'btn.backToWing': 'Назад в крилото',
+  'btn.hall': 'Обратно в залата',
+  'btn.check': 'Опитай вратата',
+  'btn.hint': 'Подсказка',
+  'btn.retry': 'Опитай наново',
+  'btn.restart': 'Започни отначало',
+  'btn.crack': 'Забелязваш пукнатина в стената…',
+
+  'map.nav': 'Карта на крилото {wing}',
+  'map.room': 'Стая {i}: {title}',
+  'map.doorFirst': 'Врата {i}: отворена от първи опит',
+  'map.doorHint': 'Врата {i}: отворена с подсказка',
+  'map.doorWrong': 'Врата {i}: отворена след грешка',
+  'map.doorTodo': 'Врата {i}: още заключена',
+  'map.treasureTaken': 'Съкровищница в края на коридора: ключът е взет',
+  'map.treasureReady': 'Съкровищница в края на коридора: ключът те чака',
+  'map.treasureLocked': 'Съкровищницата в края на коридора се отваря, след като са отворени всички врати. Остават {n}.',
+
+  'type.choice': 'Избери отговор',
+  'type.sr': 'Какво чете екранният четец',
+  'type.fix': 'Поправи разметката',
+  'type.fill': 'Попълни атрибута',
+  'type.match': 'Свържи',
+  'type.order': 'Подреди',
+  'type.tab': 'Пътят на Tab',
+  'type.tree': 'Дървото на достъпността',
+
+  'w.options': 'Възможни отговори',
+  'w.lines': 'Редове от кода — избери сгрешения',
+  'w.order': 'Подреди с бутоните нагоре и надолу',
+  'w.tab': 'Кликай полетата в реда на клавиша Tab',
+  'w.tabClear': 'Изчисти реда',
+  'w.fill': 'Попълни липсващото',
+  'w.tray': 'Парчета — кликни едно, после кликни мястото му',
+  'w.slotEmpty': '— пусни тук —',
+  'w.moveUp': 'Премести „{item}“ нагоре',
+  'w.moveDown': 'Премести „{item}“ надолу',
+  'w.select': '— избери —',
+  'w.treeRole': 'Роля',
+  'w.treeName': 'Име',
+  'w.treeState': 'Състояние',
+
+  'v.ok': 'Вратата се отваря',
+  'v.no': 'Вратата не помръдва',
+  'v.review': 'Тази врата вече е зад гърба ти',
+  'v.gradeFirst': 'Отвори я от първи опит.',
+  'v.gradeHint': 'Отвори я с подсказка.',
+  'v.gradeWrong': 'Отвори я след грешка.',
+  'v.reviewShown': 'Верният отговор е показан по-горе.',
+  'v.reviewNote': 'Записаният резултат остава първият — повтарянето е за упражнение.',
+  'v.teacher': 'Бележка за водещия',
+  'v.needAnswer': 'Дай отговор, преди да опиташ вратата.',
+  'v.announceOk': 'Вярно. {explain}',
+  'v.announceHint': 'Не още. Ето подсказка: {hint}',
+  'v.announceNo': 'Грешно. Вратата се отваря така или иначе. {explain}',
+
+  'tr.eyebrow': 'Съкровищница · {wing}',
+  'tr.h2': 'Ключът е твой',
+  'tr.take': 'Взимаш <b>{artifact}</b>.',
+  'tr.left': 'Остават още {n}.',
+  'tr.last': 'Това беше четвъртият. Последната врата вече не е заключена.',
+  'tr.announce': 'Получаваш ключ: {artifact}. {n} от 4.',
+
+  'lock.eyebrow': 'Край на коридора · {wing}',
+  'lock.h2': 'Тук би трябвало да има ключ',
+  'lock.lead': 'Нишата в стената е празна. Ключът се появява чак когато коридорът е извървян докрай — а зад теб {rest}',
+  'lock.rest1': 'е останала една незатворена врата.',
+  'lock.restN': 'са останали {n} незатворени врати.',
+  'lock.toDoor': 'Към първата незатворена врата',
+  'lock.announce': 'Съкровищницата е празна. Остават {n} незатворени врати.',
+
+  'sec.eyebrow': 'Скрита стая · {wing}',
+  'sec.back': 'Обратно в коридора',
+  'sec.announce': 'Скрита стая. {title}',
+
+  'boss.eyebrow': 'Последната стая',
+  'boss.h2': 'Четецът',
+  'boss.begin': 'Влез в тъмното',
+  'boss.notYet': 'Не още',
+  'boss.stage': '{title} · етап {i} от {n}',
+  'boss.exit': 'Излез от подземието',
+  'boss.logStart': 'Екранът е тъмен. Движи се с Tab, задействай с Enter.',
+  'boss.found': 'Намери го. Но мина през всичко останало, за да стигнеш дотук.',
+  'boss.nothing': 'Нищо не се случва.',
+  'boss.why': 'Ето защо',
+  'boss.whatHappened': 'Какво се случи',
+  'boss.fix': 'Поправи страницата',
+  'boss.fast': 'Пет секунди',
+  'boss.fastLead': 'Същата задача. Същият човек. Разликата е в разметката.',
+  'boss.done': 'Готово. Отне пет секунди.',
+  'boss.nextStage': 'Следващ етап',
+  'boss.exitLight': 'Излез на светло',
+  'boss.announceFound': 'Намери целта.',
+  'boss.announceFast': 'Готово за пет секунди.',
+
+  'end.eyebrow': 'Излезе на светло',
+  'end.h2': 'Осем атрибута',
+  'end.rank100': 'Майстор архитект',
+  'end.rank80': 'Старши строител',
+  'end.rank55': 'Чирак',
+  'end.rank0': 'Зидар',
+  'end.tileDoors': 'отворени врати',
+  'end.tileFirst': 'от първи опит',
+  'end.tileHint': 'с подсказка',
+  'end.tileSecrets': 'тайни стаи',
+  'end.three': 'Трите въпроса, с които излизаш: <b>Какво е това?</b> (роля) · <b>Как се казва?</b> (име) · <b>В какво състояние е?</b> (състояние)',
+  'end.announce': 'Край. {rank}. {first} от {total} врати от първи опит.',
+
+  'confirm.restart': 'Да започнем ли отначало? Прогресът се изтрива.'
+},
+
+/* ═══════════════════════════ ENGLISH ═══════════════════════════ */
+en: {
+  'html.title': 'The DOM Dungeon',
+  'html.desc': 'An interactive lesson on HTML, semantics and ARIA.',
+  'brand.title': 'The DOM Dungeon',
+  'brand.sub': 'Lesson 2 · HTML, semantics and ARIA',
+
+  'lang.label': 'Language',
+  'lang.switchTo': 'Switch to {name}',
+  'lang.changed': 'Language changed to English.',
+
+  'keys.ring': 'Keys collected',
+  'keys.count': '{n} of 4 keys',
+  'mode.solo': 'Solo',
+  'mode.projector': 'Projector',
+  'mode.switch': 'Change mode. Currently: {mode}',
+  'mode.announce': 'Mode: {mode}',
+
+  'foot.nav': 'navigate',
+  'foot.answer': 'answer',
+  'foot.forward': 'forward',
+  'foot.back': 'back',
+  'foot.hint': 'hint',
+  'foot.hall': 'hall',
+  'foot.mode': 'mode',
+  'foot.restart': 'restart',
+
+  'skip.link': 'Skip to content',
+
+  'title.eyebrow': 'Lesson 2 · interactive presentation',
+  'title.h2': 'You descend into a dungeon built from bad HTML',
+  'title.lead': 'Four wings, each one locked. Every door wants an answer, every wing gives a key. The four keys open the last room — and there the screen goes dark.',
+  'title.note': 'Nothing is lost when you get one wrong. The only thing counted is which attempt opened the door.',
+  'title.routePick': 'Choose a route',
+  'title.routeShort': 'Short · {n} doors',
+  'title.routeShortNote': 'fits a 45-minute class',
+  'title.routeShortAria': 'Short route: {n} doors, fits a 45-minute class',
+  'title.routeFull': 'Full · {n} doors',
+  'title.routeFullNote': 'everything, at your own pace',
+  'title.routeFullAria': 'Full route: {n} doors, the whole lesson',
+  'title.resume': 'Continue where you left off',
+
+  'hub.eyebrow': 'Central hall',
+  'hub.h2': 'The Validator is waiting',
+  'hub.lead0': 'Four wings. You choose where to start — the order is yours.',
+  'hub.leadSome': 'You have {n} of 4 keys. The last door is still silent.',
+  'hub.leadAll': 'All four keys are yours. The last door opens.',
+  'hub.bossName': 'The last room — The Screen Reader',
+  'hub.bossLocked': 'Wants four keys. You have {n}.',
+  'hub.bossOpen': 'The screen will go dark. Going in?',
+  'hub.doors': '{done} / {all} doors',
+  'hub.secret': 'secret room',
+  'hub.announce': 'Central hall. {n} of 4 keys.',
+
+  'wing.room': '{wing} · room {i} of {n}',
+  'wing.door': '{wing} · door {i} of {n}',
+  'wing.doorLocked': 'The door is locked',
+  'wing.doorReview': 'A door you already opened',
+  'wing.roomAnnounce': '{wing}, room {i} of {n}. {title}',
+  'wing.doorAnnounce': 'Door {i} of {n}. {type}.',
+
+  'btn.next': 'Next',
+  'btn.back': 'Back',
+  'btn.backToWing': 'Back into the wing',
+  'btn.hall': 'Back to the hall',
+  'btn.check': 'Try the door',
+  'btn.hint': 'Hint',
+  'btn.retry': 'Try again',
+  'btn.restart': 'Start over',
+  'btn.crack': 'You notice a crack in the wall…',
+
+  'map.nav': 'Map of the {wing} wing',
+  'map.room': 'Room {i}: {title}',
+  'map.doorFirst': 'Door {i}: opened on the first try',
+  'map.doorHint': 'Door {i}: opened with a hint',
+  'map.doorWrong': 'Door {i}: opened after a wrong answer',
+  'map.doorTodo': 'Door {i}: still locked',
+  'map.treasureTaken': 'Treasure room at the end of the corridor: the key is taken',
+  'map.treasureReady': 'Treasure room at the end of the corridor: the key is waiting',
+  'map.treasureLocked': 'The treasure room at the end of the corridor opens once every door is open. {n} left.',
+
+  'type.choice': 'Choose an answer',
+  'type.sr': 'What the screen reader says',
+  'type.fix': 'Fix the markup',
+  'type.fill': 'Fill in the attribute',
+  'type.match': 'Match',
+  'type.order': 'Put in order',
+  'type.tab': 'The path of Tab',
+  'type.tree': 'The accessibility tree',
+
+  'w.options': 'Possible answers',
+  'w.lines': 'Lines of code — pick the wrong one',
+  'w.order': 'Reorder with the up and down buttons',
+  'w.tab': 'Click the fields in the order the Tab key visits them',
+  'w.tabClear': 'Clear the order',
+  'w.fill': 'Fill in what is missing',
+  'w.tray': 'Pieces — click one, then click where it goes',
+  'w.slotEmpty': '— drop here —',
+  'w.moveUp': 'Move “{item}” up',
+  'w.moveDown': 'Move “{item}” down',
+  'w.select': '— choose —',
+  'w.treeRole': 'Role',
+  'w.treeName': 'Name',
+  'w.treeState': 'State',
+
+  'v.ok': 'The door opens',
+  'v.no': 'The door does not budge',
+  'v.review': 'This door is already behind you',
+  'v.gradeFirst': 'You opened it on the first try.',
+  'v.gradeHint': 'You opened it with a hint.',
+  'v.gradeWrong': 'You opened it after a wrong answer.',
+  'v.reviewShown': 'The correct answer is shown above.',
+  'v.reviewNote': 'The recorded result stays the first one — repeating is for practice.',
+  'v.teacher': 'Note for the presenter',
+  'v.needAnswer': 'Give an answer before you try the door.',
+  'v.announceOk': 'Correct. {explain}',
+  'v.announceHint': 'Not yet. Here is a hint: {hint}',
+  'v.announceNo': 'Wrong. The door opens anyway. {explain}',
+
+  'tr.eyebrow': 'Treasure room · {wing}',
+  'tr.h2': 'The key is yours',
+  'tr.take': 'You take <b>{artifact}</b>.',
+  'tr.left': '{n} to go.',
+  'tr.last': 'That was the fourth. The last door is no longer locked.',
+  'tr.announce': 'You receive a key: {artifact}. {n} of 4.',
+
+  'lock.eyebrow': 'End of the corridor · {wing}',
+  'lock.h2': 'There should be a key here',
+  'lock.lead': 'The niche in the wall is empty. The key appears only once the corridor has been walked to the end — and behind you {rest}',
+  'lock.rest1': 'one door is still unopened.',
+  'lock.restN': '{n} doors are still unopened.',
+  'lock.toDoor': 'To the first unopened door',
+  'lock.announce': 'The treasure room is empty. {n} doors are still unopened.',
+
+  'sec.eyebrow': 'Secret room · {wing}',
+  'sec.back': 'Back into the corridor',
+  'sec.announce': 'Secret room. {title}',
+
+  'boss.eyebrow': 'The last room',
+  'boss.h2': 'The Screen Reader',
+  'boss.begin': 'Step into the dark',
+  'boss.notYet': 'Not yet',
+  'boss.stage': '{title} · stage {i} of {n}',
+  'boss.exit': 'Leave the dungeon',
+  'boss.logStart': 'The screen is dark. Move with Tab, activate with Enter.',
+  'boss.found': 'You found it. But you went through everything else to get here.',
+  'boss.nothing': 'Nothing happens.',
+  'boss.why': 'Here is why',
+  'boss.whatHappened': 'What just happened',
+  'boss.fix': 'Fix the page',
+  'boss.fast': 'Five seconds',
+  'boss.fastLead': 'Same task. Same person. The difference is in the markup.',
+  'boss.done': 'Done. That took five seconds.',
+  'boss.nextStage': 'Next stage',
+  'boss.exitLight': 'Step back into the light',
+  'boss.announceFound': 'Target found.',
+  'boss.announceFast': 'Done in five seconds.',
+
+  'end.eyebrow': 'You made it back into the light',
+  'end.h2': 'Eight attributes',
+  'end.rank100': 'Master architect',
+  'end.rank80': 'Senior builder',
+  'end.rank55': 'Apprentice',
+  'end.rank0': 'Bricklayer',
+  'end.tileDoors': 'doors opened',
+  'end.tileFirst': 'on the first try',
+  'end.tileHint': 'with a hint',
+  'end.tileSecrets': 'secret rooms',
+  'end.three': 'The three questions you leave with: <b>What is this?</b> (role) · <b>What is it called?</b> (name) · <b>What state is it in?</b> (state)',
+  'end.announce': 'The end. {rank}. {first} of {total} doors on the first try.',
+
+  'confirm.restart': 'Start over? Your progress will be erased.'
+},
+
+/* ═══════════════════════════ FRANÇAIS ═══════════════════════════ */
+fr: {
+  'html.title': 'Le Donjon du DOM',
+  'html.desc': 'Une leçon interactive sur le HTML, la sémantique et ARIA.',
+  'brand.title': 'Le Donjon du DOM',
+  'brand.sub': 'Leçon 2 · HTML, sémantique et ARIA',
+
+  'lang.label': 'Langue',
+  'lang.switchTo': 'Passer en {name}',
+  'lang.changed': 'Langue changée en français.',
+
+  'keys.ring': 'Clés récoltées',
+  'keys.count': '{n} clés sur 4',
+  'mode.solo': 'Solo',
+  'mode.projector': 'Projecteur',
+  'mode.switch': 'Changer de mode. Actuellement : {mode}',
+  'mode.announce': 'Mode : {mode}',
+
+  'foot.nav': 'naviguer',
+  'foot.answer': 'répondre',
+  'foot.forward': 'suivant',
+  'foot.back': 'retour',
+  'foot.hint': 'indice',
+  'foot.hall': 'la salle',
+  'foot.mode': 'mode',
+  'foot.restart': 'recommencer',
+
+  'skip.link': 'Aller au contenu',
+
+  'title.eyebrow': 'Leçon 2 · présentation interactive',
+  'title.h2': 'Tu descends dans un donjon bâti en mauvais HTML',
+  'title.lead': 'Quatre ailes, toutes verrouillées. Chaque porte réclame une réponse, chaque aile donne une clé. Les quatre clés ouvrent la dernière salle — et là, l’écran s’éteint.',
+  'title.note': 'Rien ne se perd quand tu te trompes. La seule chose comptée, c’est à quel essai la porte s’est ouverte.',
+  'title.routePick': 'Choisis un parcours',
+  'title.routeShort': 'Court · {n} portes',
+  'title.routeShortNote': 'tient dans un cours de 45 minutes',
+  'title.routeShortAria': 'Parcours court : {n} portes, tient dans un cours de 45 minutes',
+  'title.routeFull': 'Complet · {n} portes',
+  'title.routeFullNote': 'tout le contenu, sans se presser',
+  'title.routeFullAria': 'Parcours complet : {n} portes, tout le contenu',
+  'title.resume': 'Reprendre la partie sauvegardée',
+
+  'hub.eyebrow': 'Salle centrale',
+  'hub.h2': 'Le Validateur t’attend',
+  'hub.lead0': 'Quatre ailes. C’est toi qui choisis par où commencer — l’ordre t’appartient.',
+  'hub.leadSome': 'Tu as {n} clés sur 4. La dernière porte se tait encore.',
+  'hub.leadAll': 'Les quatre clés sont à toi. La dernière porte s’ouvre.',
+  'hub.bossName': 'La dernière salle — Le Lecteur d’écran',
+  'hub.bossLocked': 'Réclame quatre clés. Tu en as {n}.',
+  'hub.bossOpen': 'L’écran va s’éteindre. Tu entres ?',
+  'hub.doors': '{done} / {all} portes',
+  'hub.secret': 'salle secrète',
+  'hub.announce': 'Salle centrale. {n} clés sur 4.',
+
+  'wing.room': '{wing} · salle {i} sur {n}',
+  'wing.door': '{wing} · porte {i} sur {n}',
+  'wing.doorLocked': 'La porte est verrouillée',
+  'wing.doorReview': 'Une porte déjà ouverte',
+  'wing.roomAnnounce': '{wing}, salle {i} sur {n}. {title}',
+  'wing.doorAnnounce': 'Porte {i} sur {n}. {type}.',
+
+  'btn.next': 'Suivant',
+  'btn.back': 'Retour',
+  'btn.backToWing': 'Retour dans l’aile',
+  'btn.hall': 'Retour à la salle',
+  'btn.check': 'Tenter la porte',
+  'btn.hint': 'Indice',
+  'btn.retry': 'Réessayer',
+  'btn.restart': 'Tout recommencer',
+  'btn.crack': 'Tu remarques une fissure dans le mur…',
+
+  'map.nav': 'Carte de l’aile {wing}',
+  'map.room': 'Salle {i} : {title}',
+  'map.doorFirst': 'Porte {i} : ouverte du premier coup',
+  'map.doorHint': 'Porte {i} : ouverte avec un indice',
+  'map.doorWrong': 'Porte {i} : ouverte après une erreur',
+  'map.doorTodo': 'Porte {i} : encore verrouillée',
+  'map.treasureTaken': 'Salle au trésor au bout du couloir : la clé est prise',
+  'map.treasureReady': 'Salle au trésor au bout du couloir : la clé t’attend',
+  'map.treasureLocked': 'La salle au trésor au bout du couloir s’ouvre une fois toutes les portes ouvertes. Il en reste {n}.',
+
+  'type.choice': 'Choisis une réponse',
+  'type.sr': 'Ce que lit le lecteur d’écran',
+  'type.fix': 'Corrige le balisage',
+  'type.fill': 'Complète l’attribut',
+  'type.match': 'Associe',
+  'type.order': 'Mets dans l’ordre',
+  'type.tab': 'Le chemin de Tab',
+  'type.tree': 'L’arbre d’accessibilité',
+
+  'w.options': 'Réponses possibles',
+  'w.lines': 'Lignes de code — choisis celle qui cloche',
+  'w.order': 'Réordonne avec les boutons haut et bas',
+  'w.tab': 'Clique les champs dans l’ordre où la touche Tab les visite',
+  'w.tabClear': 'Effacer l’ordre',
+  'w.fill': 'Complète ce qui manque',
+  'w.tray': 'Pièces — clique sur une, puis clique sa place',
+  'w.slotEmpty': '— dépose ici —',
+  'w.moveUp': 'Monter « {item} »',
+  'w.moveDown': 'Descendre « {item} »',
+  'w.select': '— choisir —',
+  'w.treeRole': 'Rôle',
+  'w.treeName': 'Nom',
+  'w.treeState': 'État',
+
+  'v.ok': 'La porte s’ouvre',
+  'v.no': 'La porte ne bouge pas',
+  'v.review': 'Cette porte est déjà derrière toi',
+  'v.gradeFirst': 'Tu l’as ouverte du premier coup.',
+  'v.gradeHint': 'Tu l’as ouverte avec un indice.',
+  'v.gradeWrong': 'Tu l’as ouverte après une erreur.',
+  'v.reviewShown': 'La bonne réponse est affichée ci-dessus.',
+  'v.reviewNote': 'Le résultat enregistré reste le premier — refaire, c’est pour s’entraîner.',
+  'v.teacher': 'Note pour l’intervenant',
+  'v.needAnswer': 'Donne une réponse avant de tenter la porte.',
+  'v.announceOk': 'Correct. {explain}',
+  'v.announceHint': 'Pas encore. Voici un indice : {hint}',
+  'v.announceNo': 'Faux. La porte s’ouvre quand même. {explain}',
+
+  'tr.eyebrow': 'Salle au trésor · {wing}',
+  'tr.h2': 'La clé est à toi',
+  'tr.take': 'Tu prends <b>{artifact}</b>.',
+  'tr.left': 'Il en reste {n}.',
+  'tr.last': 'C’était la quatrième. La dernière porte n’est plus verrouillée.',
+  'tr.announce': 'Tu reçois une clé : {artifact}. {n} sur 4.',
+
+  'lock.eyebrow': 'Bout du couloir · {wing}',
+  'lock.h2': 'Il devrait y avoir une clé ici',
+  'lock.lead': 'La niche dans le mur est vide. La clé n’apparaît qu’une fois le couloir parcouru jusqu’au bout — et derrière toi {rest}',
+  'lock.rest1': 'il reste une porte non ouverte.',
+  'lock.restN': 'il reste {n} portes non ouvertes.',
+  'lock.toDoor': 'Vers la première porte non ouverte',
+  'lock.announce': 'La salle au trésor est vide. Il reste {n} portes non ouvertes.',
+
+  'sec.eyebrow': 'Salle secrète · {wing}',
+  'sec.back': 'Retour dans le couloir',
+  'sec.announce': 'Salle secrète. {title}',
+
+  'boss.eyebrow': 'La dernière salle',
+  'boss.h2': 'Le Lecteur d’écran',
+  'boss.begin': 'Entre dans le noir',
+  'boss.notYet': 'Pas encore',
+  'boss.stage': '{title} · étape {i} sur {n}',
+  'boss.exit': 'Quitter le donjon',
+  'boss.logStart': 'L’écran est noir. Déplace-toi avec Tab, active avec Entrée.',
+  'boss.found': 'Tu l’as trouvé. Mais tu as traversé tout le reste pour y arriver.',
+  'boss.nothing': 'Rien ne se passe.',
+  'boss.why': 'Voilà pourquoi',
+  'boss.whatHappened': 'Ce qui vient de se passer',
+  'boss.fix': 'Répare la page',
+  'boss.fast': 'Cinq secondes',
+  'boss.fastLead': 'Même tâche. Même personne. La différence est dans le balisage.',
+  'boss.done': 'Voilà. Cela a pris cinq secondes.',
+  'boss.nextStage': 'Étape suivante',
+  'boss.exitLight': 'Ressortir à la lumière',
+  'boss.announceFound': 'Cible trouvée.',
+  'boss.announceFast': 'Fait en cinq secondes.',
+
+  'end.eyebrow': 'Te voilà ressorti à la lumière',
+  'end.h2': 'Huit attributs',
+  'end.rank100': 'Maître architecte',
+  'end.rank80': 'Bâtisseur confirmé',
+  'end.rank55': 'Apprenti',
+  'end.rank0': 'Maçon',
+  'end.tileDoors': 'portes ouvertes',
+  'end.tileFirst': 'du premier coup',
+  'end.tileHint': 'avec un indice',
+  'end.tileSecrets': 'salles secrètes',
+  'end.three': 'Les trois questions que tu emportes : <b>Qu’est-ce que c’est ?</b> (rôle) · <b>Comment ça s’appelle ?</b> (nom) · <b>Dans quel état est-ce ?</b> (état)',
+  'end.announce': 'Fin. {rank}. {first} portes sur {total} du premier coup.',
+
+  'confirm.restart': 'Tout recommencer ? La progression sera effacée.'
+}
+
+};
+
+</script>
+<script>
+/* Съдържанието на урока на БЪЛГАРСКИ.
    Всичко тук е чисти данни. Добавянето на въпрос е един обект в steps.
+   Иконите са в icons.js, интерфейсът — в i18n.js.
    Типове врати: choice | sr | fix | fill | match | order | tab | tree
    core: true  →  въпросът влиза и в краткия маршрут (за час от 45 минути). */
 
-window.GAME = {
+window.CONTENT = window.CONTENT || {};
+window.CONTENT.bg = {
 
 wings: [
 /* ═══════════════════════════ КРИЛО I ═══════════════════════════ */
 {
   id: 'basics',
   name: 'Основи',
-  icon: '📜',
   artifact: 'Свитъкът на структурата',
   blurb: 'Какво е разметка, от какво е направен документът, как се пишат елементите.',
   secret: {
@@ -605,7 +1250,6 @@ wings: [
 {
   id:'semantics',
   name:'Семантика',
-  icon:'🧭',
   artifact:'Компасът на смисъла',
   blurb:'Landmarks, заглавия, списъци, линкове срещу бутони, alt текст.',
   secret:{
@@ -721,7 +1365,6 @@ wings: [
 {
   id:'forms',
   name:'Форми',
-  icon:'🔏',
   artifact:'Печатът на съгласието',
   blurb:'Етикети, типове полета, групиране, грешки — мястото, където достъпността е най-скъпа.',
   secret:{
@@ -831,7 +1474,6 @@ wings: [
 {
   id:'aria',
   name:'ARIA',
-  icon:'🔮',
   artifact:'Призмата на ролите',
   blurb:'Дървото на достъпността, роли, състояния, live regions и петте правила.',
   secret:{
@@ -1074,31 +1716,1272 @@ boss: {
 
 </script>
 <script>
+/* Lesson content in ENGLISH.
+   Pure data. Adding a question is one object in steps.
+   Icons live in icons.js, interface strings in i18n.js.
+   Door kinds: choice | sr | fix | fill | match | order | tab | tree
+   core: true  →  the question is also part of the short route (a 45-minute class).
+
+   Door ids must match across languages — progress is shared. */
+
+window.CONTENT = window.CONTENT || {};
+window.CONTENT.en = {
+
+wings: [
+/* ═══════════════════════════ WING I ═══════════════════════════ */
+{
+  id: 'basics',
+  name: 'Basics',
+  artifact: 'The Scroll of Structure',
+  blurb: 'What markup is, what a document is made of, how elements are written.',
+  secret: {
+    title: 'The tags the web gave birth to and tried to forget',
+    text: 'Netscape shipped <blink> — text that flashes. Legend says the idea was born in a bar in one evening. Microsoft answered with <marquee> — text that crawls across the screen. Both tags are dead today, but they left a mark: flashing content is a proven danger for people with photosensitive epilepsy, and WCAG now has an explicit rule against it. A tag from 1995 is the reason a standard exists today.',
+    code: '<blink>BUY NOW</blink>\n<marquee>Welcome to my homepage!</marquee>'
+  },
+  steps: [
+    { t:'room', title:'The language of markup', lead:'HTML = HyperText Markup Language. Three words, three ideas — and not one of them is “programming”.',
+      code:'This is <em>important</em>, and this — <strong>very important</strong>.',
+      points:[
+        'HyperText — text that points at other text. The link is the whole revolution.',
+        'Markup — you label every piece of content with what it is.',
+        'Language — it has grammar and a standard, but no variables, conditionals or loops.',
+        'The idea is older than the web: editors marked up manuscripts with a blue pencil.'
+      ]},
+
+    { t:'door', id:'I.1', core:true, kind:'choice',
+      q:'What does “markup” mean in HTML?',
+      options:['That the language marks your mistakes','That you <b>label</b> pieces of content with tags','That the code is compiled before it runs','That the text gets coloured automatically'],
+      correct:1,
+      hint:'Think where the word comes from — the print shop, not programming.',
+      explain:'Markup comes from the editorial practice of “marking up” a manuscript for print. You are not describing logic — you are describing what each piece of text is.',
+      teach:'Ask the class: who else “marks up” things so a machine can understand them? (barcodes, sheet music)'},
+
+    { t:'door', id:'I.2', kind:'choice',
+      q:'Which of these is <b>not</b> true about HTML?',
+      options:['It is not a programming language','It descends from SGML','It has versions up to HTML 7','It forgives syntax errors'],
+      correct:2,
+      hint:'When did you last see a version number next to the word HTML?',
+      explain:'HTML today is a Living Standard — a living document with no version numbers. There will be no “HTML 6”. That is why “is this supported?” is a question for caniuse.com, not for a version number.',
+      teach:'Remember Lesson 1: TCP/IP works the same way — the standard lives, it is not reissued.'},
+
+    { t:'room', title:'Anatomy of a document', lead:'Every line in <head> does a concrete job. Remove it and something breaks.',
+      code:'<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <title>The title in the tab</title>\n  </head>\n  <body>\n    <h1>The visible heading</h1>\n  </body>\n</html>',
+      points:[
+        '<head> — metadata. Invisible to the eye, required by the machine.',
+        '<body> — everything that is seen.',
+        'Without charset, non-Latin text turns into mojibake.',
+        'Without lang the screen reader reads the text with the wrong accent entirely.'
+      ]},
+
+    { t:'door', id:'I.3', core:true, kind:'fill',
+      q:'One attribute decides which voice the screen reader uses. Fill it in.',
+      before:'<html ', after:'="en">', accept:['lang'],
+      hint:'Four letters. It answers “what language is this document in?”',
+      explain:'lang="en" tells the screen reader which speech synthesiser to use. A missing lang is among the most common accessibility failures on the whole web — one attribute, once, skipped by millions of sites.',
+      teach:'Open any site with Inspect and check whether it has lang. Usually it does not.'},
+
+    { t:'door', id:'I.4', core:true, kind:'choice',
+      q:'What happens if you remove <b>&lt;!DOCTYPE html&gt;</b>?',
+      options:['The page does not load at all','The browser falls into quirks mode','CSS stops working','Absolutely nothing'],
+      correct:1,
+      hint:'The browser has to decide which rules to render by — today’s, or the ones from 1998.',
+      explain:'The doctype describes nothing any more — it is a switch between standards mode and quirks mode. In quirks mode the browser deliberately emulates old bugs (a different box model) and your layout breaks. In HTML 4 the doctype was a long URL; HTML5 shrank it to the shortest string that still does the job.',
+      teach:'Show the old HTML 4.01 doctype on screen — the reaction is guaranteed.'},
+
+    { t:'room', title:'Element, tag, attribute', lead:'Three words that get mixed up constantly.',
+      code:'        opening tag     content     closing tag\n             ↓             ↓           ↓\n        <a href="/home" class="btn">Home</a>\n         ↑     ↑\n       name  attribute\n\n        └──────────── element ────────────┘',
+      points:[
+        'Tag — what you type: <p>',
+        'Element — opening tag + content + closing tag',
+        'Attribute — extra information, only in the opening tag',
+        'Void elements have no content and no closing tag: img, br, hr, input, meta, link'
+      ]},
+
+    { t:'door', id:'I.5', core:true, kind:'fix',
+      q:'Which line is wrong?',
+      lines:['<section>','  <p>This is <strong>text</p></strong>','  <p>And this one is fine.</p>','</section>'],
+      correct:1,
+      hint:'Nesting dolls do not cross.',
+      explain:'Elements nest inside one another, they never cross. The correct form is <p>This is <strong>text</strong></p>. The browser will fix it for you — that is exactly what makes HTML “forgiving” — but what it decides to fix is not your decision.',
+      teach:'Show in Inspect how the browser rearranged the DOM. They see the gap between what they wrote and what came out.'},
+
+    { t:'door', id:'I.6', kind:'choice',
+      q:'Which of these is a <b>void</b> element?',
+      options:['&lt;p&gt;','&lt;div&gt;','&lt;img&gt;','&lt;span&gt;'],
+      correct:2,
+      hint:'Which one cannot have anything inside it?',
+      explain:'<img> has no content and no closing tag. The same goes for br, hr, input, meta and link.',
+      teach:''},
+
+    { t:'door', id:'I.7', kind:'match',
+      q:'Match each term with its definition.',
+      pairs:[['tag','what you type: <p>'],['element','opening + content + closing'],['attribute','name="value" in the opening tag'],['void element','no closing tag: <img>']],
+      hint:'A tag is part of an element, not the element itself.',
+      explain:'People say “tag” for everything. The distinction matters exactly when you are reading the standard or an error message.',
+      teach:''},
+
+    { t:'room', title:'Looks versus meaning', lead:'Two pairs of tags look identical and mean different things. This is where semantics begins.',
+      code:'<b>bold</b>            → looks only\n<strong>important</strong>  → importance the machine understands\n\n<i>italic</i>          → looks only\n<em>emphasis</em>      → stress the reader can pronounce',
+      points:[
+        '<b> and <i> are purely visual — valid, but semantically empty.',
+        '<strong> and <em> carry meaning and reach the accessibility tree.',
+        'Identical on screen, different to the machine. That is semantics in one sentence.'
+      ]},
+
+    { t:'door', id:'I.8', kind:'choice',
+      q:'What is the difference between <b>&lt;b&gt;</b> and <b>&lt;strong&gt;</b>?',
+      options:['The colour of the text','No difference, they are synonyms','&lt;strong&gt; carries meaning, &lt;b&gt; is only appearance','&lt;b&gt; is deprecated and invalid'],
+      correct:2,
+      hint:'Both make text bold. We are asking what the machine knows afterwards.',
+      explain:'<b> is perfectly valid today — it just says nothing beyond “make it bold”. <strong> says “this is important”, and that reaches the screen reader, which can change its intonation.',
+      teach:'Ask: if we turn off the CSS, which of the two still means something?'}
+  ]
+},
+
+/* ═══════════════════════════ WING II ═══════════════════════════ */
+{
+  id:'semantics',
+  name:'Semantics',
+  artifact:'The Compass of Meaning',
+  blurb:'Landmarks, headings, lists, links versus buttons, alt text.',
+  secret:{
+    title:'spacer.gif — the age of tables',
+    text:'From 1996 to 2005 the entire web was built with layout tables and invisible 1×1 pixel GIFs stretched to whatever gap was needed. A whole generation of developers built websites with a spreadsheet tool. That is exactly why role="presentation" exists — there had to be a way to tell the screen reader “this table is not data, ignore it”.',
+    code:'<table border="0" cellpadding="0">\n  <tr>\n    <td><img src="spacer.gif" width="1" height="20"></td>\n    <td>Content</td>\n  </tr>\n</table>'
+  },
+  steps:[
+    { t:'room', title:'Semantics = choosing the tag by meaning', lead:'The two blocks can look identical on screen, pixel for pixel. The difference is for everyone who is not looking at the screen.',
+      code:'<!-- div soup -->\n<div class="header">\n  <div class="nav">\n    <div class="item" onclick="go(\'/\')">Home</div>\n  </div>\n</div>\n\n<!-- the same thing, semantically -->\n<header>\n  <nav>\n    <a href="/">Home</a>\n  </nav>\n</header>',
+      points:[
+        'The semantic version is shorter and works with a keyboard without a single line of JavaScript.',
+        '<div> and <span> are semantically empty — they are the last choice, not the first.',
+        'Your markup is read by screen readers, Google, reader mode, bots, and by your colleague six months from now.'
+      ]},
+
+    { t:'door', id:'II.1', core:true, kind:'choice',
+      q:'Which element may have only <b>one visible</b> instance per page?',
+      options:['&lt;nav&gt;','&lt;main&gt;','&lt;section&gt;','&lt;article&gt;'],
+      correct:1,
+      hint:'Which of them cannot be two things at once by definition?',
+      explain:'<main> marks the main content and is the target of the skip link. There is no way to have two main contents. The funny part is that <main> was added to the standard last — in 2013 — because until then everyone used <div id="content">.',
+      teach:''},
+
+    { t:'door', id:'II.2', core:true, kind:'match',
+      q:'Match each element with the landmark role it gets.',
+      pairs:[['<header>','banner'],['<nav>','navigation'],['<aside>','complementary'],['<footer>','contentinfo']],
+      hint:'The role names describe the region, not the tag.',
+      explain:'Screen readers have a dedicated key for jumping between landmarks. The user skips the menu and reaches the content in one keystroke — instead of going through 40 links.',
+      teach:'Show the Landmarks panel in the Accessibility Inspector on somebody’s site.'},
+
+    { t:'room', title:'The map of the page', lead:'HTML5 gives you elements that describe the regions. The screen reader uses them as a map.',
+      code:'┌────────────────────────────────────────┐\n│ <header>          (banner)             │\n│   <nav>           (navigation)         │\n├───────────────────────┬────────────────┤\n│ <main>    (main)      │ <aside>        │\n│   <article>           │ (complementary)│\n│     <h1> <p> ...      │                │\n├───────────────────────┴────────────────┤\n│ <footer>          (contentinfo)        │\n└────────────────────────────────────────┘',
+      points:[
+        '<article> — if you cut it out and put it elsewhere, it still makes sense.',
+        '<section> — part of something bigger, wants a heading.',
+        '<div> — only when you need a hook for CSS.',
+        '<header> and <footer> are landmarks only when they sit directly in <body>.'
+      ]},
+
+    { t:'door', id:'II.3', core:true, kind:'fix',
+      q:'Which line is the biggest accessibility problem?',
+      lines:['<header>','  <nav>','    <div class="item" onclick="go(\'/\')">Home</div>','  </nav>','</header>'],
+      correct:2,
+      hint:'Try reaching that element with the Tab key alone.',
+      explain:'A <div> with onclick is not focusable, has no role and does not respond to Enter. A single <a href="/">Home</a> gives you all of that for free — plus right click → “Open in new tab”.',
+      teach:'Demonstrate live: take your hand off the mouse and try to press that “button”.'},
+
+    { t:'room', title:'Headings are navigation', lead:'Headings are not font sizes. They are the table of contents of the document.',
+      code:'<h1>Web technologies course</h1>\n  <h2>Lesson 2 — HTML and ARIA</h2>\n    <h3>Semantics</h3>\n    <h3>Forms</h3>\n  <h2>Lesson 3 — CSS</h2>',
+      points:[
+        'One <h1> per page.',
+        'Do not skip levels: you never go from h2 straight to h4.',
+        'Need a smaller font? That is CSS’s job, not <h4>’s.',
+        'In WebAIM surveys, headings are the number one way of finding your way around a long page.'
+      ]},
+
+    { t:'door', id:'II.4', kind:'choice',
+      q:'Why should you not jump from &lt;h2&gt; straight to &lt;h4&gt;?',
+      options:['The browser throws an error','It breaks the structure the screen reader navigates by','CSS stops applying','Google drops the site from the index'],
+      correct:1,
+      hint:'Think of a book’s table of contents with a whole level missing.',
+      explain:'A skipped level says “there is a sub-section here, but under what?” A user navigating with the H key loses the hierarchy. Nothing crashes — the map just becomes wrong.',
+      teach:''},
+
+    { t:'door', id:'II.5', core:true, kind:'sr',
+      q:'What will the screen reader say?',
+      code:'<img src="IMG_4821.jpg">',
+      options:['“image” and nothing more','The file name: “I M G 4 8 2 1 dot j p g”','Nothing — it skips it','“photo”'],
+      correct:1,
+      hint:'A missing alt does not mean silence.',
+      explain:'When alt is missing entirely, the screen reader tries to say something useful and reads the file name. That is why an empty alt="" matters: it explicitly says “skip me, I am decoration”.',
+      teach:'Ask the class how they would name a file if they knew someone would read it aloud.'},
+
+    { t:'door', id:'II.6', kind:'choice',
+      q:'When do you use <b>alt=""</b> (empty, but present)?',
+      options:['Never — that is a mistake','When you cannot think of anything to write','When the image is pure decoration','When the image is the logo'],
+      correct:2,
+      hint:'Does it help to hear a description of a swirl?',
+      explain:'A decorative image carries no information — an empty alt hides it from the reader. A logo, however, is usually inside a link to the homepage, and then alt describes the action: alt="Home".',
+      teach:''},
+
+    { t:'door', id:'II.7', core:true, kind:'choice',
+      q:'“Open a modal dialog” — link or button?',
+      options:['A link, because you click it','A button','It makes no difference','A &lt;div&gt; with onclick'],
+      correct:1,
+      hint:'Does the address in the browser change?',
+      explain:'The rule is simple: if the address changes — link. If it does not — button. A link goes somewhere, a button does something. A button also responds to both Enter and Space, while a link responds only to Enter.',
+      teach:'Ask: does right click → “Open in new tab” make any sense on this?'},
+
+    { t:'door', id:'II.8', kind:'sr',
+      q:'Screen readers have a mode that lists every link on the page. What does the user see here?',
+      code:'<a href="/shipping">click here</a>\n<a href="/returns">click here</a>\n<a href="/contact">click here</a>',
+      options:['The three addresses','A list of three identical “click here” rows','The page titles','Nothing'],
+      correct:1,
+      hint:'That mode shows only the link text, lifted out of the sentence around it.',
+      explain:'Link text has to make sense on its own, out of context. “Click here”, “more” and “read more” are useless in such a list.',
+      teach:''},
+
+    { t:'door', id:'II.9', kind:'tree',
+      q:'Fill in what the machine knows about this element.',
+      code:'<a href="/profile">My profile</a>',
+      role:{options:['link','button','heading','text'],correct:'link'},
+      name:{options:['(none)','/profile','My profile','profile'],correct:'My profile'},
+      state:{options:['(none)','checked','expanded','disabled'],correct:'(none)'},
+      hint:'The name comes from the text inside the element, not from href.',
+      explain:'Role: link. Name: the text content “My profile”. State: none — a link has no state. That is exactly why link text matters so much: it is the name.',
+      teach:''}
+  ]
+},
+
+/* ═══════════════════════════ WING III ═══════════════════════════ */
+{
+  id:'forms',
+  name:'Forms',
+  artifact:'The Seal of Consent',
+  blurb:'Labels, field types, grouping, errors — where accessibility costs the most.',
+  secret:{
+    title:'Why a label makes the checkbox bigger',
+    text:'Clicking a <label> focuses and toggles the field it is tied to. That turns a 13×13 pixel checkbox into a whole sentence you can click. A free UX bonus from one correct attribute — and the only reason not to do it is not knowing. On a phone, the difference between a 13px and a 300px target is the difference between a form that works and one that annoys.',
+    code:'<label for="terms">\n  <input type="checkbox" id="terms">\n  I accept the terms and conditions\n</label>'
+  },
+  steps:[
+    { t:'room', title:'The label is not optional', lead:'A field without a label is a box with no writing on it. The reader says “text field” and that is all.',
+      code:'<!-- for points at id -->\n<label for="email">Email</label>\n<input type="email" id="email" name="email">\n\n<!-- or wrapping -->\n<label>\n  Email\n  <input type="email" name="email">\n</label>\n\n<!-- placeholder is NOT a label -->\n<input type="email" placeholder="Email">',
+      points:[
+        'The placeholder disappears exactly when you start typing.',
+        'Its contrast is deliberately low — often below the readability requirement.',
+        'You cannot click it to focus the field.',
+        'Some readers do not announce it at all.'
+      ]},
+
+    { t:'door', id:'III.1', core:true, kind:'choice',
+      q:'Which is <b>not</b> a reason a placeholder cannot replace &lt;label&gt;?',
+      options:['It disappears while typing','It has low contrast','It makes the field slower','It is not clickable'],
+      correct:2,
+      hint:'Three of these are real problems. The fourth simply does not happen.',
+      explain:'Performance has nothing to do with it. The problems are about comprehension: vanishing text, low contrast, a missing click target and inconsistent announcement.',
+      teach:''},
+
+    { t:'door', id:'III.2', core:true, kind:'fill',
+      q:'Tie the label to the field. Which attribute is missing?',
+      before:'<label ', after:'="email">Email</label>', accept:['for'],
+      hint:'Three letters. In JSX it is written htmlFor, if that helps.',
+      explain:'for points at the field’s id. From then on, clicking the text focuses the field, and the screen reader knows what the field is called.',
+      teach:''},
+
+    { t:'room', title:'Types do the work for you', lead:'One attribute saves you validation, a keyboard and a widget.',
+      code:'<input type="email">   validation + @ on the keyboard\n<input type="tel">     numeric keypad on a phone\n<input type="date">    built-in date picker\n<input type="number">  steppers, digits only\n<input type="file" accept="image/*">',
+      points:[
+        'A native type brings behaviour you would otherwise hand-write and get wrong.',
+        'autocomplete="email" makes the browser fill it in — huge for people with motor impairments.',
+        'required gives you validation without a single line of JavaScript.'
+      ]},
+
+    { t:'door', id:'III.3', core:true, kind:'choice',
+      q:'What is the default <b>type</b> of a &lt;button&gt; inside a &lt;form&gt;?',
+      options:['button','submit','reset','none — you must state it'],
+      correct:1,
+      hint:'The classic bug: you click “Show password” and the page reloads.',
+      explain:'Every <button> in a form is a submit button until you say otherwise. For a button that does something else, write type="button" explicitly.',
+      teach:'This is the bug everyone has written at least once. Ask who has been caught by it.'},
+
+    { t:'door', id:'III.4', kind:'choice',
+      q:'The screen reader says: “Courier, radio button, 1 of 2.” What is missing?',
+      code:'<label><input type="radio" name="delivery"> Courier</label>\n<label><input type="radio" name="delivery"> To the office</label>',
+      options:['&lt;fieldset&gt; and &lt;legend&gt;','aria-label on each field','&lt;form&gt; around everything','value attributes'],
+      correct:0,
+      hint:'The user hears the options. But not the question.',
+      explain:'<fieldset> groups them and <legend> supplies the question: “Delivery method”. Without it you hear the answers without knowing what they answer.',
+      teach:''},
+
+    { t:'room', title:'Hints and errors', lead:'An error has to be tied to the field, not merely sitting next to it.',
+      code:'<label for="pass">Password</label>\n<input type="password" id="pass"\n       aria-describedby="hint err"\n       aria-invalid="true" required>\n<p id="hint">At least 8 characters.</p>\n<p id="err" role="alert">The password is too short.</p>',
+      points:[
+        'aria-describedby attaches extra text to the field.',
+        'aria-invalid="true" says the field is in an error state.',
+        'role="alert" announces the message the moment it appears.',
+        'A red border on its own is not information.'
+      ]},
+
+    { t:'door', id:'III.5', kind:'match',
+      q:'Match the attribute with what it does.',
+      pairs:[['aria-describedby','attaches extra text'],['aria-invalid','the field is in error'],['required','mandatory field'],['autocomplete','the browser fills it in for you']],
+      hint:'One of them has nothing to do with ARIA and has worked for years.',
+      explain:'The first two are ARIA — they only announce. The other two are native and actually change what the browser does.',
+      teach:''},
+
+    { t:'door', id:'III.6', kind:'choice',
+      q:'Why is &lt;input type="tel"&gt; better than type="text" for a phone number?',
+      options:['It validates the number','The phone shows a numeric keypad','It formats the number automatically','There is no difference'],
+      correct:1,
+      hint:'Think about what someone filling the form on a phone sees.',
+      explain:'type="tel" does not validate (numbers differ too much worldwide), but it brings up the numeric keypad. One attribute saves the user two taps on every field.',
+      teach:''},
+
+    { t:'door', id:'III.7', core:true, kind:'tab',
+      q:'Click the fields in the order the Tab key will visit them.',
+      fields:[
+        {label:'Search', attr:''},
+        {label:'Name', attr:''},
+        {label:'Email', attr:'tabindex="1"'},
+        {label:'Message', attr:''},
+        {label:'Send', attr:''}
+      ],
+      correct:[2,0,1,3,4],
+      hint:'A positive tabindex does not queue up with the others. It jumps ahead of everyone.',
+      explain:'Elements with a positive tabindex are visited FIRST, ordered by their number, and only then comes the natural document order. That is why “Email” is first even though it is third on the page. Use only tabindex="0" and tabindex="-1".',
+      teach:'Ask: if this site has 30 such fields, where does the user end up?'},
+
+    { t:'door', id:'III.8', kind:'choice',
+      q:'The error message is shown <b>only</b> as a red border. What is the problem?',
+      options:['Red is an aggressive colour','Colour is not information for everyone','Borders are an outdated approach','There is no problem'],
+      correct:1,
+      hint:'Who will not see the red? Think of at least three different people.',
+      explain:'Colour blindness, a screen reader, a black-and-white printout, bright sun on the screen. Information has to be encoded at least twice: colour + text + icon.',
+      teach:'Around 8% of men have some form of colour blindness. In a class of 30 that is statistically at least one.'}
+  ]
+},
+
+/* ═══════════════════════════ WING IV ═══════════════════════════ */
+{
+  id:'aria',
+  name:'ARIA',
+  artifact:'The Prism of Roles',
+  blurb:'The accessibility tree, roles, states, live regions and the five rules.',
+  secret:{
+    title:'An accordion without a single line of JavaScript',
+    text:'<details> and <summary> give you a working accordion: it opens, it closes, it responds to the keyboard, it announces its state to the screen reader. Millions of lines of JavaScript exist in the world to recreate something the browser hands you for free — and they usually recreate it worse.',
+    code:'<details>\n  <summary>Show more</summary>\n  <p>The hidden content.</p>\n</details>'
+  },
+  steps:[
+    { t:'room', title:'The accessibility tree', lead:'The browser does not hand your HTML to the screen reader. It builds a second structure.',
+      code:'  HTML ──parse──▶ DOM ──▶ Accessibility Tree ──▶ 🔊 reader\n                   │                              ⌨️ voice\n                   └──▶ CSSOM ──▶ Render Tree ──▶ 🖥️ pixels',
+      points:[
+        'Every node has four things: role, name, state, value.',
+        'Role — what is this? Name — what is it called? State — what state is it in?',
+        'Voice control and automated tests run on the same tree.',
+        'See it yourself: DevTools → Elements → Accessibility.'
+      ]},
+
+    { t:'door', id:'IV.1', core:true, kind:'choice',
+      q:'What does ARIA actually <b>do</b>?',
+      options:['Changes the appearance','Adds keyboard support','Changes what the browser announces','Makes the element focusable'],
+      correct:2,
+      hint:'ARIA is a label stuck on the box. What changes inside the box?',
+      explain:'ARIA changes nothing visually, adds no behaviour, does not make an element focusable and brings no keyboard support. It changes only what is written in the accessibility tree. Everything else remains your job.',
+      teach:'This is the most important slide in the whole section. Say it twice.'},
+
+    { t:'room', title:'Where the name comes from', lead:'The browser searches in a strict order. The first thing found wins.',
+      code:'1. aria-labelledby   points at another element’s id\n2. aria-label        text written in the attribute\n3. the native one    <label>, alt, <legend>, <caption>\n4. the content       the text inside <button>Send</button>\n5. title             last resort, unreliable',
+      points:[
+        'aria-labelledby beats everything — including the visible text.',
+        'That is why a wrong aria-label is more dangerous than a missing one: it silences the correct text.',
+        'Voice control uses the same name: “click Send”.'
+      ]},
+
+    { t:'door', id:'IV.2', core:true, kind:'order',
+      q:'Put the accessible name computation in order. The strongest at the top.',
+      items:['aria-labelledby','aria-label','the native one (label / alt / legend)','the text content','title'],
+      hint:'At the top is the one that can silence all the others.',
+      explain:'ARIA attributes beat the native ones, and title comes last and is unreliable. From this follows a practical rule: do not put aria-label on a button that already has sensible text — you risk replacing it with something worse.',
+      teach:''},
+
+    { t:'door', id:'IV.3', kind:'choice',
+      q:'What are the four things the accessibility tree knows about an element?',
+      options:['tag, class, id, style','role, name, state, value','width, height, colour, position','parent, child, sibling, root'],
+      correct:1,
+      hint:'What is this? What is it called? What state is it in? What is its value?',
+      explain:'Role, Name, State, Value. If you know these and the three questions behind them, you know how every assistive technology thinks.',
+      teach:''},
+
+    { t:'door', id:'IV.4', core:true, kind:'sr',
+      q:'What does the screen reader announce?',
+      code:'<button aria-expanded="false">Menu</button>',
+      options:['“Menu”','“Menu, button”','“Menu, button, collapsed”','“Menu, collapsed”'],
+      correct:2,
+      hint:'Three things: name, role, state. Where does each come from?',
+      explain:'The name “Menu” comes from the text, the role “button” from the tag, the state “collapsed” from aria-expanded. Only the third one is ARIA. The other two you get for free.',
+      teach:'Ask the class which of the three comes from ARIA. They almost always say “all of them”.'},
+
+    { t:'room', title:'Live regions', lead:'If JavaScript changes text on the screen, the reader does not notice. You have to tell it to watch.',
+      code:'<div aria-live="polite" id="status"></div>\n<!-- later: status.textContent = "Added to cart" -->\n\n<div role="alert">Payment declined.</div>',
+      points:[
+        'polite — waits for the reader to finish. For “Saved”, “3 results”.',
+        'assertive — interrupts immediately. Only for errors and expiring timers.',
+        'role="alert" is assertive, ready-made.',
+        'The region must exist in the DOM BEFORE you put text into it.'
+      ]},
+
+    { t:'door', id:'IV.5', core:true, kind:'fix',
+      q:'Which line breaks rule 4 of ARIA?',
+      lines:['<nav>','  <button aria-hidden="true">Send</button>','  <span aria-hidden="true">🗑️</span>','</nav>'],
+      correct:1,
+      hint:'One of them is focusable. The other is not.',
+      explain:'aria-hidden on a focusable element creates a phantom: the button is reachable with Tab, but the reader has nothing to say. The user is standing on nothing. On the decorative icon, however, it is exactly the right thing.',
+      teach:''},
+
+    { t:'door', id:'IV.6', kind:'choice',
+      q:'When do you use aria-live="assertive"?',
+      options:['On every change on the screen','Only for something critical: an error, an expiring timer','Never','When the page loads'],
+      correct:1,
+      hint:'What does it mean to interrupt someone mid-sentence?',
+      explain:'assertive interrupts the reader immediately. Used for every little thing, it turns the page into one continuous interruption. For everything else — polite.',
+      teach:''},
+
+    { t:'door', id:'IV.7', core:true, kind:'fill',
+      q:'The button has only an icon. Give it a name.',
+      before:'<button aria-', after:'="Close">✕</button>', accept:['label'],
+      hint:'Five letters. Text written directly in the attribute.',
+      explain:'Without a name the reader says only “button” and the information ends there. aria-label gives a name where there is no visible text. Rule 5: every interactive element must have an accessible name.',
+      teach:''},
+
+    { t:'room', title:'The five rules of ARIA', lead:'The official Rules of ARIA Use. If this is all you remember — it is enough.',
+      code:'1. Do not use ARIA if a native element exists.\n2. Do not change native semantics without a reason.\n3. Every interactive ARIA element works with a keyboard.\n4. No role="presentation" or aria-hidden on anything focusable.\n5. Every interactive element has an accessible name.',
+      points:[
+        'No ARIA is better than bad ARIA. — W3C',
+        'ARIA is a scalpel, not a sticking plaster.',
+        'It is needed for tabs, trees, comboboxes, modals and live messages — things HTML has no element for.'
+      ]},
+
+    { t:'door', id:'IV.8', kind:'choice',
+      q:'State rule 1 of ARIA.',
+      options:['Always add a role to every element','If a native HTML element with the same semantics exists — use it','ARIA is written before class','Every div needs an aria-label'],
+      correct:1,
+      hint:'Which is shorter: <button>, or a div with a role, a tabindex and two keydown handlers?',
+      explain:'<button> brings focus, Enter, Space, disabled and the right role for free. The same thing with a div takes around 30 lines of JavaScript, which are almost always incomplete.',
+      teach:''},
+
+    { t:'door', id:'IV.9', kind:'tree',
+      q:'Fill in the node in the accessibility tree.',
+      code:'<label for="a">I agree</label>\n<input type="checkbox" id="a" checked>',
+      role:{options:['checkbox','textbox','button','switch'],correct:'checkbox'},
+      name:{options:['a','(none)','I agree','checkbox'],correct:'I agree'},
+      state:{options:['(none)','checked','expanded','invalid'],correct:'checked'},
+      hint:'The name comes from the associated label, the state from the field’s attribute.',
+      explain:'Role: checkbox (from type). Name: “I agree” (from <label for>). State: checked. All three come from native HTML — not a single line of ARIA.',
+      teach:''},
+
+    { t:'door', id:'IV.10', kind:'choice',
+      q:'According to WebAIM’s analyses, pages that <b>use</b> ARIA average <b>more</b> accessibility errors than pages without it. Why?',
+      options:['ARIA is badly designed','It is applied as a plaster over broken markup — and applied wrongly','Screen readers do not support it','The statistics are wrong'],
+      correct:1,
+      hint:'Who reaches for ARIA — the person who wrote <button>, or the person who wrote <div>?',
+      explain:'ARIA is not to blame. What is to blame is that people reach for it once the markup is already broken, and then apply it at random. Hence the rule: no ARIA is better than bad ARIA.',
+      teach:'This is the moment to go back to rule 1 and close the circle.'}
+  ]
+}
+],
+
+/* ═══════════════════════════ THE BOSS ═══════════════════════════ */
+boss: {
+  intro: 'The four keys turn. The door opens and the screen goes dark.\n\nFrom here on you see nothing. You move with Tab, you activate with Enter, and everything you learn about the page comes from a single voice.\n\nThis is exactly what the web looks like for someone using a screen reader.',
+  stages: [
+    {
+      title:'Stage 1 — A page without headings',
+      task:'Find the “Shipping” section.',
+      items:[
+        {say:'paragraph, Welcome to our electronics store with over 20 years of experience'},
+        {say:'paragraph, We work with leading brands and offer a warranty on all products'},
+        {say:'paragraph, Our team is available every working day'},
+        {say:'paragraph, Founded in 2004, the shop began as a small repair service'},
+        {say:'paragraph, We deliver anywhere in the country by courier within 48 hours', goal:true},
+        {say:'paragraph, Follow us on social media for promotions'}
+      ],
+      lesson:'Without headings the page is one endless paragraph. The H key in a screen reader jumps from heading to heading — but only if there are headings. You just went through everything to find one sentence.',
+      fixedTask:'Now the same thing, with <h2>. Find “Shipping”.',
+      fixedItems:[
+        {say:'heading level 2, About us'},
+        {say:'heading level 2, Shipping', goal:true},
+        {say:'heading level 2, Warranty'},
+        {say:'heading level 2, Contact'}
+      ],
+      fix:'<h2>Shipping</h2>'
+    },
+    {
+      title:'Stage 2 — Links without text',
+      task:'Go to the page about returning an item.',
+      unknowable:true,
+      items:[
+        {say:'link, click here'},
+        {say:'link, click here'},
+        {say:'link, click here'},
+        {say:'link, click here'},
+        {say:'link, click here'},
+        {say:'link, click here'}
+      ],
+      wrongMsg:'A cookie policy page opened. Go back.',
+      lesson:'There was no way to know. That is exactly the problem. Link text has to make sense on its own — because the reader has a mode that lists only the links, lifted out of the sentences around them.',
+      fixedTask:'Now with meaningful text. Find the returns page.',
+      fixedItems:[
+        {say:'link, Shipping and delivery times'},
+        {say:'link, Returning an item', goal:true},
+        {say:'link, Warranty terms'},
+        {say:'link, Contact'}
+      ],
+      fix:'<a href="/returns">Returning an item</a>'
+    },
+    {
+      title:'Stage 3 — Buttons without a name',
+      task:'Add the product to the cart.',
+      unknowable:true,
+      items:[
+        {say:'button'},
+        {say:'button'},
+        {say:'button'},
+        {say:'button'}
+      ],
+      wrongMsg:'The product was removed from your wishlist.',
+      lesson:'An icon button with no name is announced simply as “button”. The information ends there. aria-label="Add to cart" is one attribute and it solves everything.',
+      fixedTask:'Now with names. Add to the cart.',
+      fixedItems:[
+        {say:'button, Add to wishlist'},
+        {say:'button, Compare'},
+        {say:'button, Add to cart', goal:true},
+        {say:'button, Share'}
+      ],
+      fix:'<button aria-label="Add to cart">🛒</button>'
+    },
+    {
+      title:'Stage 4 — A form without labels',
+      task:'Fill in your email.',
+      unknowable:true,
+      items:[
+        {say:'text field'},
+        {say:'text field'},
+        {say:'text field'},
+        {say:'text field'}
+      ],
+      wrongMsg:'You typed your email into the postcode field.',
+      lesson:'A placeholder is not a label. A field without <label> is a box with no writing on it — and a wrongly filled form is the difference between the person buying something and giving up.',
+      fixedTask:'Now with labels. Fill in the email.',
+      fixedItems:[
+        {say:'text field, Name'},
+        {say:'text field, Email', goal:true},
+        {say:'text field, Phone'},
+        {say:'text field, Postcode'}
+      ],
+      fix:'<label for="email">Email</label>\n<input id="email" type="email">'
+    },
+    {
+      title:'Stage 5 — An error shown only in colour',
+      task:'Submit the form.',
+      unknowable:true,
+      items:[
+        {say:'text field, Email'},
+        {say:'button, Send', silent:true},
+        {say:'link, Terms and conditions'}
+      ],
+      wrongMsg:'Nothing happens. Silence.',
+      lesson:'The form is not submitting because the email is invalid — and that is shown only as a red border. For someone who cannot see the screen, the page simply goes quiet. This is why role="alert" exists: the message is announced the moment it appears.',
+      fixedTask:'Now with role="alert". Send it again.',
+      fixedItems:[
+        {say:'text field, Email, invalid entry'},
+        {say:'button, Send', goal:true, onGoal:'alert: The email is invalid. Please check the address.'},
+        {say:'link, Terms and conditions'}
+      ],
+      fix:'<p role="alert">The email is invalid.</p>'
+    }
+  ],
+  outro:'You have just been through a page the way millions of people go through one every day.\n\nThe difference between the broken version and the fixed one was eight attributes.'
+}
+};
+
+</script>
+<script>
+/* Contenu de la leçon en FRANÇAIS.
+   Données pures. Ajouter une question, c’est ajouter un objet dans steps.
+   Les icônes sont dans icons.js, l’interface dans i18n.js.
+   Types de portes : choice | sr | fix | fill | match | order | tab | tree
+   core: true  →  la question fait aussi partie du parcours court (cours de 45 min).
+
+   Les identifiants des portes doivent rester identiques d’une langue à l’autre —
+   la progression est partagée. */
+
+window.CONTENT = window.CONTENT || {};
+window.CONTENT.fr = {
+
+wings: [
+/* ═══════════════════════════ AILE I ═══════════════════════════ */
+{
+  id: 'basics',
+  name: 'Les bases',
+  artifact: 'Le Parchemin de la structure',
+  blurb: 'Ce qu’est le balisage, de quoi est fait un document, comment s’écrivent les éléments.',
+  secret: {
+    title: 'Les balises que le web a enfantées puis tenté d’oublier',
+    text: 'Netscape a sorti <blink> — du texte qui clignote. La légende dit que l’idée est née dans un bar, en une soirée. Microsoft a répondu avec <marquee> — du texte qui défile. Les deux balises sont mortes aujourd’hui, mais elles ont laissé une trace : le contenu clignotant est un danger avéré pour les personnes atteintes d’épilepsie photosensible, et WCAG comporte désormais une règle explicite contre lui. Une balise de 1995 est la raison d’être d’une norme actuelle.',
+    code: '<blink>ACHETEZ MAINTENANT</blink>\n<marquee>Bienvenue sur ma page !</marquee>'
+  },
+  steps: [
+    { t:'room', title:'Le langage du balisage', lead:'HTML = HyperText Markup Language. Trois mots, trois idées — et aucune ne dit « programmation ».',
+      code:'Ceci est <em>important</em>, et ceci — <strong>très important</strong>.',
+      points:[
+        'HyperText — du texte qui pointe vers d’autre texte. Le lien, c’est toute la révolution.',
+        'Markup — le balisage : tu étiquettes chaque morceau de contenu par ce qu’il est.',
+        'Language — il a une grammaire et une norme, mais ni variables, ni conditions, ni boucles.',
+        'L’idée est plus ancienne que le web : les correcteurs annotaient les manuscrits au crayon bleu.'
+      ]},
+
+    { t:'door', id:'I.1', core:true, kind:'choice',
+      q:'Que signifie « markup » dans HTML ?',
+      options:['Que le langage marque tes erreurs','Que tu <b>étiquettes</b> des morceaux de contenu','Que le code est compilé avant de tourner','Que le texte se colore automatiquement'],
+      correct:1,
+      hint:'Pense à l’origine du mot — l’imprimerie, pas la programmation.',
+      explain:'Markup vient de la pratique éditoriale consistant à « marquer » un manuscrit pour l’impression. Tu ne décris pas une logique — tu décris ce qu’est chaque morceau de texte.',
+      teach:'Demande à la classe : qui d’autre « balise » les choses pour qu’une machine les comprenne ? (code-barres, partition)'},
+
+    { t:'door', id:'I.2', kind:'choice',
+      q:'Laquelle de ces affirmations est <b>fausse</b> à propos de HTML ?',
+      options:['Ce n’est pas un langage de programmation','Il descend de SGML','Il a des versions jusqu’à HTML 7','Il pardonne les erreurs de syntaxe'],
+      correct:2,
+      hint:'Quand as-tu vu pour la dernière fois un numéro de version à côté du mot HTML ?',
+      explain:'HTML est aujourd’hui un Living Standard — un document vivant sans numéro de version. Il n’y aura pas de « HTML 6 ». C’est pourquoi « est-ce pris en charge ? » est une question pour caniuse.com, pas pour un numéro de version.',
+      teach:'Rappelle la leçon 1 : TCP/IP fonctionne pareil — la norme vit, elle n’est pas rééditée.'},
+
+    { t:'room', title:'Anatomie d’un document', lead:'Chaque ligne du <head> fait un travail concret. Enlève-la et quelque chose casse.',
+      code:'<!DOCTYPE html>\n<html lang="fr">\n  <head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <title>Le titre dans l’onglet</title>\n  </head>\n  <body>\n    <h1>Le titre visible</h1>\n  </body>\n</html>',
+      points:[
+        '<head> — les métadonnées. Invisibles à l’œil, obligatoires pour la machine.',
+        '<body> — tout ce qui se voit.',
+        'Sans charset, les accents se transforment en charabia.',
+        'Sans lang, le lecteur d’écran lit le texte avec le mauvais accent.'
+      ]},
+
+    { t:'door', id:'I.3', core:true, kind:'fill',
+      q:'Un attribut décide de la voix qu’utilisera le lecteur d’écran. Complète-le.',
+      before:'<html ', after:'="fr">', accept:['lang'],
+      hint:'Quatre lettres. Il répond à « dans quelle langue est ce document ? »',
+      explain:'lang="fr" indique au lecteur d’écran quelle synthèse vocale utiliser. L’absence de lang fait partie des défauts d’accessibilité les plus fréquents du web — un attribut, une fois, oublié par des millions de sites.',
+      teach:'Ouvre n’importe quel site avec l’inspecteur et vérifie s’il a lang. Le plus souvent, non.'},
+
+    { t:'door', id:'I.4', core:true, kind:'choice',
+      q:'Que se passe-t-il si tu enlèves <b>&lt;!DOCTYPE html&gt;</b> ?',
+      options:['La page ne se charge pas du tout','Le navigateur passe en quirks mode','Le CSS cesse de fonctionner','Absolument rien'],
+      correct:1,
+      hint:'Le navigateur doit décider selon quelles règles rendre la page — celles d’aujourd’hui ou celles de 1998.',
+      explain:'Le doctype ne décrit plus rien — c’est un interrupteur entre standards mode et quirks mode. En quirks mode, le navigateur imite volontairement de vieux bugs (un autre modèle de boîte) et ta mise en page casse. En HTML 4, le doctype était une longue URL ; HTML5 l’a réduit à la plus courte chaîne qui fasse encore ce travail.',
+      teach:'Montre l’ancien doctype HTML 4.01 à l’écran — la réaction est garantie.'},
+
+    { t:'room', title:'Élément, balise, attribut', lead:'Trois mots que l’on confond sans arrêt.',
+      code:'        balise ouvrante   contenu    balise fermante\n             ↓              ↓            ↓\n        <a href="/home" class="btn">Accueil</a>\n         ↑     ↑\n       nom  attribut\n\n        └──────────── élément ────────────┘',
+      points:[
+        'Balise — ce que tu tapes : <p>',
+        'Élément — balise ouvrante + contenu + balise fermante',
+        'Attribut — une information en plus, uniquement dans la balise ouvrante',
+        'Les éléments vides n’ont ni contenu ni balise fermante : img, br, hr, input, meta, link'
+      ]},
+
+    { t:'door', id:'I.5', core:true, kind:'fix',
+      q:'Quelle ligne est fautive ?',
+      lines:['<section>','  <p>Ceci est du <strong>texte</p></strong>','  <p>Et celle-ci va bien.</p>','</section>'],
+      correct:1,
+      hint:'Les poupées russes ne se croisent pas.',
+      explain:'Les éléments s’emboîtent les uns dans les autres, ils ne se croisent jamais. La forme correcte est <p>Ceci est du <strong>texte</strong></p>. Le navigateur va le corriger pour toi — c’est précisément ce qui rend HTML « indulgent » — mais ce qu’il décide de corriger ne dépend pas de toi.',
+      teach:'Montre dans l’inspecteur comment le navigateur a réorganisé le DOM. Ils voient l’écart entre ce qu’ils ont écrit et ce qui est sorti.'},
+
+    { t:'door', id:'I.6', kind:'choice',
+      q:'Lequel de ces éléments est <b>vide</b> (void) ?',
+      options:['&lt;p&gt;','&lt;div&gt;','&lt;img&gt;','&lt;span&gt;'],
+      correct:2,
+      hint:'Lequel ne peut rien contenir ?',
+      explain:'<img> n’a ni contenu ni balise fermante. Idem pour br, hr, input, meta et link.',
+      teach:''},
+
+    { t:'door', id:'I.7', kind:'match',
+      q:'Associe chaque terme à sa définition.',
+      pairs:[['balise','ce que tu tapes : <p>'],['élément','ouvrante + contenu + fermante'],['attribut','nom="valeur" dans la balise ouvrante'],['élément vide','sans balise fermante : <img>']],
+      hint:'Une balise fait partie d’un élément, elle n’est pas l’élément.',
+      explain:'On dit « balise » pour tout. La distinction compte précisément quand tu lis la norme ou un message d’erreur.',
+      teach:''},
+
+    { t:'room', title:'L’apparence contre le sens', lead:'Deux paires de balises se ressemblent et signifient autre chose. C’est là que commence la sémantique.',
+      code:'<b>gras</b>                → apparence seulement\n<strong>important</strong>  → une importance que la machine comprend\n\n<i>italique</i>            → apparence seulement\n<em>accentuation</em>      → une emphase que le lecteur peut prononcer',
+      points:[
+        '<b> et <i> sont purement visuels — valides, mais vides de sens.',
+        '<strong> et <em> portent un sens et atteignent l’arbre d’accessibilité.',
+        'Identiques à l’écran, différents pour la machine. Voilà la sémantique en une phrase.'
+      ]},
+
+    { t:'door', id:'I.8', kind:'choice',
+      q:'Quelle est la différence entre <b>&lt;b&gt;</b> et <b>&lt;strong&gt;</b> ?',
+      options:['La couleur du texte','Aucune, ce sont des synonymes','&lt;strong&gt; porte un sens, &lt;b&gt; n’est qu’une apparence','&lt;b&gt; est obsolète et invalide'],
+      correct:2,
+      hint:'Les deux mettent en gras. On demande ce que la machine en sait ensuite.',
+      explain:'<b> est parfaitement valide aujourd’hui — il ne dit simplement rien de plus que « mets en gras ». <strong> dit « ceci est important », et cela atteint le lecteur d’écran, qui peut changer d’intonation.',
+      teach:'Demande : si on coupe le CSS, lequel des deux veut encore dire quelque chose ?'}
+  ]
+},
+
+/* ═══════════════════════════ AILE II ═══════════════════════════ */
+{
+  id:'semantics',
+  name:'Sémantique',
+  artifact:'La Boussole du sens',
+  blurb:'Points de repère, titres, listes, liens contre boutons, texte alternatif.',
+  secret:{
+    title:'spacer.gif — l’ère des tableaux',
+    text:'De 1996 à 2005, tout le web a été bâti avec des tableaux de mise en page et des GIF invisibles de 1×1 pixel, étirés à la taille voulue. Toute une génération de développeurs a construit des sites avec un outil de tableur. C’est exactement pour cela que role="presentation" existe — il fallait un moyen de dire au lecteur d’écran « ce tableau n’est pas des données, ignore-le ».',
+    code:'<table border="0" cellpadding="0">\n  <tr>\n    <td><img src="spacer.gif" width="1" height="20"></td>\n    <td>Contenu</td>\n  </tr>\n</table>'
+  },
+  steps:[
+    { t:'room', title:'La sémantique, c’est choisir la balise par le sens', lead:'Les deux blocs peuvent être identiques à l’écran, au pixel près. La différence est pour tous ceux qui ne regardent pas l’écran.',
+      code:'<!-- soupe de div -->\n<div class="header">\n  <div class="nav">\n    <div class="item" onclick="go(\'/\')">Accueil</div>\n  </div>\n</div>\n\n<!-- la même chose, en sémantique -->\n<header>\n  <nav>\n    <a href="/">Accueil</a>\n  </nav>\n</header>',
+      points:[
+        'La version sémantique est plus courte et marche au clavier sans une seule ligne de JavaScript.',
+        '<div> et <span> sont vides de sens — ce sont le dernier choix, pas le premier.',
+        'Ton balisage est lu par les lecteurs d’écran, Google, le mode lecture, les robots, et par ton collègue dans six mois.'
+      ]},
+
+    { t:'door', id:'II.1', core:true, kind:'choice',
+      q:'Quel élément ne peut avoir qu’<b>une seule instance visible</b> par page ?',
+      options:['&lt;nav&gt;','&lt;main&gt;','&lt;section&gt;','&lt;article&gt;'],
+      correct:1,
+      hint:'Lequel, par définition, ne peut pas être deux choses à la fois ?',
+      explain:'<main> marque le contenu principal et sert de cible au lien d’évitement. On ne peut pas avoir deux contenus principaux. Le plus drôle, c’est que <main> a été ajouté en dernier à la norme — en 2013 — parce que jusque-là tout le monde utilisait <div id="content">.',
+      teach:''},
+
+    { t:'door', id:'II.2', core:true, kind:'match',
+      q:'Associe chaque élément au rôle de repère qu’il reçoit.',
+      pairs:[['<header>','banner'],['<nav>','navigation'],['<aside>','complementary'],['<footer>','contentinfo']],
+      hint:'Les noms de rôles décrivent la zone, pas la balise.',
+      explain:'Les lecteurs d’écran ont une touche dédiée pour sauter de repère en repère. L’utilisateur saute le menu et atteint le contenu en une frappe — au lieu de traverser 40 liens.',
+      teach:'Montre le panneau Landmarks de l’inspecteur d’accessibilité sur le site de quelqu’un.'},
+
+    { t:'room', title:'La carte de la page', lead:'HTML5 fournit des éléments qui décrivent les zones. Le lecteur d’écran s’en sert comme d’une carte.',
+      code:'┌────────────────────────────────────────┐\n│ <header>          (banner)             │\n│   <nav>           (navigation)         │\n├───────────────────────┬────────────────┤\n│ <main>    (main)      │ <aside>        │\n│   <article>           │ (complementary)│\n│     <h1> <p> ...      │                │\n├───────────────────────┴────────────────┤\n│ <footer>          (contentinfo)        │\n└────────────────────────────────────────┘',
+      points:[
+        '<article> — si tu le découpes et le poses ailleurs, il garde du sens.',
+        '<section> — une partie d’un ensemble plus grand, qui réclame un titre.',
+        '<div> — seulement quand il te faut une accroche pour le CSS.',
+        '<header> et <footer> ne sont des repères que placés directement dans <body>.'
+      ]},
+
+    { t:'door', id:'II.3', core:true, kind:'fix',
+      q:'Quelle ligne pose le plus gros problème d’accessibilité ?',
+      lines:['<header>','  <nav>','    <div class="item" onclick="go(\'/\')">Accueil</div>','  </nav>','</header>'],
+      correct:2,
+      hint:'Essaie d’atteindre cet élément avec la seule touche Tab.',
+      explain:'Un <div> avec onclick n’est pas focalisable, n’a pas de rôle et ne réagit pas à Entrée. Un simple <a href="/">Accueil</a> te donne tout cela gratuitement — plus le clic droit → « Ouvrir dans un nouvel onglet ».',
+      teach:'Fais la démonstration en direct : lâche la souris et essaie d’appuyer sur ce « bouton ».'},
+
+    { t:'room', title:'Les titres sont une navigation', lead:'Les titres ne sont pas des tailles de police. Ils sont la table des matières du document.',
+      code:'<h1>Cours de technologies web</h1>\n  <h2>Leçon 2 — HTML et ARIA</h2>\n    <h3>Sémantique</h3>\n    <h3>Formulaires</h3>\n  <h2>Leçon 3 — CSS</h2>',
+      points:[
+        'Un seul <h1> par page.',
+        'Ne saute pas de niveau : on ne passe jamais de h2 directement à h4.',
+        'Il te faut une police plus petite ? C’est le travail du CSS, pas de <h4>.',
+        'Dans les enquêtes WebAIM, les titres sont le moyen numéro un de s’orienter dans une longue page.'
+      ]},
+
+    { t:'door', id:'II.4', kind:'choice',
+      q:'Pourquoi ne faut-il pas passer de &lt;h2&gt; directement à &lt;h4&gt; ?',
+      options:['Le navigateur renvoie une erreur','Cela casse la structure par laquelle navigue le lecteur d’écran','Le CSS cesse de s’appliquer','Google retire le site de l’index'],
+      correct:1,
+      hint:'Pense à une table des matières où il manque un niveau entier.',
+      explain:'Un niveau sauté dit « il y a une sous-partie ici, mais sous quoi ? ». L’utilisateur qui navigue avec la touche H perd la hiérarchie. Rien ne plante — la carte devient simplement fausse.',
+      teach:''},
+
+    { t:'door', id:'II.5', core:true, kind:'sr',
+      q:'Que va lire le lecteur d’écran ?',
+      code:'<img src="IMG_4821.jpg">',
+      options:['« image » et rien de plus','Le nom du fichier : « I M G 4 8 2 1 point j p g »','Rien — il le saute','« photo »'],
+      correct:1,
+      hint:'Un alt manquant ne veut pas dire silence.',
+      explain:'Quand alt manque totalement, le lecteur d’écran essaie de dire quelque chose d’utile et lit le nom du fichier. C’est pour cela qu’un alt="" vide compte : il dit explicitement « saute-moi, je suis décoratif ».',
+      teach:'Demande à la classe comment ils nommeraient un fichier en sachant qu’on le lira à voix haute.'},
+
+    { t:'door', id:'II.6', kind:'choice',
+      q:'Quand utilise-t-on <b>alt=""</b> (vide, mais présent) ?',
+      options:['Jamais — c’est une erreur','Quand on ne sait pas quoi écrire','Quand l’image est purement décorative','Quand l’image est le logo'],
+      correct:2,
+      hint:'Est-ce utile d’entendre la description d’une arabesque ?',
+      explain:'Une image décorative ne porte aucune information — un alt vide la cache au lecteur. Le logo, lui, est généralement dans un lien vers l’accueil, et alors alt décrit l’action : alt="Accueil".',
+      teach:''},
+
+    { t:'door', id:'II.7', core:true, kind:'choice',
+      q:'« Ouvrir une fenêtre modale » — lien ou bouton ?',
+      options:['Un lien, puisqu’on clique dessus','Un bouton','Cela n’a pas d’importance','Un &lt;div&gt; avec onclick'],
+      correct:1,
+      hint:'L’adresse dans le navigateur change-t-elle ?',
+      explain:'La règle est simple : si l’adresse change — lien. Sinon — bouton. Un lien mène quelque part, un bouton fait quelque chose. Le bouton répond en plus à Entrée et à Espace, le lien seulement à Entrée.',
+      teach:'Demande : le clic droit → « Ouvrir dans un nouvel onglet » a-t-il un sens ici ?'},
+
+    { t:'door', id:'II.8', kind:'sr',
+      q:'Les lecteurs d’écran ont un mode qui liste tous les liens de la page. Que voit l’utilisateur ici ?',
+      code:'<a href="/livraison">cliquez ici</a>\n<a href="/retours">cliquez ici</a>\n<a href="/contact">cliquez ici</a>',
+      options:['Les trois adresses','Une liste de trois lignes identiques « cliquez ici »','Les titres des pages','Rien'],
+      correct:1,
+      hint:'Ce mode n’affiche que le texte du lien, sorti de la phrase qui l’entoure.',
+      explain:'Le texte d’un lien doit avoir du sens tout seul, hors contexte. « Cliquez ici », « plus » et « en savoir plus » ne servent à rien dans une telle liste.',
+      teach:''},
+
+    { t:'door', id:'II.9', kind:'tree',
+      q:'Complète ce que la machine sait de cet élément.',
+      code:'<a href="/profil">Mon profil</a>',
+      role:{options:['link','button','heading','text'],correct:'link'},
+      name:{options:['(aucun)','/profil','Mon profil','profil'],correct:'Mon profil'},
+      state:{options:['(aucun)','checked','expanded','disabled'],correct:'(aucun)'},
+      hint:'Le nom vient du texte à l’intérieur de l’élément, pas du href.',
+      explain:'Rôle : link. Nom : le contenu textuel « Mon profil ». État : aucun — un lien n’a pas d’état. C’est précisément pour cela que le texte du lien compte tant : c’est le nom.',
+      teach:''}
+  ]
+},
+
+/* ═══════════════════════════ AILE III ═══════════════════════════ */
+{
+  id:'forms',
+  name:'Formulaires',
+  artifact:'Le Sceau du consentement',
+  blurb:'Étiquettes, types de champs, regroupement, erreurs — là où l’accessibilité coûte le plus cher.',
+  secret:{
+    title:'Pourquoi une étiquette agrandit la case à cocher',
+    text:'Cliquer sur un <label> met le focus sur le champ associé et le coche. Cela transforme une case de 13×13 pixels en une phrase entière cliquable. Un bonus d’ergonomie gratuit offert par un attribut correct — et la seule raison de s’en priver, c’est de ne pas le savoir. Sur un téléphone, l’écart entre une cible de 13 px et une de 300 px, c’est l’écart entre un formulaire qui marche et un formulaire qui agace.',
+    code:'<label for="conditions">\n  <input type="checkbox" id="conditions">\n  J’accepte les conditions générales\n</label>'
+  },
+  steps:[
+    { t:'room', title:'L’étiquette n’est pas facultative', lead:'Un champ sans étiquette est une boîte sans inscription. Le lecteur dit « champ de texte » et c’est tout.',
+      code:'<!-- for pointe vers id -->\n<label for="email">Courriel</label>\n<input type="email" id="email" name="email">\n\n<!-- ou en enveloppant -->\n<label>\n  Courriel\n  <input type="email" name="email">\n</label>\n\n<!-- placeholder n’est PAS une étiquette -->\n<input type="email" placeholder="Courriel">',
+      points:[
+        'Le placeholder disparaît précisément quand tu commences à écrire.',
+        'Son contraste est volontairement faible — souvent sous le seuil de lisibilité.',
+        'Tu ne peux pas cliquer dessus pour activer le champ.',
+        'Certains lecteurs ne l’annoncent pas du tout.'
+      ]},
+
+    { t:'door', id:'III.1', core:true, kind:'choice',
+      q:'Laquelle <b>n’est pas</b> une raison pour qu’un placeholder ne remplace pas &lt;label&gt; ?',
+      options:['Il disparaît pendant la saisie','Il a un faible contraste','Il ralentit le champ','Il n’est pas cliquable'],
+      correct:2,
+      hint:'Trois de ces points sont de vrais problèmes. Le quatrième n’arrive tout simplement pas.',
+      explain:'La performance n’a rien à voir. Les problèmes portent sur la compréhension : un texte qui s’évapore, un faible contraste, une cible de clic absente et une annonce inégale.',
+      teach:''},
+
+    { t:'door', id:'III.2', core:true, kind:'fill',
+      q:'Relie l’étiquette au champ. Quel attribut manque ?',
+      before:'<label ', after:'="email">Courriel</label>', accept:['for'],
+      hint:'Trois lettres. En JSX on l’écrit htmlFor, si cela aide.',
+      explain:'for pointe vers l’id du champ. Dès lors, cliquer sur le texte active le champ, et le lecteur d’écran sait comment il s’appelle.',
+      teach:''},
+
+    { t:'room', title:'Les types travaillent à ta place', lead:'Un attribut t’épargne une validation, un clavier et un composant.',
+      code:'<input type="email">   validation + @ sur le clavier\n<input type="tel">     pavé numérique sur le téléphone\n<input type="date">    sélecteur de date intégré\n<input type="number">  flèches, chiffres uniquement\n<input type="file" accept="image/*">',
+      points:[
+        'Un type natif apporte un comportement que tu écrirais sinon à la main, avec des bugs.',
+        'autocomplete="email" fait remplir par le navigateur — énorme pour les personnes à mobilité réduite.',
+        'required donne la validation sans une seule ligne de JavaScript.'
+      ]},
+
+    { t:'door', id:'III.3', core:true, kind:'choice',
+      q:'Quel est le <b>type</b> par défaut d’un &lt;button&gt; dans un &lt;form&gt; ?',
+      options:['button','submit','reset','aucun — il faut le préciser'],
+      correct:1,
+      hint:'Le bug classique : tu cliques sur « Afficher le mot de passe » et la page se recharge.',
+      explain:'Tout <button> dans un formulaire est un bouton d’envoi tant que tu ne dis pas le contraire. Pour un bouton qui fait autre chose, écris type="button" explicitement.',
+      teach:'C’est le bug que tout le monde a écrit au moins une fois. Demande qui s’est fait avoir.'},
+
+    { t:'door', id:'III.4', kind:'choice',
+      q:'Le lecteur d’écran dit : « Coursier, bouton radio, 1 sur 2. » Que manque-t-il ?',
+      code:'<label><input type="radio" name="livraison"> Coursier</label>\n<label><input type="radio" name="livraison"> En point relais</label>',
+      options:['&lt;fieldset&gt; et &lt;legend&gt;','aria-label sur chaque champ','&lt;form&gt; autour du tout','des attributs value'],
+      correct:0,
+      hint:'L’utilisateur entend les réponses. Mais pas la question.',
+      explain:'<fieldset> les regroupe et <legend> fournit la question : « Mode de livraison ». Sans cela, tu entends les réponses sans savoir à quoi elles répondent.',
+      teach:''},
+
+    { t:'room', title:'Aides et erreurs', lead:'Une erreur doit être rattachée au champ, pas simplement posée à côté.',
+      code:'<label for="pass">Mot de passe</label>\n<input type="password" id="pass"\n       aria-describedby="aide err"\n       aria-invalid="true" required>\n<p id="aide">Au moins 8 caractères.</p>\n<p id="err" role="alert">Le mot de passe est trop court.</p>',
+      points:[
+        'aria-describedby rattache un texte complémentaire au champ.',
+        'aria-invalid="true" indique que le champ est en erreur.',
+        'role="alert" annonce le message dès son apparition.',
+        'Une bordure rouge à elle seule n’est pas une information.'
+      ]},
+
+    { t:'door', id:'III.5', kind:'match',
+      q:'Associe l’attribut à ce qu’il fait.',
+      pairs:[['aria-describedby','rattache un texte complémentaire'],['aria-invalid','le champ est en erreur'],['required','champ obligatoire'],['autocomplete','le navigateur remplit à ta place']],
+      hint:'L’un d’eux n’a rien à voir avec ARIA et fonctionne depuis des années.',
+      explain:'Les deux premiers sont ARIA — ils ne font qu’annoncer. Les deux autres sont natifs et changent réellement le comportement du navigateur.',
+      teach:''},
+
+    { t:'door', id:'III.6', kind:'choice',
+      q:'Pourquoi &lt;input type="tel"&gt; vaut-il mieux que type="text" pour un téléphone ?',
+      options:['Il valide le numéro','Le téléphone affiche un pavé numérique','Il formate le numéro automatiquement','Il n’y a pas de différence'],
+      correct:1,
+      hint:'Pense à ce que voit la personne qui remplit le formulaire depuis son téléphone.',
+      explain:'type="tel" ne valide pas (les numéros varient trop dans le monde), mais il fait apparaître le pavé numérique. Un attribut épargne deux gestes à l’utilisateur sur chaque champ.',
+      teach:''},
+
+    { t:'door', id:'III.7', core:true, kind:'tab',
+      q:'Clique les champs dans l’ordre où la touche Tab les visitera.',
+      fields:[
+        {label:'Recherche', attr:''},
+        {label:'Nom', attr:''},
+        {label:'Courriel', attr:'tabindex="1"'},
+        {label:'Message', attr:''},
+        {label:'Envoyer', attr:''}
+      ],
+      correct:[2,0,1,3,4],
+      hint:'Un tabindex positif ne prend pas la file. Il passe devant tout le monde.',
+      explain:'Les éléments avec un tabindex positif sont visités EN PREMIER, classés par leur numéro, et seulement ensuite vient l’ordre naturel du document. C’est pourquoi « Courriel » passe en tête alors qu’il est troisième sur la page. N’utilise que tabindex="0" et tabindex="-1".',
+      teach:'Demande : si ce site a 30 champs de ce genre, où atterrit l’utilisateur ?'},
+
+    { t:'door', id:'III.8', kind:'choice',
+      q:'Le message d’erreur n’est signalé que par une bordure rouge. Où est le problème ?',
+      options:['Le rouge est une couleur agressive','La couleur n’est pas une information pour tout le monde','Les bordures sont une approche dépassée','Il n’y a pas de problème'],
+      correct:1,
+      hint:'Qui ne verra pas le rouge ? Pense à au moins trois personnes différentes.',
+      explain:'Daltonisme, lecteur d’écran, impression en noir et blanc, plein soleil sur l’écran. L’information doit être codée au moins deux fois : couleur + texte + icône.',
+      teach:'Environ 8 % des hommes ont une forme de daltonisme. Dans une classe de 30, cela fait statistiquement au moins un.'}
+  ]
+},
+
+/* ═══════════════════════════ AILE IV ═══════════════════════════ */
+{
+  id:'aria',
+  name:'ARIA',
+  artifact:'Le Prisme des rôles',
+  blurb:'L’arbre d’accessibilité, les rôles, les états, les régions live et les cinq règles.',
+  secret:{
+    title:'Un accordéon sans une seule ligne de JavaScript',
+    text:'<details> et <summary> donnent un accordéon qui marche : il s’ouvre, il se ferme, il répond au clavier, il annonce son état au lecteur d’écran. Des millions de lignes de JavaScript existent dans le monde pour recréer ce que le navigateur offre gratuitement — et le recréent généralement moins bien.',
+    code:'<details>\n  <summary>Afficher la suite</summary>\n  <p>Le contenu masqué.</p>\n</details>'
+  },
+  steps:[
+    { t:'room', title:'L’arbre d’accessibilité', lead:'Le navigateur ne donne pas ton HTML au lecteur d’écran. Il construit une seconde structure.',
+      code:'  HTML ──parse──▶ DOM ──▶ Arbre d’accessibilité ──▶ 🔊 lecteur\n                   │                                ⌨️ voix\n                   └──▶ CSSOM ──▶ Render Tree ──▶ 🖥️ pixels',
+      points:[
+        'Chaque nœud a quatre choses : rôle, nom, état, valeur.',
+        'Rôle — qu’est-ce que c’est ? Nom — comment ça s’appelle ? État — dans quel état est-ce ?',
+        'La commande vocale et les tests automatisés tournent sur le même arbre.',
+        'Vois-le toi-même : DevTools → Elements → Accessibility.'
+      ]},
+
+    { t:'door', id:'IV.1', core:true, kind:'choice',
+      q:'Que <b>fait</b> réellement ARIA ?',
+      options:['Change l’apparence','Ajoute la prise en charge du clavier','Change ce qu’annonce le navigateur','Rend l’élément focalisable'],
+      correct:2,
+      hint:'ARIA est une étiquette collée sur la boîte. Qu’est-ce qui change dans la boîte ?',
+      explain:'ARIA ne change rien visuellement, n’ajoute aucun comportement, ne rend pas un élément focalisable et n’apporte pas le clavier. Elle ne change que ce qui est écrit dans l’arbre d’accessibilité. Tout le reste reste ton travail.',
+      teach:'C’est la diapositive la plus importante de toute la section. Dis-le deux fois.'},
+
+    { t:'room', title:'D’où vient le nom', lead:'Le navigateur cherche dans un ordre strict. Le premier trouvé l’emporte.',
+      code:'1. aria-labelledby   pointe vers l’id d’un autre élément\n2. aria-label        texte écrit dans l’attribut\n3. le natif          <label>, alt, <legend>, <caption>\n4. le contenu        le texte dans <button>Envoyer</button>\n5. title             dernier recours, peu fiable',
+      points:[
+        'aria-labelledby bat tout — y compris le texte visible.',
+        'C’est pourquoi un aria-label erroné est plus dangereux qu’un aria-label absent : il fait taire le texte correct.',
+        'La commande vocale utilise le même nom : « clique Envoyer ».'
+      ]},
+
+    { t:'door', id:'IV.2', core:true, kind:'order',
+      q:'Mets dans l’ordre le calcul du nom accessible. Le plus fort en haut.',
+      items:['aria-labelledby','aria-label','le natif (label / alt / legend)','le contenu textuel','title'],
+      hint:'En haut se trouve celui qui peut faire taire tous les autres.',
+      explain:'Les attributs ARIA battent le natif, et title vient en dernier et n’est pas fiable. D’où une règle pratique : ne mets pas d’aria-label sur un bouton qui a déjà un texte correct — tu risques de le remplacer par pire.',
+      teach:''},
+
+    { t:'door', id:'IV.3', kind:'choice',
+      q:'Quelles sont les quatre choses que l’arbre d’accessibilité sait d’un élément ?',
+      options:['balise, classe, id, style','rôle, nom, état, valeur','largeur, hauteur, couleur, position','parent, enfant, voisin, racine'],
+      correct:1,
+      hint:'Qu’est-ce que c’est ? Comment ça s’appelle ? Dans quel état est-ce ? Quelle est sa valeur ?',
+      explain:'Rôle, Nom, État, Valeur. Si tu connais ces quatre-là et les trois questions derrière, tu sais comment pense toute technologie d’assistance.',
+      teach:''},
+
+    { t:'door', id:'IV.4', core:true, kind:'sr',
+      q:'Qu’annonce le lecteur d’écran ?',
+      code:'<button aria-expanded="false">Menu</button>',
+      options:['« Menu »','« Menu, bouton »','« Menu, bouton, réduit »','« Menu, réduit »'],
+      correct:2,
+      hint:'Trois choses : nom, rôle, état. D’où vient chacune ?',
+      explain:'Le nom « Menu » vient du texte, le rôle « bouton » de la balise, l’état « réduit » de aria-expanded. Seul le troisième est de l’ARIA. Les deux autres, tu les as gratuitement.',
+      teach:'Demande à la classe laquelle des trois vient d’ARIA. Ils répondent presque toujours « les trois ».'},
+
+    { t:'room', title:'Les régions live', lead:'Si JavaScript change un texte à l’écran, le lecteur ne le remarque pas. Il faut lui dire de surveiller.',
+      code:'<div aria-live="polite" id="status"></div>\n<!-- plus tard : status.textContent = "Ajouté au panier" -->\n\n<div role="alert">Paiement refusé.</div>',
+      points:[
+        'polite — attend que le lecteur ait fini. Pour « Enregistré », « 3 résultats ».',
+        'assertive — interrompt aussitôt. Seulement pour les erreurs et les minuteurs qui expirent.',
+        'role="alert" est un assertive tout prêt.',
+        'La région doit exister dans le DOM AVANT que tu y mettes du texte.'
+      ]},
+
+    { t:'door', id:'IV.5', core:true, kind:'fix',
+      q:'Quelle ligne enfreint la règle 4 d’ARIA ?',
+      lines:['<nav>','  <button aria-hidden="true">Envoyer</button>','  <span aria-hidden="true">🗑️</span>','</nav>'],
+      correct:1,
+      hint:'L’un est focalisable. L’autre non.',
+      explain:'aria-hidden sur un élément focalisable crée un fantôme : le bouton s’atteint avec Tab, mais le lecteur n’a rien à dire. L’utilisateur se tient sur du vide. Sur l’icône décorative, en revanche, c’est exactement la bonne chose.',
+      teach:''},
+
+    { t:'door', id:'IV.6', kind:'choice',
+      q:'Quand utilise-t-on aria-live="assertive" ?',
+      options:['À chaque changement à l’écran','Seulement pour du critique : une erreur, un minuteur qui expire','Jamais','Au chargement de la page'],
+      correct:1,
+      hint:'Que veut dire interrompre quelqu’un au milieu d’une phrase ?',
+      explain:'assertive interrompt le lecteur immédiatement. Employé pour la moindre broutille, il transforme la page en interruption permanente. Pour tout le reste — polite.',
+      teach:''},
+
+    { t:'door', id:'IV.7', core:true, kind:'fill',
+      q:'Le bouton n’a qu’une icône. Donne-lui un nom.',
+      before:'<button aria-', after:'="Fermer">✕</button>', accept:['label'],
+      hint:'Cinq lettres. Du texte écrit directement dans l’attribut.',
+      explain:'Sans nom, le lecteur dit seulement « bouton » et l’information s’arrête là. aria-label donne un nom là où il n’y a pas de texte visible. Règle 5 : tout élément interactif doit avoir un nom accessible.',
+      teach:''},
+
+    { t:'room', title:'Les cinq règles d’ARIA', lead:'Les Rules of ARIA Use officielles. Si tu ne retiens que cela — cela suffit.',
+      code:'1. N’utilise pas ARIA s’il existe un élément natif.\n2. Ne change pas la sémantique native sans raison.\n3. Tout élément ARIA interactif marche au clavier.\n4. Pas de role="presentation" ni d’aria-hidden sur du focalisable.\n5. Tout élément interactif a un nom accessible.',
+      points:[
+        'Pas d’ARIA vaut mieux qu’une mauvaise ARIA. — W3C',
+        'ARIA est un scalpel, pas un pansement.',
+        'Elle est nécessaire pour les onglets, les arbres, les listes déroulantes, les modales et les messages live — des choses pour lesquelles HTML n’a pas d’élément.'
+      ]},
+
+    { t:'door', id:'IV.8', kind:'choice',
+      q:'Énonce la règle 1 d’ARIA.',
+      options:['Ajoute toujours un rôle à chaque élément','S’il existe un élément HTML natif de même sémantique — utilise-le','ARIA s’écrit avant class','Chaque div a besoin d’un aria-label'],
+      correct:1,
+      hint:'Lequel est plus court : <button>, ou un div avec un rôle, un tabindex et deux gestionnaires keydown ?',
+      explain:'<button> apporte le focus, Entrée, Espace, disabled et le bon rôle, gratuitement. La même chose avec un div demande une trentaine de lignes de JavaScript, presque toujours incomplètes.',
+      teach:''},
+
+    { t:'door', id:'IV.9', kind:'tree',
+      q:'Complète le nœud dans l’arbre d’accessibilité.',
+      code:'<label for="a">J’accepte</label>\n<input type="checkbox" id="a" checked>',
+      role:{options:['checkbox','textbox','button','switch'],correct:'checkbox'},
+      name:{options:['a','(aucun)','J’accepte','checkbox'],correct:'J’accepte'},
+      state:{options:['(aucun)','checked','expanded','invalid'],correct:'checked'},
+      hint:'Le nom vient de l’étiquette associée, l’état de l’attribut du champ.',
+      explain:'Rôle : checkbox (depuis type). Nom : « J’accepte » (depuis <label for>). État : checked. Les trois viennent du HTML natif — pas une ligne d’ARIA.',
+      teach:''},
+
+    { t:'door', id:'IV.10', kind:'choice',
+      q:'D’après les analyses de WebAIM, les pages qui <b>utilisent</b> ARIA comptent en moyenne <b>plus</b> d’erreurs d’accessibilité que celles qui s’en passent. Pourquoi ?',
+      options:['ARIA est mal conçue','On la pose en pansement sur un balisage cassé — et on la pose mal','Les lecteurs d’écran ne la prennent pas en charge','Les statistiques sont fausses'],
+      correct:1,
+      hint:'Qui se tourne vers ARIA — celui qui a écrit <button>, ou celui qui a écrit <div> ?',
+      explain:'ARIA n’y est pour rien. Ce qui est en cause, c’est qu’on y recourt quand le balisage est déjà cassé, et qu’on l’applique alors au hasard. D’où la règle : pas d’ARIA vaut mieux qu’une mauvaise ARIA.',
+      teach:'C’est le moment de revenir à la règle 1 et de boucler la boucle.'}
+  ]
+}
+],
+
+/* ═══════════════════════════ LE BOSS ═══════════════════════════ */
+boss: {
+  intro: 'Les quatre clés tournent. La porte s’ouvre et l’écran s’éteint.\n\nÀ partir d’ici, tu ne vois plus rien. Tu te déplaces avec Tab, tu actives avec Entrée, et tout ce que tu apprends de la page vient d’une seule voix.\n\nVoilà exactement à quoi ressemble le web pour quelqu’un qui utilise un lecteur d’écran.',
+  stages: [
+    {
+      title:'Étape 1 — Une page sans titres',
+      task:'Trouve la section « Livraison ».',
+      items:[
+        {say:'paragraphe, Bienvenue dans notre magasin d’électronique fort de plus de 20 ans d’expérience'},
+        {say:'paragraphe, Nous travaillons avec les grandes marques et garantissons tous nos produits'},
+        {say:'paragraphe, Notre équipe est disponible tous les jours ouvrés'},
+        {say:'paragraphe, Fondée en 2004, la boutique a commencé comme un petit atelier de réparation'},
+        {say:'paragraphe, Nous livrons partout dans le pays par coursier sous 48 heures', goal:true},
+        {say:'paragraphe, Suivez-nous sur les réseaux sociaux pour les promotions'}
+      ],
+      lesson:'Sans titres, la page est un seul paragraphe sans fin. La touche H d’un lecteur d’écran saute de titre en titre — mais seulement s’il y a des titres. Tu viens de traverser tout le reste pour trouver une phrase.',
+      fixedTask:'Maintenant la même chose, avec <h2>. Trouve « Livraison ».',
+      fixedItems:[
+        {say:'titre niveau 2, À propos'},
+        {say:'titre niveau 2, Livraison', goal:true},
+        {say:'titre niveau 2, Garantie'},
+        {say:'titre niveau 2, Contact'}
+      ],
+      fix:'<h2>Livraison</h2>'
+    },
+    {
+      title:'Étape 2 — Des liens sans texte',
+      task:'Va à la page sur le retour d’un article.',
+      unknowable:true,
+      items:[
+        {say:'lien, cliquez ici'},
+        {say:'lien, cliquez ici'},
+        {say:'lien, cliquez ici'},
+        {say:'lien, cliquez ici'},
+        {say:'lien, cliquez ici'},
+        {say:'lien, cliquez ici'}
+      ],
+      wrongMsg:'Une page sur les cookies s’est ouverte. Reviens en arrière.',
+      lesson:'Il n’y avait aucun moyen de savoir. C’est précisément le problème. Le texte d’un lien doit avoir du sens tout seul — parce que le lecteur a un mode qui ne liste que les liens, sortis des phrases qui les entourent.',
+      fixedTask:'Maintenant avec un texte parlant. Trouve la page des retours.',
+      fixedItems:[
+        {say:'lien, Livraison et délais'},
+        {say:'lien, Retour d’un article', goal:true},
+        {say:'lien, Conditions de garantie'},
+        {say:'lien, Contact'}
+      ],
+      fix:'<a href="/retours">Retour d’un article</a>'
+    },
+    {
+      title:'Étape 3 — Des boutons sans nom',
+      task:'Ajoute le produit au panier.',
+      unknowable:true,
+      items:[
+        {say:'bouton'},
+        {say:'bouton'},
+        {say:'bouton'},
+        {say:'bouton'}
+      ],
+      wrongMsg:'Le produit a été retiré de ta liste d’envies.',
+      lesson:'Un bouton-icône sans nom est annoncé simplement « bouton ». L’information s’arrête là. aria-label="Ajouter au panier" est un seul attribut et règle tout.',
+      fixedTask:'Maintenant avec des noms. Ajoute au panier.',
+      fixedItems:[
+        {say:'bouton, Ajouter à la liste d’envies'},
+        {say:'bouton, Comparer'},
+        {say:'bouton, Ajouter au panier', goal:true},
+        {say:'bouton, Partager'}
+      ],
+      fix:'<button aria-label="Ajouter au panier">🛒</button>'
+    },
+    {
+      title:'Étape 4 — Un formulaire sans étiquettes',
+      task:'Saisis ton courriel.',
+      unknowable:true,
+      items:[
+        {say:'champ de texte'},
+        {say:'champ de texte'},
+        {say:'champ de texte'},
+        {say:'champ de texte'}
+      ],
+      wrongMsg:'Tu as saisi ton courriel dans le champ du code postal.',
+      lesson:'Un placeholder n’est pas une étiquette. Un champ sans <label> est une boîte sans inscription — et un formulaire mal rempli, c’est la différence entre la personne qui achète et celle qui abandonne.',
+      fixedTask:'Maintenant avec des étiquettes. Saisis le courriel.',
+      fixedItems:[
+        {say:'champ de texte, Nom'},
+        {say:'champ de texte, Courriel', goal:true},
+        {say:'champ de texte, Téléphone'},
+        {say:'champ de texte, Code postal'}
+      ],
+      fix:'<label for="email">Courriel</label>\n<input id="email" type="email">'
+    },
+    {
+      title:'Étape 5 — Une erreur signalée par la seule couleur',
+      task:'Envoie le formulaire.',
+      unknowable:true,
+      items:[
+        {say:'champ de texte, Courriel'},
+        {say:'bouton, Envoyer', silent:true},
+        {say:'lien, Conditions générales'}
+      ],
+      wrongMsg:'Rien ne se passe. Silence.',
+      lesson:'Le formulaire ne part pas parce que le courriel est invalide — et cela n’est signalé que par une bordure rouge. Pour qui ne voit pas l’écran, la page se tait, tout simplement. Voilà pourquoi role="alert" existe : le message est annoncé au moment où il apparaît.',
+      fixedTask:'Maintenant avec role="alert". Renvoie-le.',
+      fixedItems:[
+        {say:'champ de texte, Courriel, valeur invalide'},
+        {say:'bouton, Envoyer', goal:true, onGoal:'alerte : Le courriel est invalide. Vérifie l’adresse.'},
+        {say:'lien, Conditions générales'}
+      ],
+      fix:'<p role="alert">Le courriel est invalide.</p>'
+    }
+  ],
+  outro:'Tu viens de traverser une page comme des millions de personnes en traversent une chaque jour.\n\nEntre la version cassée et la version réparée, l’écart était de huit attributs.'
+}
+};
+
+</script>
+<script>
 /* Подземието на DOM-а — двигател.
    Нула зависимости. Класически скрипт, за да работи и през file:// без сървър.
 
-   Кои полета в data.js се рендерират като HTML и кои се екранират:
-     q, options            → HTML (може да ползваш <b> и &lt;tag&gt;)
+   Нищо тук не е текст и нищо не е икона:
+     текстът на интерфейса  →  i18n.js        (t('ключ', {n: 3}))
+     иконите                →  icons.js       (ICONS.door)
+     съдържанието на урока  →  content.<език>.js
+
+   Кои полета от съдържанието се рендерират като HTML и кои се екранират:
+     q, options            → HTML (може <b> и &lt;tag&gt;)
      всичко останало       → чист текст (пиши <div> направо, екранира се само) */
 
 (function () {
   'use strict';
 
-  var G = window.GAME;
+  var I18N = window.I18N;
+  var LANGS = window.LANGS;
+  var ICONS = window.ICONS;
   var STORE = 'dom-dungeon-v1';
+  var DEFAULT_LANG = 'bg';
 
   var stage = document.getElementById('stage');
   var live = document.getElementById('live');
+  var topbar = document.getElementById('topbar');
+  var brand = document.getElementById('brand');
+  var langbar = document.getElementById('langs');
   var keyring = document.getElementById('keyring');
   var modebtn = document.getElementById('modebtn');
   var footbar = document.getElementById('footbar');
   var progress = document.getElementById('progress');
+  var skiplink = document.getElementById('skiplink');
+
+  /* ───────────────────────── език ───────────────────────── */
+
+  function knownLang(code) {
+    for (var i = 0; i < LANGS.length; i++) if (LANGS[i].code === code) return code;
+    return null;
+  }
+
+  /** Ред на предпочитание: ?lang= → запазеното → езикът на браузъра → български. */
+  function pickLang(saved) {
+    var q = null;
+    try {
+      q = knownLang(new URLSearchParams(location.search).get('lang'));
+    } catch (e) { /* стар браузър — просто пропускаме */ }
+    if (q) return q;
+    if (saved && knownLang(saved)) return saved;
+    var nav = (navigator.languages || [navigator.language || '']).map(function (l) {
+      return String(l).slice(0, 2).toLowerCase();
+    });
+    for (var i = 0; i < nav.length; i++) if (knownLang(nav[i])) return nav[i];
+    return DEFAULT_LANG;
+  }
+
+  function t(key, p) {
+    var dict = I18N[S.lang] || I18N[DEFAULT_LANG];
+    var s = dict[key];
+    if (s === undefined) s = I18N[DEFAULT_LANG][key];
+    if (s === undefined) return key;
+    if (p) for (var k in p) s = s.split('{' + k + '}').join(p[k]);
+    return s;
+  }
+
+  /** Съдържанието на текущия език; ако липсва — българското. */
+  function G() {
+    return (window.CONTENT && window.CONTENT[S.lang]) || window.CONTENT[DEFAULT_LANG];
+  }
+
+  function langName(code) {
+    for (var i = 0; i < LANGS.length; i++) if (LANGS[i].code === code) return LANGS[i].name;
+    return code;
+  }
 
   /* ───────────────────────── състояние ───────────────────────── */
 
   var S = null;
   function fresh() {
     return {
+      lang: DEFAULT_LANG,
       mode: 'solo',
       route: 'full',
       screen: 'title',
@@ -1108,7 +2991,6 @@ boss: {
       answered: {},   // id на врата → 'first' | 'hint' | 'wrong'
       secrets: {},    // id на крило → намерена скрита стая
       pendingSecret: null,
-      returnTo: null,
       boss: { stage: 0, phase: 'intro', tries: 0, log: [] },
       ui: {}
     };
@@ -1144,16 +3026,19 @@ boss: {
       .replace(/"/g, '&quot;');
   }
   function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+  function ico(name) { return '<span aria-hidden="true">' + name + '</span>'; }
   function announce(msg) { live.textContent = ''; setTimeout(function () { live.textContent = msg; }, 60); }
+
   function wingById(id) {
-    for (var i = 0; i < G.wings.length; i++) if (G.wings[i].id === id) return G.wings[i];
+    var w = G().wings;
+    for (var i = 0; i < w.length; i++) if (w[i].id === id) return w[i];
     return null;
   }
   function shuffle(a) {
     var r = a.slice();
     for (var i = r.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
-      var t = r[i]; r[i] = r[j]; r[j] = t;
+      var t2 = r[i]; r[i] = r[j]; r[j] = t2;
     }
     return r;
   }
@@ -1165,10 +3050,13 @@ boss: {
   function doorsOf(w) { return steps(w).filter(function (s) { return s.t === 'door'; }); }
   function allDoors() {
     var n = 0;
-    G.wings.forEach(function (w) { n += doorsOf(w).length; });
+    G().wings.forEach(function (w) { n += doorsOf(w).length; });
     return n;
   }
   function answeredCount() { return Object.keys(S.answered).length; }
+  function keyCount() {
+    return G().wings.filter(function (w) { return S.keys[w.id]; }).length;
+  }
   function doorsLeft(w) {
     return steps(w).filter(function (st) { return st.t === 'door' && !S.answered[st.id]; });
   }
@@ -1180,56 +3068,90 @@ boss: {
     }
     return 0;
   }
-  function keyCount() {
-    return G.wings.filter(function (w) { return S.keys[w.id]; }).length;
-  }
-
-  var TYPE_LABEL = {
-    choice: 'Избери отговор', sr: 'Какво чете екранният четец', fix: 'Поправи разметката',
-    fill: 'Попълни атрибута', match: 'Свържи', order: 'Подреди',
-    tab: 'Пътят на Tab', tree: 'Дървото на достъпността'
-  };
 
   /* ───────────────────────── рамка ───────────────────────── */
 
   function paintChrome() {
     document.documentElement.dataset.mode = S.mode;
+    document.documentElement.lang = S.lang;
+    document.title = t('html.title');
 
-    var html = '';
-    G.wings.forEach(function (w) {
-      var has = S.keys[w.id];
-      html += '<span class="keyslot' + (has ? ' has' : '') + '" title="' + esc(w.artifact) + '">' +
-        (has ? '🔑' : '·') + '</span>';
+    if (skiplink) skiplink.textContent = t('skip.link');
+
+    brand.innerHTML = esc(t('brand.title')) + '<small>' + esc(t('brand.sub')) + '</small>';
+
+    var lh = '';
+    LANGS.forEach(function (l) {
+      var on = l.code === S.lang;
+      lh += '<button class="langbtn" type="button" data-lang="' + l.code + '" lang="' + l.code + '" ' +
+        'aria-pressed="' + on + '" aria-label="' + esc(t('lang.switchTo', { name: l.name })) + '">' +
+        esc(l.label) + '</button>';
     });
-    keyring.innerHTML = html +
-      '<span class="sr-only">' + keyCount() + ' от 4 ключа</span>';
+    langbar.innerHTML = lh;
+    langbar.setAttribute('aria-label', t('lang.label'));
 
-    modebtn.textContent = S.mode === 'projector' ? '🎥 Проектор' : '💻 Соло';
-    modebtn.setAttribute('aria-label', 'Смени режима. Сега: ' +
-      (S.mode === 'projector' ? 'проектор' : 'соло'));
+    var kh = '';
+    G().wings.forEach(function (w) {
+      var has = S.keys[w.id];
+      kh += '<span class="keyslot' + (has ? ' has' : '') + '" title="' + esc(w.artifact) + '" aria-hidden="true">' +
+        (has ? ICONS.key : '·') + '</span>';
+    });
+    keyring.innerHTML = kh + '<span class="sr-only">' + esc(t('keys.count', { n: keyCount() })) + '</span>';
+    keyring.setAttribute('aria-label', t('keys.ring'));
 
-    var pct = allDoors() ? Math.round(answeredCount() / allDoors() * 100) : 0;
-    progress.style.width = pct + '%';
+    var modeName = t(S.mode === 'projector' ? 'mode.projector' : 'mode.solo');
+    modebtn.innerHTML = ico(S.mode === 'projector' ? ICONS.projector : ICONS.solo) + ' ' + esc(modeName);
+    modebtn.setAttribute('aria-label', t('mode.switch', { mode: modeName }));
+
+    progress.style.width = (allDoors() ? Math.round(answeredCount() / allDoors() * 100) : 0) + '%';
 
     footbar.innerHTML =
-      '<span><kbd>Tab</kbd> навигация</span>' +
-      '<span><kbd>1</kbd>–<kbd>4</kbd> отговор</span>' +
-      '<span><kbd>→</kbd> напред</span>' +
-      '<span><kbd>H</kbd> подсказка</span>' +
-      '<span><kbd>Esc</kbd> залата</span>' +
-      '<span><kbd>P</kbd> режим</span>' +
-      '<span><kbd>R</kbd> отначало</span>';
+      '<span><kbd>Tab</kbd> ' + esc(t('foot.nav')) + '</span>' +
+      '<span><kbd>1</kbd>–<kbd>4</kbd> ' + esc(t('foot.answer')) + '</span>' +
+      '<span><kbd>' + ICONS.next + '</kbd> ' + esc(t('foot.forward')) + '</span>' +
+      '<span><kbd>' + ICONS.back + '</kbd> ' + esc(t('foot.back')) + '</span>' +
+      '<span><kbd>H</kbd> ' + esc(t('foot.hint')) + '</span>' +
+      '<span><kbd>Esc</kbd> ' + esc(t('foot.hall')) + '</span>' +
+      '<span><kbd>P</kbd> ' + esc(t('foot.mode')) + '</span>' +
+      '<span><kbd>R</kbd> ' + esc(t('foot.restart')) + '</span>';
   }
 
+  /* Кой екран гледаме. Всяко кликване вътре в един и същи екран (избор на отговор,
+     подреждане, подсказка) не е навигация и не бива да изиграва входящата анимация
+     наново — иначе всяко действие изглежда като презареждане. */
+  function viewKey() {
+    return [S.screen, S.wing, S.step, S.lang, S.mode, S.route,
+            S.boss.phase, S.boss.stage].join('|');
+  }
+  var lastView = null;
+
   function paint(html, focusSel) {
+    var key = viewKey();
+    var moved = key !== lastView;
+    lastView = key;
+
+    // ако оставаме на същия екран, фокусът трябва да се върне там, където беше
+    var prevId = document.activeElement && document.activeElement.id;
+
     stage.innerHTML = html;
+    if (moved) {
+      var panel = stage.querySelector('.panel');
+      if (panel) panel.classList.add('reveal');
+    }
     paintChrome();
+
     var f = null;
     if (S.ui.focusId) f = document.getElementById(S.ui.focusId);
     if (!f && focusSel) f = stage.querySelector(focusSel);
-    if (!f) f = stage.querySelector('h2');
+    if (!f && moved) f = stage.querySelector('h2');
+    if (!f && !moved && prevId) f = document.getElementById(prevId);
     if (f) f.focus();
     S.ui.focusId = null;
+  }
+
+  function btn(act, label, cls, primary) {
+    return '<button class="btn ' + (cls || '') + '" data-act="' + act + '"' +
+      (primary ? ' data-primary="1"' : '') + '>' + label + '</button>';
   }
 
   /* ───────────────────────── екрани ───────────────────────── */
@@ -1243,101 +3165,108 @@ boss: {
     if (S.screen === 'end') return renderEnd();
   }
 
+  /* двата маршрута са еднакви на вид: заглавие + пояснение под него,
+     за да не зависи ширината на бутона от дължината на текста */
+  function route(id, cls, n, primary) {
+    var cap = id === 'short' ? 'title.routeShort' : 'title.routeFull';
+    var note = id === 'short' ? 'title.routeShortNote' : 'title.routeFullNote';
+    var aria = id === 'short' ? 'title.routeShortAria' : 'title.routeFullAria';
+    return '<button class="btn route ' + cls + '" data-act="start" data-route="' + id + '"' +
+      (primary ? ' data-primary="1"' : '') +
+      ' aria-label="' + esc(t(aria, { n: n })) + '">' +
+      '<span class="rt">' + esc(t(cap, { n: n })) + '</span>' +
+      '<span class="rn">' + esc(t(note)) + '</span></button>';
+  }
+
   function renderTitle() {
     var core = 0, total = 0;
-    G.wings.forEach(function (w) {
+    G().wings.forEach(function (w) {
       w.steps.forEach(function (s) {
         if (s.t === 'door') { total++; if (s.core) core++; }
       });
     });
-    var hasSave = !!loadSave();
 
     paint(
-      '<div class="panel reveal">' +
+      '<div class="panel">' +
         '<div class="head">' +
-          '<p class="eyebrow">Урок 2 · интерактивна презентация</p>' +
-          '<h2 tabindex="-1">Слизаш в подземие, построено от лош HTML</h2>' +
+          '<p class="eyebrow">' + esc(t('title.eyebrow')) + '</p>' +
+          '<h2 tabindex="-1">' + esc(t('title.h2')) + '</h2>' +
         '</div>' +
-        '<p class="lead">Четири крила, всяко заключено. Всяка врата иска отговор, всяко крило дава ключ. ' +
-        'Четирите ключа отварят последната стая — и там екранът изгасва.</p>' +
-        '<p class="muted">Нищо не се губи при грешка. Единственото, което се брои, е от кой опит си отворил вратата.</p>' +
+        '<p class="lead">' + esc(t('title.lead')) + '</p>' +
+        '<p class="muted">' + esc(t('title.note')) + '</p>' +
         '<hr class="divider">' +
-        '<p class="eyebrow">Избери маршрут</p>' +
-        '<div class="row">' +
-          '<button class="btn btn-primary" data-act="start" data-route="short" data-primary="1">' +
-            'Кратък · ' + core + ' врати <span class="muted">(за час от 45 мин)</span></button>' +
-          '<button class="btn" data-act="start" data-route="full">Пълен · ' + total + ' врати</button>' +
-          (hasSave ? '<button class="btn btn-ghost" data-act="resume">Продължи запазеното</button>' : '') +
+        '<p class="eyebrow">' + esc(t('title.routePick')) + '</p>' +
+        '<div class="routes">' +
+          route('short', 'btn-primary', core, true) +
+          route('full', '', total, false) +
         '</div>' +
+        (loadSave() ? '<div class="row">' + btn('resume', esc(t('title.resume')), 'btn-ghost') + '</div>' : '') +
       '</div>'
     );
   }
 
   function renderHub() {
     var keys = keyCount();
-    var html = '<div class="panel reveal">' +
+    var html = '<div class="panel">' +
       '<div class="head">' +
-        '<p class="eyebrow">Централна зала</p>' +
-        '<h2 tabindex="-1">Валидаторът те чака</h2>' +
+        '<p class="eyebrow">' + esc(t('hub.eyebrow')) + '</p>' +
+        '<h2 tabindex="-1">' + esc(t('hub.h2')) + '</h2>' +
       '</div>' +
-      '<p class="lead">' +
-        (keys === 0 ? 'Четири крила. Ти избираш откъде да започнеш — редът е твой.' :
-         keys < 4 ? 'Имаш ' + keys + ' от 4 ключа. Последната врата още мълчи.' :
-         'Четирите ключа са у теб. Последната врата се отваря.') +
-      '</p>' +
+      '<p class="lead">' + esc(
+        keys === 0 ? t('hub.lead0') : keys < 4 ? t('hub.leadSome', { n: keys }) : t('hub.leadAll')
+      ) + '</p>' +
       '<button class="boss-door" data-act="boss" ' + (keys < 4 ? 'disabled' : 'data-primary="1"') + '>' +
-        '<span class="dn">' + (keys < 4 ? '🔒' : '🔓') + ' Последната стая — Четецът</span>' +
-        '<span class="dd">' + (keys < 4 ? 'Иска четири ключа. Имаш ' + keys + '.' : 'Екранът ще изгасне. Влизаш ли?') + '</span>' +
+        '<span class="dn">' + ico(keys < 4 ? ICONS.locked : ICONS.unlocked) + ' ' + esc(t('hub.bossName')) + '</span>' +
+        '<span class="dd">' + esc(keys < 4 ? t('hub.bossLocked', { n: keys }) : t('hub.bossOpen')) + '</span>' +
       '</button>' +
       '<div class="hub-grid">';
 
-    G.wings.forEach(function (w) {
+    G().wings.forEach(function (w) {
       var d = doorsOf(w);
       var done = d.filter(function (x) { return S.answered[x.id]; }).length;
       var got = S.keys[w.id];
       html += '<button class="door' + (got ? ' done' : '') + '" data-act="wing" data-id="' + w.id + '">' +
-        '<span class="dn"><span aria-hidden="true">' + w.icon + '</span> ' + esc(w.name) + '</span>' +
+        '<span class="dn">' + ico(ICONS.wings[w.id] || '') + ' ' + esc(w.name) + '</span>' +
         '<span class="dd">' + esc(w.blurb) + '</span>' +
-        '<span class="dp">' + (got ? '🔑 ' + esc(w.artifact) : done + ' / ' + d.length + ' врати') +
-        (S.secrets[w.id] ? ' · 💡 тайна стая' : '') + '</span>' +
+        '<span class="dp">' +
+          (got ? ico(ICONS.key) + ' ' + esc(w.artifact) : esc(t('hub.doors', { done: done, all: d.length }))) +
+          (S.secrets[w.id] ? ' · ' + ico(ICONS.hint) + ' ' + esc(t('hub.secret')) : '') +
+        '</span>' +
       '</button>';
     });
 
-    html += '</div></div>';
-    paint(html);
-    announce('Централна зала. ' + keys + ' от 4 ключа.');
+    paint(html + '</div></div>');
+    announce(t('hub.announce', { n: keys }));
   }
 
   /* ── карта на крилото: скок до всяка стая и всяка врата ── */
 
   function renderMap(w, list) {
-    var h = '<nav class="map" aria-label="Карта на крилото ' + esc(w.name) + '">';
+    var h = '<nav class="map" aria-label="' + esc(t('map.nav', { wing: w.name })) + '">';
     list.forEach(function (st, i) {
-      var cls = 'mapdot', label, mark = String(i + 1);
+      var cls = 'mapdot', label;
       if (st.t === 'room') {
         cls += ' room';
-        label = 'Стая ' + (i + 1) + ': ' + st.title;
+        label = t('map.room', { i: i + 1, title: st.title });
       } else {
         var g = S.answered[st.id];
         cls += g === 'first' ? ' ok' : g === 'hint' ? ' hint' : g === 'wrong' ? ' wr' : ' todo';
-        label = 'Врата ' + (i + 1) + ': ' + (
-          g === 'first' ? 'отворена от първи опит' :
-          g === 'hint' ? 'отворена с подсказка' :
-          g === 'wrong' ? 'отворена след грешка' : 'още заключена');
+        label = t(g === 'first' ? 'map.doorFirst' : g === 'hint' ? 'map.doorHint'
+          : g === 'wrong' ? 'map.doorWrong' : 'map.doorTodo', { i: i + 1 });
       }
       h += '<button class="' + cls + '" data-act="goto" data-i="' + i + '"' +
         (i === S.step ? ' aria-current="step"' : '') +
-        ' aria-label="' + esc(label) + '">' + mark + '</button>';
+        ' aria-label="' + esc(label) + '">' + (i + 1) + '</button>';
     });
+
     if (wingDone(w)) {
       h += '<button class="mapdot end ok" data-act="goto" data-i="' + list.length + '"' +
         (S.step >= list.length ? ' aria-current="step"' : '') +
-        ' aria-label="Съкровищница в края на коридора' +
-        (S.keys[w.id] ? ': ключът е взет' : ': ключът те чака') + '">🔑</button>';
+        ' aria-label="' + esc(t(S.keys[w.id] ? 'map.treasureTaken' : 'map.treasureReady')) + '">' +
+        ICONS.key + '</button>';
     } else {
       h += '<span class="mapdot end locked" aria-hidden="true">·</span>' +
-        '<span class="sr-only">Съкровищницата в края на коридора се отваря, ' +
-        'след като са отворени всички врати. Остават ' + doorsLeft(w).length + '.</span>';
+        '<span class="sr-only">' + esc(t('map.treasureLocked', { n: doorsLeft(w).length })) + '</span>';
     }
     h += '<span class="mapbreak" aria-hidden="true"></span>';
     return h + '</nav>';
@@ -1345,8 +3274,8 @@ boss: {
 
   function navRow(extra) {
     return '<div class="row">' + (extra || '') +
-      (S.step > 0 ? '<button class="btn btn-ghost" data-act="back">← Назад</button>' : '') +
-      '<button class="btn btn-ghost" data-act="hub">Обратно в залата</button></div>';
+      (S.step > 0 ? btn('back', ICONS.back + ' ' + esc(t('btn.back')), 'btn-ghost') : '') +
+      btn('hub', esc(t('btn.hall')), 'btn-ghost') + '</div>';
   }
 
   /* ── крило: стая, врата, съкровищница ── */
@@ -1360,9 +3289,9 @@ boss: {
   }
 
   function renderRoom(w, s, list) {
-    var html = '<div class="panel reveal">' +
+    var html = '<div class="panel">' +
       '<div class="head">' +
-        '<p class="eyebrow">' + esc(w.name) + ' · стая ' + (S.step + 1) + ' от ' + list.length + '</p>' +
+        '<p class="eyebrow">' + esc(t('wing.room', { wing: w.name, i: S.step + 1, n: list.length })) + '</p>' +
         '<h2 tabindex="-1">' + esc(s.title) + '</h2>' +
       '</div>' +
       renderMap(w, list) +
@@ -1373,9 +3302,29 @@ boss: {
       s.points.forEach(function (p) { html += '<li>' + esc(p) + '</li>'; });
       html += '</ul>';
     }
-    html += navRow('<button class="btn btn-primary" data-act="next" data-primary="1">Напред →</button>') + '</div>';
+    html += navRow(btn('next', esc(t('btn.next')) + ' ' + ICONS.next, 'btn-primary', true)) + '</div>';
     paint(html);
-    announce(w.name + ', стая ' + (S.step + 1) + ' от ' + list.length + '. ' + s.title);
+    announce(t('wing.roomAnnounce', { wing: w.name, i: S.step + 1, n: list.length, title: s.title }));
+  }
+
+  /* вече отговорена врата се отваря с показан верен отговор, не празна */
+  function hydrateReview(s, u) {
+    u.checked = true;
+    u.review = true;
+    u.ok = S.answered[s.id] !== 'wrong';
+    switch (s.kind) {
+      case 'choice': case 'sr': case 'fix': u.pick = s.correct; break;
+      case 'fill': u.typed = s.accept[0]; break;
+      case 'match':
+        u.assign = s.pairs.map(function (_, i) {
+          for (var k = 0; k < u.tokens.length; k++) if (u.tokens[k].idx === i) return k;
+          return null;
+        });
+        break;
+      case 'order': u.order = s.items.map(function (_, i) { return i; }); break;
+      case 'tab': u.seq = s.correct.slice(); break;
+      case 'tree': u.tree = { role: s.role.correct, name: s.name.correct, state: s.state.correct }; break;
+    }
   }
 
   function renderDoor(w, s, list) {
@@ -1396,56 +3345,36 @@ boss: {
       if (S.answered[s.id] && !replay) hydrateReview(s, u);
     }
 
-    var html = '<div class="panel reveal">' +
+    var html = '<div class="panel">' +
       '<div class="head">' +
-        '<p class="eyebrow">' + esc(w.name) + ' · врата ' + (S.step + 1) + ' от ' + list.length + '</p>' +
-        '<h2 tabindex="-1">' + (u.review ? '🗝️ Вече отворена врата' : '🚪 Вратата е заключена') + '</h2>' +
+        '<p class="eyebrow">' + esc(t('wing.door', { wing: w.name, i: S.step + 1, n: list.length })) + '</p>' +
+        '<h2 tabindex="-1">' + ico(u.review ? ICONS.doorOpened : ICONS.door) + ' ' +
+          esc(t(u.review ? 'wing.doorReview' : 'wing.doorLocked')) + '</h2>' +
       '</div>' +
       renderMap(w, list) +
       '<div class="doorframe">' +
-        '<span class="qtype">' + esc(TYPE_LABEL[s.kind] || '') + '</span>' +
+        '<span class="qtype">' + esc(t('type.' + s.kind)) + '</span>' +
         '<p class="q">' + s.q + '</p>' +
         (s.code ? '<pre class="code">' + esc(s.code) + '</pre>' : '') +
         widget(s, u) +
       '</div>';
 
     if (u.hint && !u.checked && s.hint) {
-      html += '<div class="hintbox">💡 ' + esc(s.hint) + '</div>';
+      html += '<div class="hintbox">' + ico(ICONS.hint) + ' ' + esc(s.hint) + '</div>';
     }
 
     if (u.checked) {
-      html += verdict(s, u, w);
+      html += verdict(s, u);
     } else {
       html += navRow(
-        '<button class="btn btn-primary" data-act="check" data-primary="1">Опитай вратата</button>' +
-        (s.hint && !u.hint ? '<button class="btn btn-ghost" data-act="hint">💡 Подсказка</button>' : ''));
+        btn('check', esc(t('btn.check')), 'btn-primary', true) +
+        (s.hint && !u.hint ? btn('hint', ico(ICONS.hint) + ' ' + esc(t('btn.hint')), 'btn-ghost') : ''));
     }
 
-    html += '</div>';
-    paint(html, u.checked ? '.verdict h3' : null);
+    paint(html + '</div>', u.checked ? '.verdict h3' : null);
     if (!u.announced) {
       u.announced = true;
-      announce('Врата ' + (S.step + 1) + ' от ' + list.length + '. ' + TYPE_LABEL[s.kind] + '.');
-    }
-  }
-
-  /* вече отговорена врата се отваря с показан верен отговор, не празна */
-  function hydrateReview(s, u) {
-    u.checked = true;
-    u.review = true;
-    u.ok = S.answered[s.id] !== 'wrong';
-    switch (s.kind) {
-      case 'choice': case 'sr': case 'fix': u.pick = s.correct; break;
-      case 'fill': u.typed = s.accept[0]; break;
-      case 'match':
-        u.assign = s.pairs.map(function (_, i) {
-          for (var t = 0; t < u.tokens.length; t++) if (u.tokens[t].idx === i) return t;
-          return null;
-        });
-        break;
-      case 'order': u.order = s.items.map(function (_, i) { return i; }); break;
-      case 'tab': u.seq = s.correct.slice(); break;
-      case 'tree': u.tree = { role: s.role.correct, name: s.name.correct, state: s.state.correct }; break;
+      announce(t('wing.doorAnnounce', { i: S.step + 1, n: list.length, type: t('type.' + s.kind) }));
     }
   }
 
@@ -1453,60 +3382,62 @@ boss: {
     var left = doorsLeft(w);
     if (left.length) {
       paint(
-        '<div class="panel reveal">' +
+        '<div class="panel">' +
           '<div class="head">' +
-            '<p class="eyebrow">Край на коридора · ' + esc(w.name) + '</p>' +
-            '<h2 tabindex="-1">Тук би трябвало да има ключ</h2>' +
+            '<p class="eyebrow">' + esc(t('lock.eyebrow', { wing: w.name })) + '</p>' +
+            '<h2 tabindex="-1">' + esc(t('lock.h2')) + '</h2>' +
           '</div>' +
           renderMap(w, steps(w)) +
-          '<p class="lead">Нишата в стената е празна. Ключът се появява чак когато коридорът ' +
-          'е извървян докрай — а зад теб ' + (left.length === 1 ? 'е останала една незатворена врата.'
-            : 'са останали ' + left.length + ' незатворени врати.') + '</p>' +
+          '<p class="lead">' + esc(t('lock.lead', {
+            rest: left.length === 1 ? t('lock.rest1') : t('lock.restN', { n: left.length })
+          })) + '</p>' +
           '<div class="row">' +
             '<button class="btn btn-primary" data-act="goto" data-i="' + firstOpenIndex(w) + '" data-primary="1">' +
-              'Към първата незатворена врата</button>' +
-            '<button class="btn btn-ghost" data-act="back">← Назад</button>' +
-            '<button class="btn btn-ghost" data-act="hub">Обратно в залата</button>' +
+              esc(t('lock.toDoor')) + '</button>' +
+            btn('back', ICONS.back + ' ' + esc(t('btn.back')), 'btn-ghost') +
+            btn('hub', esc(t('btn.hall')), 'btn-ghost') +
           '</div>' +
         '</div>'
       );
-      announce('Съкровищницата е празна. Остават ' + left.length + ' незатворени врати.');
+      announce(t('lock.announce', { n: left.length }));
       return;
     }
+
     if (!S.keys[w.id]) { S.keys[w.id] = true; save(); }
     paint(
-      '<div class="panel secret reveal">' +
+      '<div class="panel secret">' +
         '<div class="head">' +
-          '<p class="eyebrow">Съкровищница · ' + esc(w.name) + '</p>' +
-          '<h2 tabindex="-1">Ключът е твой</h2>' +
+          '<p class="eyebrow">' + esc(t('tr.eyebrow', { wing: w.name })) + '</p>' +
+          '<h2 tabindex="-1">' + esc(t('tr.h2')) + '</h2>' +
         '</div>' +
         renderMap(w, steps(w)) +
-        '<p class="artifact" aria-hidden="true">🔑</p>' +
-        '<p class="lead">Взимаш <b>' + esc(w.artifact) + '</b>. ' +
-        (keyCount() === 4 ? 'Това беше четвъртият. Последната врата вече не е заключена.'
-                          : 'Остават още ' + (4 - keyCount()) + '.') + '</p>' +
-        '<div class="row"><button class="btn btn-primary" data-act="hub" data-primary="1">Обратно в залата</button>' +
-        '<button class="btn btn-ghost" data-act="back">← Назад в крилото</button></div>' +
+        '<p class="artifact" aria-hidden="true">' + ICONS.key + '</p>' +
+        '<p class="lead">' + t('tr.take', { artifact: esc(w.artifact) }) + ' ' +
+          esc(keyCount() === 4 ? t('tr.last') : t('tr.left', { n: 4 - keyCount() })) + '</p>' +
+        '<div class="row">' +
+          btn('hub', esc(t('btn.hall')), 'btn-primary', true) +
+          btn('back', ICONS.back + ' ' + esc(t('btn.backToWing')), 'btn-ghost') +
+        '</div>' +
       '</div>'
     );
-    announce('Получаваш ключ: ' + w.artifact + '. ' + keyCount() + ' от 4.');
+    announce(t('tr.announce', { artifact: w.artifact, n: keyCount() }));
   }
 
   function renderSecret() {
     var w = wingById(S.pendingSecret);
     var sec = w.secret;
     paint(
-      '<div class="panel secret reveal">' +
+      '<div class="panel secret">' +
         '<div class="head">' +
-          '<p class="eyebrow">Скрита стая · ' + esc(w.name) + '</p>' +
-          '<h2 tabindex="-1">💡 ' + esc(sec.title) + '</h2>' +
+          '<p class="eyebrow">' + esc(t('sec.eyebrow', { wing: w.name })) + '</p>' +
+          '<h2 tabindex="-1">' + ico(ICONS.hint) + ' ' + esc(sec.title) + '</h2>' +
         '</div>' +
         '<p class="lead">' + esc(sec.text) + '</p>' +
         (sec.code ? '<pre class="code">' + esc(sec.code) + '</pre>' : '') +
-        '<div class="row"><button class="btn btn-primary" data-act="secret-close" data-primary="1">Обратно в коридора</button></div>' +
+        '<div class="row">' + btn('secret-close', esc(t('sec.back')), 'btn-primary', true) + '</div>' +
       '</div>'
     );
-    announce('Скрита стая. ' + sec.title);
+    announce(t('sec.announce', { title: sec.title }));
   }
 
   /* ───────────────────────── джаджи по тип ───────────────────────── */
@@ -1527,7 +3458,7 @@ boss: {
   var LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
   function wChoice(s, u) {
-    var h = '<div class="opts" role="group" aria-label="Възможни отговори">';
+    var h = '<div class="opts" role="group" aria-label="' + esc(t('w.options')) + '">';
     s.options.forEach(function (o, i) {
       var cls = 'opt';
       if (u.checked) {
@@ -1542,7 +3473,7 @@ boss: {
   }
 
   function wFix(s, u) {
-    var h = '<div class="lines" role="group" aria-label="Редове от кода — избери сгрешения">';
+    var h = '<div class="lines" role="group" aria-label="' + esc(t('w.lines')) + '">';
     s.lines.forEach(function (l, i) {
       var cls = 'lineb';
       if (u.checked) {
@@ -1560,7 +3491,7 @@ boss: {
   function wFill(s, u) {
     var cls = u.checked ? (u.ok ? 'good' : 'bad') : '';
     return '<div class="fill-wrap">' +
-      '<label class="sr-only" for="fill">Попълни липсващото</label>' +
+      '<label class="sr-only" for="fill">' + esc(t('w.fill')) + '</label>' +
       '<span>' + esc(s.before) + '</span>' +
       '<input class="fill-in ' + cls + '" id="fill" type="text" autocomplete="off" autocapitalize="off" ' +
       'spellcheck="false" value="' + esc(u.typed || '') + '"' + (u.checked ? ' disabled' : '') + '>' +
@@ -1577,21 +3508,21 @@ boss: {
         '<div class="slotlabel">' + esc(p[0]) + '</div>' +
         '<button id="slot-' + i + '" class="' + cls + '" data-act="slot" data-i="' + i + '"' +
         (u.checked ? ' disabled' : '') + '>' +
-        (a !== null ? esc(u.tokens[a].txt) : '— пусни тук —') + '</button>' +
+        (a !== null ? esc(u.tokens[a].txt) : esc(t('w.slotEmpty'))) + '</button>' +
       '</div>';
     });
-    h += '</div><div class="tray"><span class="tray-label">Парчета — кликни едно, после кликни мястото му</span>';
-    u.tokens.forEach(function (t, i) {
+    h += '</div><div class="tray"><span class="tray-label">' + esc(t('w.tray')) + '</span>';
+    u.tokens.forEach(function (tok, i) {
       var used = u.assign.indexOf(i) !== -1;
       h += '<button id="token-' + i + '" class="token" data-act="token" data-i="' + i + '" ' +
         'draggable="' + (!used && !u.checked) + '" aria-pressed="' + (u.sel === i ? 'true' : 'false') + '"' +
-        (used || u.checked ? ' disabled' : '') + '>' + esc(t.txt) + '</button>';
+        (used || u.checked ? ' disabled' : '') + '>' + esc(tok.txt) + '</button>';
     });
     return h + '</div>';
   }
 
   function wOrder(s, u) {
-    var h = '<div class="orderlist" role="group" aria-label="Подреди с бутоните нагоре и надолу">';
+    var h = '<div class="orderlist" role="group" aria-label="' + esc(t('w.order')) + '">';
     u.order.forEach(function (it, pos) {
       var cls = 'orderitem';
       if (u.checked) cls += (it === pos ? ' good' : ' bad');
@@ -1599,10 +3530,10 @@ boss: {
         '<span class="num" aria-hidden="true">' + (pos + 1) + '</span>' +
         '<span class="txt">' + esc(s.items[it]) + '</span>' +
         '<button id="up-' + pos + '" class="mini" data-act="up" data-i="' + pos + '" ' +
-        'aria-label="Премести „' + esc(s.items[it]) + '“ нагоре"' +
+        'aria-label="' + esc(t('w.moveUp', { item: s.items[it] })) + '"' +
         (pos === 0 || u.checked ? ' disabled' : '') + '>↑</button>' +
         '<button id="down-' + pos + '" class="mini" data-act="down" data-i="' + pos + '" ' +
-        'aria-label="Премести „' + esc(s.items[it]) + '“ надолу"' +
+        'aria-label="' + esc(t('w.moveDown', { item: s.items[it] })) + '"' +
         (pos === u.order.length - 1 || u.checked ? ' disabled' : '') + '>↓</button>' +
       '</div>';
     });
@@ -1610,7 +3541,7 @@ boss: {
   }
 
   function wTab(s, u) {
-    var h = '<div class="formsim" role="group" aria-label="Кликай полетата в реда на клавиша Tab">';
+    var h = '<div class="formsim" role="group" aria-label="' + esc(t('w.tab')) + '">';
     s.fields.forEach(function (f, i) {
       var pos = u.seq.indexOf(i);
       var cls = 'fieldbtn' + (pos !== -1 ? ' picked' : '');
@@ -1624,23 +3555,22 @@ boss: {
     });
     h += '</div>';
     if (!u.checked && u.seq.length) {
-      h += '<div class="row"><button class="btn btn-ghost" data-act="tab-reset">Изчисти реда</button></div>';
+      h += '<div class="row">' + btn('tab-reset', esc(t('w.tabClear')), 'btn-ghost') + '</div>';
     }
     return h;
   }
 
   function wTree(s, u) {
-    var parts = [['role', 'Роля', s.role], ['name', 'Име', s.name], ['state', 'Състояние', s.state]];
+    var parts = [['role', t('w.treeRole'), s.role], ['name', t('w.treeName'), s.name], ['state', t('w.treeState'), s.state]];
     var h = '<div class="treegrid">';
     parts.forEach(function (p) {
       var key = p[0], got = u.checked ? (u.tree && u.tree[key]) : null;
       var cls = u.checked ? (got === p[2].correct ? 'good' : 'bad') : '';
-      h += '<div><label for="tree-' + key + '">' + p[1] + '</label>' +
+      h += '<div><label for="tree-' + key + '">' + esc(p[1]) + '</label>' +
         '<select class="tree-sel ' + cls + '" id="tree-' + key + '"' + (u.checked ? ' disabled' : '') + '>' +
-        '<option value="">— избери —</option>';
+        '<option value="">' + esc(t('w.select')) + '</option>';
       p[2].options.forEach(function (o) {
-        var sel = got === o ? ' selected' : '';
-        h += '<option value="' + esc(o) + '"' + sel + '>' + esc(o) + '</option>';
+        h += '<option value="' + esc(o) + '"' + (got === o ? ' selected' : '') + '>' + esc(o) + '</option>';
       });
       h += '</select></div>';
     });
@@ -1650,8 +3580,7 @@ boss: {
   /* ───────────────────────── проверка ───────────────────────── */
 
   function norm(s) {
-    return String(s || '').toLowerCase().trim()
-      .replace(/["'`=]/g, '').replace(/\s+/g, '');
+    return String(s || '').toLowerCase().trim().replace(/["'`=]/g, '').replace(/\s+/g, '');
   }
 
   function evaluate(s, u) {
@@ -1666,12 +3595,12 @@ boss: {
         return s.accept.some(function (a) { return norm(a) === norm(u.typed); });
       case 'match':
         if (u.assign.indexOf(null) !== -1) return null;
-        return u.assign.every(function (t, i) { return u.tokens[t].idx === i; });
+        return u.assign.every(function (tok, i) { return u.tokens[tok].idx === i; });
       case 'order':
-        return u.order.every(function (v, i) { return v === i; });
+        return u.order.every(function (v2, i) { return v2 === i; });
       case 'tab':
         if (u.seq.length !== s.fields.length) return null;
-        return u.seq.every(function (v, i) { return v === s.correct[i]; });
+        return u.seq.every(function (v2, i) { return v2 === s.correct[i]; });
       case 'tree':
         u.tree = {
           role: document.getElementById('tree-role').value,
@@ -1686,29 +3615,25 @@ boss: {
     return null;
   }
 
-  var GRADE_TXT = {
-    first: 'Отвори я от първи опит.',
-    hint: 'Отвори я с подсказка.',
-    wrong: 'Отвори я след грешка.'
-  };
-
-  function verdict(s, u, w) {
+  function verdict(s, u) {
+    var gradeKey = { first: 'v.gradeFirst', hint: 'v.gradeHint', wrong: 'v.gradeWrong' }[S.answered[s.id]];
     var h = '<div class="verdict ' + (u.review ? 'rev' : u.ok ? 'ok' : 'no') + '">' +
-      '<h3 tabindex="-1">' + (u.review ? '🗝️ Тази врата вече е зад гърба ти'
-        : u.ok ? '✅ Вратата се отваря' : '❌ Вратата не помръдва') + '</h3>' +
-      (u.review ? '<p class="muted">' + GRADE_TXT[S.answered[s.id]] + ' Верният отговор е показан по-горе.</p>' : '') +
+      '<h3 tabindex="-1">' + ico(u.review ? ICONS.doorOpened : u.ok ? ICONS.ok : ICONS.no) + ' ' +
+        esc(t(u.review ? 'v.review' : u.ok ? 'v.ok' : 'v.no')) + '</h3>' +
+      (u.review ? '<p class="muted">' + esc(t(gradeKey) + ' ' + t('v.reviewShown')) + '</p>' : '') +
       '<p>' + esc(s.explain) + '</p>';
     if (S.mode === 'projector' && s.teach) {
-      h += '<p class="teach"><b>Бележка за водещия</b>' + esc(s.teach) + '</p>';
+      h += '<p class="teach"><b>' + esc(t('v.teacher')) + '</b>' + esc(s.teach) + '</p>';
     }
     h += '</div>';
 
     if (S.pendingSecret && !S.secrets[S.pendingSecret]) {
-      h += '<button class="crack" data-act="secret">🕳️ Забелязваш пукнатина в стената…</button>';
+      h += '<button class="crack" data-act="secret">' + ico(ICONS.crack) + ' ' + esc(t('btn.crack')) + '</button>';
     }
-    h += navRow('<button class="btn btn-primary" data-act="next" data-primary="1">Напред →</button>' +
-      (u.review ? '<button class="btn" data-act="retry">↻ Опитай наново</button>' : ''));
-    if (u.review) h += '<p class="muted note">Записаният резултат остава първият — повтарянето е за упражнение.</p>';
+    h += navRow(
+      btn('next', esc(t('btn.next')) + ' ' + ICONS.next, 'btn-primary', true) +
+      (u.review ? btn('retry', ICONS.retry + ' ' + esc(t('btn.retry')), '') : ''));
+    if (u.review) h += '<p class="muted note">' + esc(t('v.reviewNote')) + '</p>';
     return h;
   }
 
@@ -1718,7 +3643,7 @@ boss: {
     var u = S.ui;
     var res = evaluate(s, u);
 
-    if (res === null) { announce('Дай отговор, преди да опиташ вратата.'); return; }
+    if (res === null) { announce(t('v.needAnswer')); return; }
 
     if (res) {
       u.checked = true; u.ok = true;
@@ -1727,16 +3652,16 @@ boss: {
         S.answered[s.id] = grade;
         if (grade === 'first' && !S.secrets[w.id]) S.pendingSecret = w.id;
       }
-      announce('Вярно. ' + s.explain);
+      announce(t('v.announceOk', { explain: s.explain }));
     } else {
       u.tries++;
       if (u.tries >= 2) {
         u.checked = true; u.ok = false;
         if (!S.answered[s.id]) S.answered[s.id] = 'wrong';
-        announce('Грешно. Вратата се отваря така или иначе. ' + s.explain);
+        announce(t('v.announceNo', { explain: s.explain }));
       } else {
         u.hint = true;
-        announce('Не още. Ето подсказка: ' + (s.hint || ''));
+        announce(t('v.announceHint', { hint: s.hint || '' }));
         var p = stage.querySelector('.doorframe');
         if (p) { p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); }
       }
@@ -1754,44 +3679,47 @@ boss: {
 
   function renderBoss() {
     var b = S.boss;
+    var boss = G().boss;
 
     if (b.phase === 'intro') {
       paint(
-        '<div class="panel boss-stage reveal">' +
-          '<div class="head"><p class="eyebrow">Последната стая</p>' +
-          '<h2 tabindex="-1">🔊 Четецът</h2></div>' +
-          '<p class="lead">' + nl2br(G.boss.intro) + '</p>' +
-          '<div class="row"><button class="btn btn-primary" data-act="boss-begin" data-primary="1">Влез в тъмното</button>' +
-          '<button class="btn btn-ghost" data-act="hub">Не още</button></div>' +
+        '<div class="panel boss-stage">' +
+          '<div class="head"><p class="eyebrow">' + esc(t('boss.eyebrow')) + '</p>' +
+          '<h2 tabindex="-1">' + ico(ICONS.reader) + ' ' + esc(t('boss.h2')) + '</h2></div>' +
+          '<p class="lead">' + nl2br(boss.intro) + '</p>' +
+          '<div class="row">' +
+            btn('boss-begin', esc(t('boss.begin')), 'btn-primary', true) +
+            btn('hub', esc(t('boss.notYet')), 'btn-ghost') +
+          '</div>' +
         '</div>'
       );
       return;
     }
+
+    var st = boss.stages[b.stage];
 
     if (b.phase === 'done') {
-      var st0 = G.boss.stages[b.stage];
       paint(
-        '<div class="panel boss-stage reveal">' +
-          '<div class="head"><p class="eyebrow">' + esc(st0.title) + '</p>' +
-          '<h2 tabindex="-1">Пет секунди</h2></div>' +
-          '<p class="lead">Същата задача. Същият човек. Разликата е в разметката.</p>' +
-          '<pre class="code">' + esc(st0.fix) + '</pre>' +
-          '<div class="row"><button class="btn btn-primary" data-act="boss-next" data-primary="1">' +
-          (b.stage + 1 < G.boss.stages.length ? 'Следващ етап →' : 'Излез на светло') + '</button></div>' +
+        '<div class="panel boss-stage">' +
+          '<div class="head"><p class="eyebrow">' + esc(st.title) + '</p>' +
+          '<h2 tabindex="-1">' + esc(t('boss.fast')) + '</h2></div>' +
+          '<p class="lead">' + esc(t('boss.fastLead')) + '</p>' +
+          '<pre class="code">' + esc(st.fix) + '</pre>' +
+          '<div class="row">' + btn('boss-next',
+            esc(b.stage + 1 < boss.stages.length ? t('boss.nextStage') + ' ' + ICONS.next : t('boss.exitLight')),
+            'btn-primary', true) + '</div>' +
         '</div>'
       );
       return;
     }
-
-    var st = G.boss.stages[b.stage];
 
     if (b.phase === 'lesson') {
       paint(
-        '<div class="panel boss-stage reveal">' +
+        '<div class="panel boss-stage">' +
           '<div class="head"><p class="eyebrow">' + esc(st.title) + '</p>' +
-          '<h2 tabindex="-1">Ето защо</h2></div>' +
-          '<div class="boss-lesson"><h3>Какво се случи</h3><p>' + esc(st.lesson) + '</p></div>' +
-          '<div class="row"><button class="btn btn-primary" data-act="boss-fix" data-primary="1">Поправи страницата</button></div>' +
+          '<h2 tabindex="-1">' + esc(t('boss.why')) + '</h2></div>' +
+          '<div class="boss-lesson"><h3>' + esc(t('boss.whatHappened')) + '</h3><p>' + esc(st.lesson) + '</p></div>' +
+          '<div class="row">' + btn('boss-fix', esc(t('boss.fix')), 'btn-primary', true) + '</div>' +
         '</div>'
       );
       return;
@@ -1799,54 +3727,53 @@ boss: {
 
     var broken = b.phase === 'broken';
     var items = broken ? st.items : st.fixedItems;
-    var task = broken ? st.task : st.fixedTask;
 
     var h = '<div class="panel boss-stage">' +
-      '<div class="head"><p class="eyebrow">' + esc(st.title) + ' · етап ' + (b.stage + 1) + ' от ' + G.boss.stages.length + '</p>' +
-      '<h2 tabindex="-1" class="boss-task">' + esc(task) + '</h2></div>' +
+      '<div class="head"><p class="eyebrow">' +
+        esc(t('boss.stage', { title: st.title, i: b.stage + 1, n: boss.stages.length })) + '</p>' +
+      '<h2 tabindex="-1" class="boss-task">' + esc(broken ? st.task : st.fixedTask) + '</h2></div>' +
       '<div class="log" aria-hidden="true">';
-    if (!S.boss.log.length) bossLog('Екранът е тъмен. Движи се с Tab, задействай с Enter.', 'sys');
-    S.boss.log.forEach(function (l) {
-      h += '<p class="' + l.c + '">' + esc(l.t) + '</p>';
-    });
+    if (!b.log.length) bossLog(t('boss.logStart'), 'sys');
+    b.log.forEach(function (l) { h += '<p class="' + l.c + '">' + esc(l.t) + '</p>'; });
     h += '</div><div class="blocks">';
     items.forEach(function (it, i) {
       h += '<button id="blk-' + i + '" class="blk" data-act="blk" data-i="' + i + '">' +
-        '<span class="shape" aria-hidden="true">▮▮▮▮▮▮▮▮▮▮▮▮</span>' +
+        '<span class="shape" aria-hidden="true">' + ICONS.block + '</span>' +
         '<span class="sr-only">' + esc(it.say) + '</span></button>';
     });
-    h += '</div><div class="row"><button class="btn btn-ghost" data-act="hub">Излез от подземието</button></div></div>';
+    h += '</div><div class="row">' + btn('hub', esc(t('boss.exit')), 'btn-ghost') + '</div></div>';
 
     paint(h);
   }
 
   function bossActivate(i) {
     var b = S.boss;
-    var st = G.boss.stages[b.stage];
+    var st = G().boss.stages[b.stage];
     var broken = b.phase === 'broken';
     var it = (broken ? st.items : st.fixedItems)[i];
 
     if (it.goal) {
       if (broken) {
-        bossLog('✓ Намери го. Но мина през всичко останало, за да стигнеш дотук.', 'good');
+        bossLog(ICONS.yes + ' ' + t('boss.found'), 'good');
         b.phase = 'lesson';
       } else {
-        if (it.onGoal) bossLog('🔊 ' + it.onGoal, 'good');
-        bossLog('✓ Готово. Отне пет секунди.', 'good');
+        if (it.onGoal) bossLog(ICONS.reader + ' ' + it.onGoal, 'good');
+        bossLog(ICONS.yes + ' ' + t('boss.done'), 'good');
         b.phase = 'done';
       }
       save(); render();
-      announce(broken ? 'Намери целта.' : 'Готово за пет секунди.');
+      announce(broken ? t('boss.announceFound') : t('boss.announceFast'));
       return;
     }
 
     b.tries++;
     S.ui.focusId = 'blk-' + i;
-    bossLog('✗ ' + (st.wrongMsg || 'Нищо не се случва.'), 'bad');
-    var max = st.unknowable ? 2 : 6;
-    if (b.tries >= max) { b.phase = 'lesson'; b.tries = 0; }
+    bossLog(ICONS.nope + ' ' + (st.wrongMsg || t('boss.nothing')), 'bad');
+    if (b.tries >= (st.unknowable ? 2 : 6)) { b.phase = 'lesson'; b.tries = 0; }
     save(); render();
   }
+
+  /* ───────────────────────── финал ───────────────────────── */
 
   function renderEnd() {
     var first = 0, hinted = 0, wrong = 0;
@@ -1856,85 +3783,86 @@ boss: {
     });
     var total = first + hinted + wrong;
     var ratio = total ? first / total : 0;
-    var rank = ratio === 1 ? '🏅 Майстор архитект'
-      : ratio >= 0.8 ? '🥈 Старши строител'
-      : ratio >= 0.55 ? '🥉 Чирак'
-      : '🧱 Зидар';
-    var secrets = Object.keys(S.secrets).length;
+    var rankKey = ratio === 1 ? 'rank100' : ratio >= 0.8 ? 'rank80' : ratio >= 0.55 ? 'rank55' : 'rank0';
+    var rank = ICONS.ranks[rankKey] + ' ' + t('end.' + rankKey);
 
     paint(
-      '<div class="panel reveal">' +
-        '<div class="head"><p class="eyebrow">Излезе на светло</p>' +
-        '<h2 tabindex="-1">Осем атрибута</h2></div>' +
-        '<p class="lead">' + nl2br(G.boss.outro) + '</p>' +
+      '<div class="panel">' +
+        '<div class="head"><p class="eyebrow">' + esc(t('end.eyebrow')) + '</p>' +
+        '<h2 tabindex="-1">' + esc(t('end.h2')) + '</h2></div>' +
+        '<p class="lead">' + nl2br(G().boss.outro) + '</p>' +
         '<hr class="divider">' +
-        '<p class="rank">' + rank + '</p>' +
+        '<p class="rank">' + esc(rank) + '</p>' +
         '<div class="score">' +
-          tile(total, 'отворени врати') +
-          tile(first, 'от първи опит') +
-          tile(hinted, 'с подсказка') +
-          tile(secrets + ' / 4', 'тайни стаи') +
+          tile(total, t('end.tileDoors')) +
+          tile(first, t('end.tileFirst')) +
+          tile(hinted, t('end.tileHint')) +
+          tile(Object.keys(S.secrets).length + ' / 4', t('end.tileSecrets')) +
         '</div>' +
-        '<p class="muted">Трите въпроса, с които излизаш: <b>Какво е това?</b> (роля) · ' +
-        '<b>Как се казва?</b> (име) · <b>В какво състояние е?</b> (състояние)</p>' +
+        '<p class="muted">' + t('end.three') + '</p>' +
         '<div class="row">' +
-          '<button class="btn btn-primary" data-act="hub" data-primary="1">Обратно в залата</button>' +
-          '<button class="btn btn-ghost" data-act="restart">Започни отначало</button>' +
+          btn('hub', esc(t('btn.hall')), 'btn-primary', true) +
+          btn('restart', esc(t('btn.restart')), 'btn-ghost') +
         '</div>' +
       '</div>'
     );
-    announce('Край. ' + rank + '. ' + first + ' от ' + total + ' врати от първи опит.');
+    announce(t('end.announce', { rank: t('end.' + rankKey), first: first, total: total }));
   }
   function tile(n, l) {
-    return '<div class="scoretile"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>';
+    return '<div class="scoretile"><div class="n">' + esc(n) + '</div><div class="l">' + esc(l) + '</div></div>';
   }
 
   /* ───────────────────────── действия ───────────────────────── */
 
-  function handle(act, ds, node) {
+  function handle(act, ds) {
     var u = S.ui;
     var i = ds.i !== undefined ? parseInt(ds.i, 10) : null;
 
     switch (act) {
-      case 'start':
-        S.route = ds.route; S.screen = 'hub'; save(); return render();
+      case 'start': S.route = ds.route; S.screen = 'hub'; save(); return render();
       case 'resume':
-        var d = loadSave(); if (d) { S = d; S.screen = 'hub'; } return render();
+        var d = loadSave();
+        if (d) { var lang = S.lang; S = d; S.lang = lang; S.screen = 'hub'; }
+        return render();
       case 'restart':
-        wipe(); var m = S.mode; S = fresh(); S.mode = m; return render();
-      case 'hub':
-        S.screen = 'hub'; S.ui = {}; save(); return render();
-      case 'wing':
-        S.wing = ds.id; S.step = 0; S.screen = 'wing'; S.ui = {}; save(); return render();
-      case 'next':
-        S.step++; S.ui = {}; save(); return render();
-      case 'back':
-        if (S.step > 0) S.step--; S.ui = {}; save(); return render();
+        wipe();
+        var keep = { mode: S.mode, lang: S.lang };
+        S = fresh(); S.mode = keep.mode; S.lang = keep.lang;
+        return render();
+      case 'hub': S.screen = 'hub'; S.ui = {}; save(); return render();
+      case 'wing': S.wing = ds.id; S.step = 0; S.screen = 'wing'; S.ui = {}; save(); return render();
+      case 'next': S.step++; S.ui = {}; save(); return render();
+      case 'back': if (S.step > 0) S.step--; S.ui = {}; save(); return render();
       case 'goto': {
         var gw = wingById(S.wing), glist = steps(gw);
         S.step = (i >= glist.length && !wingDone(gw)) ? glist.length - 1 : i;
         S.ui = {}; save(); return render();
       }
-      case 'retry':
-        S.ui = { doorId: null, replay: true }; return render();
+      case 'retry': S.ui = { doorId: null, replay: true }; return render();
       case 'check': return check();
       case 'hint': u.hint = true; return render();
 
-      case 'opt': u.pick = i; S.ui.focusId = 'opt-' + i; return render();
-      case 'token':
-        u.sel = (u.sel === i ? null : i); S.ui.focusId = 'token-' + i; return render();
+      /* Изборът на отговор не променя нищо друго на екрана, затова само
+         пребоядисваме бутоните вместо да строим целия панел наново. */
+      case 'opt': {
+        u.pick = i;
+        var opts = stage.querySelectorAll('[data-act="opt"]');
+        for (var k = 0; k < opts.length; k++) {
+          opts[k].setAttribute('aria-pressed', String(parseInt(opts[k].dataset.i, 10) === i));
+        }
+        return;
+      }
+      case 'token': u.sel = (u.sel === i ? null : i); u.focusId = 'token-' + i; return render();
       case 'slot':
         if (u.sel !== null && u.sel !== undefined) { u.assign[i] = u.sel; u.sel = null; }
         else if (u.assign[i] !== null) { u.assign[i] = null; }
-        S.ui.focusId = 'slot-' + i; return render();
-      case 'up':
-        swap(u.order, i, i - 1); S.ui.focusId = 'up-' + (i - 1); return render();
-      case 'down':
-        swap(u.order, i, i + 1); S.ui.focusId = 'down-' + (i + 1); return render();
+        u.focusId = 'slot-' + i; return render();
+      case 'up': swap(u.order, i, i - 1); u.focusId = 'up-' + (i - 1); return render();
+      case 'down': swap(u.order, i, i + 1); u.focusId = 'down-' + (i + 1); return render();
       case 'field':
         var at = u.seq.indexOf(i);
         if (at !== -1) u.seq.splice(at, 1); else u.seq.push(i);
-        S.ui.focusId = 'field-' + i; return render();
+        u.focusId = 'field-' + i; return render();
       case 'tab-reset': u.seq = []; return render();
 
       case 'secret': S.screen = 'secret'; return render();
@@ -1942,54 +3870,71 @@ boss: {
         S.secrets[S.pendingSecret] = true; S.pendingSecret = null;
         S.screen = 'wing'; save(); return render();
 
-      case 'boss':
-        S.screen = 'boss'; S.boss = { stage: 0, phase: 'intro', tries: 0, log: [] }; return render();
-      case 'boss-begin':
-        S.boss.phase = 'broken'; S.boss.log = []; return render();
-      case 'boss-fix':
-        S.boss.phase = 'fixed'; S.boss.tries = 0; S.boss.log = []; return render();
+      case 'boss': S.screen = 'boss'; S.boss = { stage: 0, phase: 'intro', tries: 0, log: [] }; return render();
+      case 'boss-begin': S.boss.phase = 'broken'; S.boss.log = []; return render();
+      case 'boss-fix': S.boss.phase = 'fixed'; S.boss.tries = 0; S.boss.log = []; return render();
       case 'boss-next':
-        if (S.boss.stage + 1 < G.boss.stages.length) {
+        if (S.boss.stage + 1 < G().boss.stages.length) {
           S.boss.stage++; S.boss.phase = 'broken'; S.boss.tries = 0; S.boss.log = [];
         } else { S.screen = 'end'; }
         save(); return render();
       case 'blk': return bossActivate(i);
     }
   }
-  function swap(a, i, j) { var t = a[i]; a[i] = a[j]; a[j] = t; }
+  function swap(a, i, j) { var x = a[i]; a[i] = a[j]; a[j] = x; }
+
+  function setLang(code) {
+    if (!knownLang(code) || code === S.lang) return;
+    S.lang = code;
+    S.ui = {};
+    S.boss.log = [];
+    save();
+    render();
+    announce(t('lang.changed'));
+  }
+
+  function toggleMode() {
+    S.mode = S.mode === 'solo' ? 'projector' : 'solo';
+    render();
+    announce(t('mode.announce', { mode: t(S.mode === 'projector' ? 'mode.projector' : 'mode.solo') }));
+  }
 
   /* ───────────────────────── вход ───────────────────────── */
 
   stage.addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]');
     if (!b || b.disabled) return;
-    handle(b.dataset.act, b.dataset, b);
+    handle(b.dataset.act, b.dataset);
+  });
+
+  topbar.addEventListener('click', function (e) {
+    var l = e.target.closest('[data-lang]');
+    if (l) return setLang(l.dataset.lang);
+    if (e.target.closest('#modebtn')) return toggleMode();
   });
 
   /* фокусът върху блок в стаята на боса „изговаря“ какво има там */
   stage.addEventListener('focusin', function (e) {
     var b = e.target.closest('.blk');
     if (!b || S.screen !== 'boss') return;
-    var st = G.boss.stages[S.boss.stage];
-    var items = S.boss.phase === 'broken' ? st.items : st.fixedItems;
-    var it = items[parseInt(b.dataset.i, 10)];
+    var st = G().boss.stages[S.boss.stage];
+    var it = (S.boss.phase === 'broken' ? st.items : st.fixedItems)[parseInt(b.dataset.i, 10)];
     if (!it) return;
     b.classList.add('lit');
     var logEl = stage.querySelector('.log');
     if (!logEl) return;
     var p = document.createElement('p');
-    p.textContent = '🔊 ' + it.say;
+    p.textContent = ICONS.reader + ' ' + it.say;
     logEl.appendChild(p);
     logEl.scrollTop = logEl.scrollHeight;
-    S.boss.log.push({ t: '🔊 ' + it.say, c: '' });
-    if (S.boss.log.length > 40) S.boss.log.shift();
+    bossLog(ICONS.reader + ' ' + it.say);
   });
 
   /* drag & drop за свързването — клавиатурният път (клик → клик) остава водещ */
   stage.addEventListener('dragstart', function (e) {
-    var t = e.target.closest('.token');
-    if (!t || t.disabled) return;
-    e.dataTransfer.setData('text/plain', t.dataset.i);
+    var tk = e.target.closest('.token');
+    if (!tk || tk.disabled) return;
+    e.dataTransfer.setData('text/plain', tk.dataset.i);
     e.dataTransfer.effectAllowed = 'move';
   });
   stage.addEventListener('dragover', function (e) {
@@ -2016,22 +3961,12 @@ boss: {
     render();
   });
 
-  modebtn.addEventListener('click', toggleMode);
-  function toggleMode() {
-    S.mode = S.mode === 'solo' ? 'projector' : 'solo';
-    paintChrome();
-    render();
-    announce('Режим: ' + (S.mode === 'projector' ? 'проектор' : 'соло'));
-  }
-
   document.addEventListener('keydown', function (e) {
-    var t = e.target;
-    var typing = t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA');
+    var target = e.target;
+    var typing = target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA');
     if (e.metaKey || e.ctrlKey || e.altKey) return;
 
-    if (e.key === 'Escape' && S.screen !== 'title') {
-      e.preventDefault(); return handle('hub', {});
-    }
+    if (e.key === 'Escape' && S.screen !== 'title') { e.preventDefault(); return handle('hub', {}); }
     if (typing) {
       if (e.key === 'Enter' && S.screen === 'wing') { e.preventDefault(); check(); }
       return;
@@ -2040,7 +3975,7 @@ boss: {
     if (e.code === 'KeyP') { e.preventDefault(); return toggleMode(); }
     if (e.code === 'KeyR') {
       e.preventDefault();
-      if (confirm('Да започнем ли отначало? Прогресът се изтрива.')) handle('restart', {});
+      if (confirm(t('confirm.restart'))) handle('restart', {});
       return;
     }
     if (e.code === 'KeyH') {
@@ -2048,17 +3983,19 @@ boss: {
       if (hb) { e.preventDefault(); hb.click(); }
       return;
     }
-    var onChrome = (t === document.body || t === stage || t.tagName === 'H2');
+
+    var onChrome = (target === document.body || target === stage || target.tagName === 'H2');
     if (e.key === 'ArrowLeft' && onChrome) {
       var bb = stage.querySelector('[data-act="back"]');
       if (bb) { e.preventDefault(); bb.click(); }
       return;
     }
-    if ((e.key === 'ArrowRight' && onChrome) || (e.key === 'Enter' && t === document.body)) {
+    if ((e.key === 'ArrowRight' && onChrome) || (e.key === 'Enter' && target === document.body)) {
       var pb = stage.querySelector('[data-primary]');
       if (pb && !pb.disabled) { e.preventDefault(); pb.click(); }
       return;
     }
+
     var n = null;
     if (/^[1-5]$/.test(e.key)) n = parseInt(e.key, 10) - 1;
     else if (/^Key[A-E]$/.test(e.code)) n = e.code.charCodeAt(3) - 65;
@@ -2071,6 +4008,8 @@ boss: {
   /* ───────────────────────── старт ───────────────────────── */
 
   S = fresh();
+  var saved = loadSave();
+  S.lang = pickLang(saved && saved.lang);
   render();
 })();
 

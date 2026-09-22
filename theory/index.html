@@ -4,19 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Подземието на DOM-а — интерактивен урок по HTML, семантика и ARIA</title>
-<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA на български. Четири крила, 35 врати в осем типа задачи, скрити стаи и финален бос, в който екранът изгасва и минаваш страницата само по това, което чете екранният четец.">
+<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA на български, английски и френски. Четири крила, 35 врати в осем типа задачи, скрити стаи и финален бос, в който екранът изгасва и минаваш страницата само по това, което чете екранният четец.">
 <meta name="author" content="bob4o-afk">
 <meta name="keywords" content="HTML, семантичен HTML, ARIA, достъпност, a11y, WCAG, екранен четец, интерактивен урок, tues game, ТУЕС, български">
 <link rel="canonical" href="https://bob4o-afk.github.io/tues-game/theory/">
+<link rel="alternate" hreflang="bg" href="https://bob4o-afk.github.io/tues-game/theory/?lang=bg">
+<link rel="alternate" hreflang="en" href="https://bob4o-afk.github.io/tues-game/theory/?lang=en">
+<link rel="alternate" hreflang="fr" href="https://bob4o-afk.github.io/tues-game/theory/?lang=fr">
+<link rel="alternate" hreflang="x-default" href="https://bob4o-afk.github.io/tues-game/theory/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#0E0F14">
 
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="TUES Game">
 <meta property="og:locale" content="bg_BG">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale:alternate" content="fr_FR">
 <meta property="og:url" content="https://bob4o-afk.github.io/tues-game/theory/">
 <meta property="og:title" content="Подземието на DOM-а — HTML, семантика и ARIA">
-<meta property="og:description" content="35 врати, четири ключа и финал, в който екранът изгасва. Интерактивен урок по уеб достъпност на български.">
+<meta property="og:description" content="35 врати, четири ключа и финал, в който екранът изгасва. Интерактивен урок по уеб достъпност на три езика.">
 <meta property="og:image" content="https://bob4o-afk.github.io/tues-game/theory/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -34,7 +40,7 @@
   "name": "Подземието на DOM-а",
   "url": "https://bob4o-afk.github.io/tues-game/theory/",
   "description": "Интерактивен урок по HTML, семантика и ARIA — четири крила, 35 врати, скрити стаи и финален бос.",
-  "inLanguage": "bg",
+  "inLanguage": ["bg", "en", "fr"],
   "learningResourceType": "Game",
   "educationalUse": "instruction",
   "educationalLevel": "Средно образование",
@@ -53,20 +59,21 @@
 }
 </script>
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230E0F14'/%3E%3Ctext y='24' x='4' font-size='22'%3E%F0%9F%8F%B0%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22%230E0F14%22%2F%3E%3Cpath%20d%3D%22M14%2058V26a18%2018%200%200%201%2036%200v32z%22%20fill%3D%22none%22%20stroke%3D%22%23F0A836%22%20stroke-width%3D%226%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2234%22%20r%3D%225%22%20fill%3D%22%23F0A836%22%2F%3E%3Cpath%20d%3D%22M32%2038l3.2%2011h-6.4z%22%20fill%3D%22%23F0A836%22%2F%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<a class="skip-link" href="#stage">Прескочи към съдържанието</a>
+<a class="skip-link" id="skiplink" href="#stage">Прескочи към съдържанието</a>
 
 <div class="shell">
-  <header class="topbar">
-    <h1 class="brand">Подземието на DOM-а<small>Урок 2 · HTML, семантика и ARIA</small></h1>
-    <div class="keyring" id="keyring" aria-label="Събрани ключове"></div>
-    <button class="modebtn" id="modebtn" type="button">Режим</button>
+  <header class="topbar" id="topbar">
+    <h1 class="brand" id="brand"></h1>
+    <div class="langs" id="langs" role="group"></div>
+    <div class="keyring" id="keyring"></div>
+    <button class="modebtn" id="modebtn" type="button"></button>
   </header>
 
   <div class="progressbar" aria-hidden="true"><span id="progress" style="width:0%"></span></div>
@@ -78,7 +85,11 @@
 
 <div class="sr-only" id="live" role="status" aria-live="polite"></div>
 
-<script src="./data.js"></script>
+<script src="./icons.js"></script>
+<script src="./i18n.js"></script>
+<script src="./content.bg.js"></script>
+<script src="./content.en.js"></script>
+<script src="./content.fr.js"></script>
 <script src="./game.js"></script>
 </body>
 </html>

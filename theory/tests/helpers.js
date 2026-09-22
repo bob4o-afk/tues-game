@@ -6,26 +6,32 @@ const { JSDOM } = require('jsdom');
 
 const ROOT = path.join(__dirname, '..');
 
-/** Зарежда разделения проект (index.html + отделните файлове). */
-function load() {
+const SCRIPTS = ['icons.js', 'i18n.js', 'content.bg.js', 'content.en.js', 'content.fr.js', 'game.js'];
+
+/** Зарежда разделения проект (index.html + отделните файлове).
+    lang по избор — ако е подаден, играта тръгва на този език. */
+function load(lang) {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')
     .replace(/<link[^>]*>/g, '')                 // без мрежа за шрифтовете
     .replace(/<script[^>]*><\/script>/g, '');    // скриптовете ги пускаме ръчно
-  const dom = new JSDOM(html, { url: 'https://example.org/', runScripts: 'outside-only' });
-  dom.window.eval(fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8'));
-  dom.window.eval(fs.readFileSync(path.join(ROOT, 'game.js'), 'utf8'));
-  return wrap(dom);
+  const url = 'https://example.org/' + (lang ? '?lang=' + lang : '');
+  const dom = new JSDOM(html, { url: url, runScripts: 'outside-only' });
+  SCRIPTS.forEach(function (f) {
+    dom.window.eval(fs.readFileSync(path.join(ROOT, f), 'utf8'));
+  });
+  return wrap(dom, lang);
 }
 
 /** Зарежда слепения офлайн файл — истинско изпълнение на inline скриптовете. */
-function loadBundle(file = 'igra-offline.html') {
+function loadBundle(file = 'igra-offline.html', lang) {
   const html = fs.readFileSync(path.join(ROOT, file), 'utf8')
     .replace(/<link[^>]*rel="stylesheet"[^>]*>/g, '');
-  const dom = new JSDOM(html, { url: 'https://example.org/', runScripts: 'dangerously' });
-  return wrap(dom);
+  const url = 'https://example.org/' + (lang ? '?lang=' + lang : '');
+  const dom = new JSDOM(html, { url: url, runScripts: 'dangerously' });
+  return wrap(dom, lang);
 }
 
-function wrap(dom) {
+function wrap(dom, lang) {
   const doc = dom.window.document;
   const errors = [];
   dom.window.addEventListener('error', e => errors.push(e.message));
@@ -40,7 +46,14 @@ function wrap(dom) {
   };
   const txt = () => $('#stage').textContent;
 
-  return { dom, doc, $, $$, click, txt, errors, G: dom.window.GAME };
+  const code = lang || doc.documentElement.lang || 'bg';
+  return {
+    dom, doc, $, $$, click, txt, errors,
+    lang: code,
+    G: dom.window.CONTENT[code],
+    T: dom.window.I18N[code],
+    ICONS: dom.window.ICONS
+  };
 }
 
 /** Дава верния отговор на текущата врата, какъвто и да е типът ѝ. */
@@ -93,7 +106,7 @@ function clearWing(ctx, w) {
     if ($('[data-act="secret"]')) { click('[data-act="secret"]'); click('[data-act="secret-close"]'); }
     click('[data-act="next"]');
   });
-  if (!txt().includes('Ключът е твой')) throw new Error(`${w.id}: няма съкровищница в края`);
+  if (!txt().includes(ctx.T['tr.h2'])) throw new Error(`${w.id}: няма съкровищница в края`);
   click('[data-act="hub"]');
 }
 
