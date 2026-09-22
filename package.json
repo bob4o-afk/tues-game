@@ -1,0 +1,14 @@
+{
+  "name": "tues-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Интерактивни уроци — по една игра на урок",
+  "scripts": {
+    "test": "node --test theory/tests/*.test.js",
+    "bundle": "node theory/bundle.js",
+    "build": "npm run bundle && node build.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "engines": { "node": ">=20" },
+  "devDependencies": { "jsdom": "^24.1.3" }
+}

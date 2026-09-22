@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Генериран файл. Редактирай източниците и пусни: node build.js -->
+<title>Подземието на DOM-а</title>
+<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA — подземие с четири крила, скрити стаи и финален бос.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230E0F14'/%3E%3Ctext y='24' x='4' font-size='22'%3E%F0%9F%8F%B0%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* Подземието на DOM-а — един ангажиран тъмен свят: камък, факла, руна.
+   Няма светла тема нарочно: играта е подземие. Всичко се рисува явно. */
+
+:root{
+  color-scheme: dark;
+
+  --ink:#0E0F14;
+  --ink-2:#0A0B0F;
+  --stone:#171922;
+  --stone-2:#1F2230;
+  --edge:#2C3040;
+  --edge-2:#3D4356;
+
+  --torch:#F0A836;
+  --torch-dim:#8A6423;
+  --rune:#6FD3C7;
+  --moss:#7ED694;
+  --ember:#FF9A8B;
+
+  --text:#EDE9E2;
+  --muted:#9A94A6;
+
+  --display:"Philosopher","Iowan Old Style",Georgia,serif;
+  --body:"Golos Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+
+  --scale:1;
+
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:calc(15px * var(--scale));
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+[data-mode="projector"]{--scale:1.4}
+[hidden]{display:none !important}
+h1,h2,h3{text-wrap:balance}
+
+/* ---------------- скелет ---------------- */
+.shell{
+  min-height:100%;
+  max-width:1080px;
+  margin-inline:auto;
+  padding-inline:16px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+main{flex:1 0 auto;padding-bottom:8px}
+main:focus{outline:none}
+
+/* ---------------- горна лента ---------------- */
+.topbar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;
+  padding-block:14px 12px;
+}
+.brand{
+  font-family:var(--display);font-weight:700;font-size:1.15rem;
+  letter-spacing:.02em;color:var(--torch);margin:0;line-height:1.25;
+}
+.brand small{
+  display:block;font-family:var(--body);font-weight:400;font-size:.62em;
+  color:var(--muted);letter-spacing:.08em;text-transform:uppercase;
+}
+.keyring{display:flex;gap:6px;margin-inline-start:auto;align-items:center}
+.keyslot{
+  width:2.2em;height:2.2em;display:grid;place-items:center;
+  border:1px solid var(--edge);background:var(--ink-2);font-size:.9em;
+  filter:grayscale(1) brightness(.45);
+}
+.keyslot.has{filter:none;border-color:var(--torch-dim);background:#2A2011}
+.modebtn{
+  font:inherit;font-size:.82em;color:var(--muted);background:transparent;
+  border:1px solid var(--edge);padding:.4em .8em;cursor:pointer;
+}
+.modebtn:hover{color:var(--text);border-color:var(--edge-2)}
+
+.progressbar{height:3px;background:var(--edge)}
+.progressbar span{display:block;height:100%;background:var(--torch);transition:width .3s}
+
+/* ---------------- панел ---------------- */
+.panel{
+  background:var(--stone);
+  border:1px solid var(--edge);
+  border-top:2px solid var(--torch-dim);
+  padding:clamp(18px,3.5vw,32px);
+  display:flex;flex-direction:column;gap:16px;
+}
+.panel h2{
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(1.45rem,3.6vw,1.9rem);line-height:1.15;margin:0;
+}
+.panel h2:focus{outline:none}
+.panel h2:focus-visible{outline:3px solid var(--torch);outline-offset:6px}
+.eyebrow{
+  font-size:.74em;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--torch);font-weight:600;margin:0;
+}
+.head{display:flex;flex-direction:column;gap:.35em}
+.lead,.panel p{max-width:64ch;margin:0}
+.muted{color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.divider{height:1px;background:var(--edge);border:0;margin:0}
+
+/* ---------------- код ---------------- */
+pre.code{
+  font-family:var(--mono);font-size:.92em;line-height:1.7;
+  background:var(--ink-2);border:1px solid var(--edge);border-left:3px solid var(--rune);
+  padding:14px 16px;margin:0;overflow-x:auto;color:#D9E6E3;
+}
+code{
+  font-family:var(--mono);font-size:.92em;background:#00000040;
+  padding:.1em .35em;border:1px solid var(--edge);color:#D9E6E3;
+}
+
+ul.points{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5em}
+ul.points li{padding-left:1.4em;position:relative;max-width:64ch}
+ul.points li::before{content:"▸";position:absolute;left:0;color:var(--torch)}
+
+/* ---------------- бутони ---------------- */
+.btn{
+  font:inherit;font-weight:500;
+  background:var(--stone-2);color:var(--text);
+  border:1px solid var(--edge-2);
+  padding:.65em 1.3em;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.btn:hover{background:#262A3A;border-color:var(--torch-dim)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-primary{background:#2A2011;border-color:var(--torch-dim);color:var(--torch)}
+.btn-primary:hover{background:#3A2C16;border-color:var(--torch)}
+.btn-ghost{background:transparent;border-color:var(--edge);color:var(--muted)}
+.btn-ghost:hover{color:var(--text);background:transparent}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+:focus-visible{outline:3px solid var(--torch);outline-offset:2px}
+
+/* ---------------- централната зала ---------------- */
+.hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:620px){.hub-grid{grid-template-columns:1fr}}
+.door{
+  display:block;width:100%;text-align:left;font:inherit;color:var(--text);
+  background:var(--stone-2);border:1px solid var(--edge);
+  border-left:3px solid var(--edge-2);
+  padding:1em 1.1em;cursor:pointer;
+}
+.door:hover{border-left-color:var(--torch);background:#232735}
+.door .dn{font-family:var(--display);font-weight:700;font-size:1.15em;display:flex;gap:.5em;align-items:baseline}
+.door .dd{color:var(--muted);font-size:.86em;margin-top:.3em;max-width:34ch}
+.door .dp{font-family:var(--mono);font-size:.76em;color:var(--torch);margin-top:.6em;letter-spacing:.06em}
+.door.done{border-left-color:var(--moss)}
+.door.done .dp{color:var(--moss)}
+.boss-door{
+  width:100%;text-align:left;font:inherit;color:var(--text);
+  background:linear-gradient(180deg,#221018,#16121A);
+  border:1px solid #4A2230;border-left:3px solid #7A3145;
+  padding:1em 1.1em;cursor:pointer;
+}
+.boss-door[disabled]{cursor:not-allowed;opacity:.55}
+.boss-door:not([disabled]):hover{border-left-color:var(--ember)}
+.boss-door .dn{font-family:var(--display);font-weight:700;font-size:1.15em}
+.boss-door .dd{color:var(--muted);font-size:.86em;margin-top:.3em}
+
+/* ---------------- карта на крилото ---------------- */
+.map{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mapdot{
+  font:inherit;font-family:var(--mono);font-size:.82em;line-height:1;
+  width:2.3em;height:2.3em;display:grid;place-items:center;cursor:pointer;
+  background:var(--ink-2);border:1px solid var(--edge);color:var(--muted);
+}
+.mapdot:hover{border-color:var(--edge-2);color:var(--text)}
+.mapdot.room{border-style:dotted}
+.mapdot.todo{border-color:var(--torch-dim);color:var(--torch)}
+.mapdot.ok{border-color:var(--moss);color:var(--moss)}
+.mapdot.hint{border-color:var(--torch);color:var(--torch)}
+.mapdot.wr{border-color:var(--ember);color:var(--ember)}
+.mapdot.end{margin-left:auto}
+.mapdot.end.locked{border-style:dashed;opacity:.45;cursor:default}
+.mapbreak{display:none}
+
+/* на тесен екран ключът се вдига на собствен ред НАД номерата,
+   иначе при пренасяне увисва вдясно до последния номер и се чете като част от него */
+@media (max-width:620px){
+  .mapdot.end{order:-1;margin-left:0}
+  .mapbreak{display:block;order:-1;flex-basis:100%;height:0}
+}
+.mapdot[aria-current="step"]{
+  background:var(--stone-2);color:var(--text);
+  box-shadow:inset 0 -3px 0 var(--torch);
+}
+
+/* ---------------- врата с въпрос ---------------- */
+.doorframe{
+  border:1px solid var(--edge);background:var(--ink-2);
+  padding:clamp(14px,2.5vw,22px);display:flex;flex-direction:column;gap:14px;
+}
+.qtype{font-size:.72em;letter-spacing:.12em;text-transform:uppercase;color:var(--rune);font-weight:600}
+.q{font-size:1.08em;font-weight:500;margin:0;max-width:60ch}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{
+  display:flex;gap:.8em;align-items:flex-start;text-align:left;
+  font:inherit;color:var(--text);background:var(--stone);
+  border:1px solid var(--edge);padding:.7em .9em;cursor:pointer;width:100%;
+}
+.opt:hover{border-color:var(--edge-2);background:var(--stone-2)}
+.opt .chip{
+  flex:0 0 auto;width:1.8em;height:1.8em;display:grid;place-items:center;
+  border:1px solid var(--edge-2);font-family:var(--mono);font-size:.8em;color:var(--muted);
+}
+.opt[aria-pressed="true"]{border-color:var(--torch);background:#241E12}
+.opt[aria-pressed="true"] .chip{border-color:var(--torch);color:var(--torch)}
+.opt.good{border-color:var(--moss);background:#16251B}
+.opt.bad{border-color:var(--ember);background:#2A1A18}
+.opt code{background:transparent;border:0;padding:0}
+
+/* ---------------- поправи разметката ---------------- */
+.lines{background:var(--ink-2);border:1px solid var(--edge);overflow-x:auto}
+.lineb{
+  display:flex;gap:1em;width:100%;text-align:left;
+  font-family:var(--mono);font-size:.9em;
+  background:transparent;color:#D9E6E3;border:0;border-left:3px solid transparent;
+  padding:.4em .8em;cursor:pointer;white-space:pre;
+}
+.lineb:hover{background:#151821}
+.lineb .ln{color:var(--muted);user-select:none}
+.lineb[aria-pressed="true"]{border-left-color:var(--torch);background:#241E12}
+.lineb.good{border-left-color:var(--moss);background:#16251B}
+.lineb.bad{border-left-color:var(--ember);background:#2A1A18}
+
+/* ---------------- попълване и дърво ---------------- */
+.fill-wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-family:var(--mono);font-size:.95em}
+.fill-in{
+  font:inherit;font-family:var(--mono);background:var(--ink-2);color:var(--torch);
+  border:1px solid var(--edge-2);padding:.5em .7em;min-width:12ch;max-width:100%;
+}
+.fill-in:focus{border-color:var(--torch);outline:none}
+.fill-in.good{border-color:var(--moss)}
+.fill-in.bad{border-color:var(--ember)}
+.treegrid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
+@media (max-width:620px){.treegrid{grid-template-columns:1fr}}
+.treegrid label{display:block;font-size:.74em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4em}
+select.tree-sel{
+  font:inherit;font-family:var(--mono);font-size:.9em;width:100%;
+  background:var(--ink-2);color:var(--text);border:1px solid var(--edge-2);padding:.5em .6em;
+}
+select.tree-sel.good{border-color:var(--moss)}
+select.tree-sel.bad{border-color:var(--ember)}
+
+/* ---------------- свързване (drag & drop) ---------------- */
+.slots{display:flex;flex-direction:column;gap:8px}
+.slotrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:620px){.slotrow{grid-template-columns:1fr}}
+.slotlabel{
+  background:var(--stone);border:1px solid var(--edge);padding:.6em .8em;
+  font-family:var(--mono);font-size:.88em;display:flex;align-items:center;
+}
+.slot{
+  font:inherit;text-align:left;width:100%;cursor:pointer;
+  background:var(--ink-2);border:1px dashed var(--edge-2);color:var(--muted);
+  padding:.6em .8em;min-height:2.9em;
+}
+.slot.filled{border-style:solid;color:var(--text);background:var(--stone-2)}
+.slot.over{border-color:var(--torch);background:#241E12}
+.slot.good{border-style:solid;border-color:var(--moss);background:#16251B;color:var(--text)}
+.slot.bad{border-style:solid;border-color:var(--ember);background:#2A1A18;color:var(--text)}
+.tray{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--edge)}
+.tray-label{width:100%;font-size:.76em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.token{
+  font:inherit;font-size:.92em;background:var(--stone-2);border:1px solid var(--edge-2);
+  color:var(--text);padding:.5em .8em;cursor:grab;
+}
+.token:active{cursor:grabbing}
+.token[aria-pressed="true"]{border-color:var(--torch);background:#241E12;color:var(--torch)}
+.token[disabled]{opacity:.25;cursor:default}
+
+/* ---------------- подреждане ---------------- */
+.orderlist{display:flex;flex-direction:column;gap:6px}
+.orderitem{display:flex;gap:10px;align-items:center;background:var(--stone-2);border:1px solid var(--edge);padding:.5em .7em}
+.orderitem .num{font-family:var(--mono);color:var(--torch);width:1.6em;flex:0 0 auto}
+.orderitem .txt{flex:1;font-family:var(--mono);font-size:.88em;min-width:0;overflow-wrap:anywhere}
+.orderitem.good{border-color:var(--moss)}
+.orderitem.bad{border-color:var(--ember)}
+.mini{
+  font:inherit;font-size:.85em;background:transparent;border:1px solid var(--edge);
+  color:var(--muted);cursor:pointer;width:2.1em;height:2.1em;line-height:1;flex:0 0 auto;
+}
+.mini:hover{color:var(--text);border-color:var(--edge-2)}
+.mini[disabled]{opacity:.3;cursor:not-allowed}
+
+/* ---------------- пътят на Tab ---------------- */
+.formsim{background:var(--stone);border:1px solid var(--edge);padding:1em;display:flex;flex-direction:column;gap:.6em}
+.fieldbtn{
+  display:flex;gap:.8em;align-items:center;font:inherit;text-align:left;width:100%;
+  background:var(--ink-2);border:1px solid var(--edge-2);color:var(--text);padding:.55em .8em;cursor:pointer;
+}
+.fieldbtn .ord{
+  width:1.9em;height:1.9em;display:grid;place-items:center;flex:0 0 auto;
+  border:1px solid var(--edge);font-family:var(--mono);font-size:.8em;color:var(--muted);
+}
+.fieldbtn.picked .ord{border-color:var(--torch);color:var(--torch);background:#241E12}
+.fieldbtn.good{border-color:var(--moss)}
+.fieldbtn.bad{border-color:var(--ember)}
+.fieldbtn .hintattr{font-family:var(--mono);font-size:.78em;color:var(--muted);margin-left:auto;flex:0 0 auto}
+
+/* ---------------- резултат ---------------- */
+.verdict{border:1px solid var(--edge);border-left:3px solid var(--edge-2);padding:1em 1.1em;background:var(--stone);display:flex;flex-direction:column;gap:.5em}
+.verdict.ok{border-left-color:var(--moss)}
+.verdict.rev{border-left-color:var(--rune)}
+.verdict.rev h3{color:var(--rune)}
+.note{font-size:.85em}
+.verdict.no{border-left-color:var(--ember)}
+.verdict h3{margin:0;font-family:var(--body);font-size:1em;font-weight:600;display:flex;gap:.5em;align-items:center}
+.verdict.ok h3{color:var(--moss)}
+.verdict.no h3{color:var(--ember)}
+.teach{margin-top:.3em;padding-top:.7em;border-top:1px dashed var(--edge);color:var(--torch);font-size:.94em}
+.teach b{font-family:var(--mono);font-size:.82em;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:.2em}
+.hintbox{border:1px dashed var(--torch-dim);padding:.7em .9em;color:var(--torch);background:#1D1810}
+.crack{
+  font:inherit;font-size:.92em;background:transparent;border:1px dashed var(--edge-2);
+  color:var(--muted);padding:.6em .9em;cursor:pointer;align-self:flex-start;
+}
+.crack:hover{color:var(--torch);border-color:var(--torch-dim);background:#1A1710}
+
+/* ---------------- скрита стая / съкровищница ---------------- */
+.secret{border:1px solid var(--torch-dim);background:#1B160E;border-top-width:2px}
+.secret h2{color:var(--torch)}
+.artifact{font-size:3rem;line-height:1}
+
+/* ---------------- босът ---------------- */
+.boss-stage{background:#06070A;border:1px solid #241A20;border-top:2px solid #7A3145;padding:clamp(16px,3vw,28px);display:flex;flex-direction:column;gap:16px}
+.boss-task{font-family:var(--display);font-size:1.2em;color:var(--ember);margin:0}
+.log{
+  font-family:var(--mono);font-size:.9em;background:#000;border:1px solid #1E1A24;
+  padding:.9em 1em;min-height:8em;max-height:15em;overflow-y:auto;
+  display:flex;flex-direction:column;gap:.35em;
+}
+.log p{margin:0;max-width:none;color:#9FE8DC;overflow-wrap:anywhere}
+.log p.sys{color:var(--muted)}
+.log p.bad{color:var(--ember)}
+.log p.good{color:var(--moss)}
+.blocks{display:flex;flex-direction:column;gap:6px}
+.blk{
+  font:inherit;font-family:var(--mono);font-size:.9em;text-align:left;width:100%;cursor:pointer;
+  background:#0C0D12;border:1px solid #191C26;color:#191C26;padding:.75em .9em;
+}
+.blk:hover{border-color:#2A2E3A}
+.blk:focus-visible{outline:3px solid var(--ember);outline-offset:2px;color:#454A58}
+.blk.lit{color:#454A58}
+.boss-lesson{border:1px solid #3A2028;border-left:3px solid var(--ember);background:#180F12;padding:1em 1.1em;display:flex;flex-direction:column;gap:.5em}
+.boss-lesson h3{margin:0;color:var(--ember);font-family:var(--body);font-size:1em}
+
+/* ---------------- финал ---------------- */
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.scoretile{background:var(--stone-2);border:1px solid var(--edge);padding:.9em 1em}
+.scoretile .n{font-family:var(--mono);font-size:1.8em;color:var(--torch);font-variant-numeric:tabular-nums;line-height:1.1}
+.scoretile .l{font-size:.76em;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:.2em}
+.rank{font-family:var(--display);font-size:clamp(1.6rem,4vw,2.2rem);color:var(--torch);margin:0}
+
+/* ---------------- долна лента ---------------- */
+.footbar{
+  border-top:1px solid var(--edge);padding-block:10px;
+  display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;
+  font-family:var(--mono);font-size:.74em;color:var(--muted);
+}
+.footbar kbd{
+  font-family:var(--mono);background:var(--stone-2);border:1px solid var(--edge-2);
+  padding:.15em .45em;color:var(--text);
+}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:-9999px;top:0;z-index:10;background:var(--torch);color:#111;padding:.6em 1em;font-weight:600}
+.skip-link:focus{left:8px;top:8px}
+
+.reveal{animation:reveal .3s ease-out}
+@keyframes reveal{from{opacity:.25;transform:translateY(6px)}to{opacity:1;transform:none}}
+.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+
+</style>
+</head>
+<body>
+<a class="skip-link" href="#stage">Прескочи към съдържанието</a>
+
+<div class="shell">
+  <header class="topbar">
+    <h1 class="brand">Подземието на DOM-а<small>Урок 2 · HTML, семантика и ARIA</small></h1>
+    <div class="keyring" id="keyring" aria-label="Събрани ключове"></div>
+    <button class="modebtn" id="modebtn" type="button">Режим</button>
+  </header>
+
+  <div class="progressbar" aria-hidden="true"><span id="progress" style="width:0%"></span></div>
+
+  <main id="stage" tabindex="-1"></main>
+
+  <footer class="footbar" id="footbar"></footer>
+</div>
+
+<div class="sr-only" id="live" role="status" aria-live="polite"></div>
+
+<script>
+/* Подземието на DOM-а — съдържание.
+   Всичко тук е чисти данни. Добавянето на въпрос е един обект в steps.
+   Типове врати: choice | sr | fix | fill | match | order | tab | tree
+   core: true  →  въпросът влиза и в краткия маршрут (за час от 45 минути). */
+
+window.GAME = {
+
+wings: [
+/* ═══════════════════════════ КРИЛО I ═══════════════════════════ */
+{
+  id: 'basics',
+  name: 'Основи',
+  icon: '📜',
+  artifact: 'Свитъкът на структурата',
+  blurb: 'Какво е разметка, от какво е направен документът, как се пишат елементите.',
+  secret: {
+    title: 'Таговете, които уебът роди и се опита да забрави',
+    text: 'В Netscape правят <blink> — текст, който мига. Легендата казва, че идеята е родена в бар за една вечер. Microsoft отговарят с <marquee> — текст, който се движи по екрана. И двата тага са мъртви днес, но оставят следа: мигащото съдържание е доказано опасно за хора с фотосензитивна епилепсия и затова WCAG има изрично правило срещу него. Един тег от 1995 е причината днес да има стандарт.',
+    code: '<blink>КУПИ СЕГА</blink>\n<marquee>Добре дошли в моята страница!</marquee>'
+  },
+  steps: [
+    { t:'room', title:'Езикът на разметката', lead:'HTML = HyperText Markup Language. Три думи, три идеи — и нито една от тях не е „програмиране“.',
+      code:'Това е <em>важно</em>, а това — <strong>много важно</strong>.',
+      points:[
+        'HyperText — текст, който сочи към друг текст. Линкът е цялата революция.',
+        'Markup — разметка: обозначаваш всяко парче съдържание какво е.',
+        'Language — има граматика и стандарт, но няма променливи, условия и цикли.',
+        'Идеята е по-стара от уеба: редакторът е драскал по ръкописа със син молив.'
+      ]},
+
+    { t:'door', id:'I.1', core:true, kind:'choice',
+      q:'Какво означава „markup“ в HTML?',
+      options:['Че езикът маркира грешките ти','Че <b>обозначаваш</b> части от съдържанието с етикети','Че кодът се компилира преди да тръгне','Че текстът се оцветява автоматично'],
+      correct:1,
+      hint:'Помисли откъде идва думата — от печатницата, не от програмирането.',
+      explain:'Markup идва от редакторската практика да се „маркира“ ръкопис за печат. Ти не описваш логика — описваш какво е всяко парче текст.',
+      teach:'Питай класа: кой друг „маркира“ неща, за да ги разбере машина? (баркод, нотен запис)'},
+
+    { t:'door', id:'I.2', kind:'choice',
+      q:'Кое от тези <b>не</b> е вярно за HTML?',
+      options:['Не е програмен език','Произлиза от SGML','Има версии до HTML 7','Прощава синтактични грешки'],
+      correct:2,
+      hint:'Кога за последно си виждал номер на версия до думата HTML?',
+      explain:'Днес HTML е Living Standard — жив документ без номера на версии. Няма да има „HTML 6“. Затова въпросът „поддържа ли се това?“ вече е към caniuse.com, а не към версия.',
+      teach:'Спомни си Урок 1: и TCP/IP така — стандартът живее, а не се преиздава.'},
+
+    { t:'room', title:'Анатомия на документа', lead:'Всеки ред в <head> върши конкретна работа. Махни го и нещо се чупи.',
+      code:'<!DOCTYPE html>\n<html lang="bg">\n  <head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <title>Заглавие в таба</title>\n  </head>\n  <body>\n    <h1>Видимото заглавие</h1>\n  </body>\n</html>',
+      points:[
+        '<head> — метаданни. Невидими за окото, задължителни за машината.',
+        '<body> — всичко, което се вижда.',
+        'Без charset кирилицата става на „Ð¢ÐµÑ�Ñ‚“.',
+        'Без lang екранният четец чете българския текст с английско произношение.'
+      ]},
+
+    { t:'door', id:'I.3', core:true, kind:'fill',
+      q:'Един атрибут решава дали четецът ще произнесе текста на български. Попълни го.',
+      before:'<html ', after:'="bg">', accept:['lang'],
+      hint:'Четири букви. Отговаря на въпроса „на какъв език е този документ?“',
+      explain:'lang="bg" казва на четеца кой гласов синтезатор да пусне. Липсващият lang е сред най-честите грешки за достъпност в целия уеб — един атрибут, един път, пропуснат от милиони сайтове.',
+      teach:'Отвори произволен български сайт с Inspect и провери дали има lang. Обикновено — не.'},
+
+    { t:'door', id:'I.4', core:true, kind:'choice',
+      q:'Какво се случва, ако махнеш <b>&lt;!DOCTYPE html&gt;</b>?',
+      options:['Страницата не се зарежда изобщо','Браузърът влиза в quirks mode','CSS-ът спира да работи','Абсолютно нищо'],
+      correct:1,
+      hint:'Браузърът трябва да реши по кои правила да рендерира — днешните или тези от 1998.',
+      explain:'Доктайпът днес не описва нищо — той е шалтер между standards mode и quirks mode. В quirks mode браузърът нарочно емулира стари бъгове (друг box model) и оформлението ти се чупи. В HTML 4 доктайпът беше дълъг URL; HTML5 го сви до най-късия низ, който още върши тази работа.',
+      teach:'Покажи стария доктайп на HTML 4.01 на екрана — ефектът е гарантиран.'},
+
+    { t:'room', title:'Елемент, таг, атрибут', lead:'Три думи, които се бъркат постоянно.',
+      code:'        отварящ таг      съдържание     затварящ таг\n             ↓                ↓             ↓\n        <a href="/home" class="btn">Начало</a>\n         ↑     ↑\n        име  атрибут\n\n        └──────────── елемент ────────────┘',
+      points:[
+        'Таг — това, което пишеш: <p>',
+        'Елемент — отварящ таг + съдържание + затварящ таг',
+        'Атрибут — допълнителна информация, само в отварящия таг',
+        'Void елементите нямат съдържание и затварящ таг: img, br, hr, input, meta, link'
+      ]},
+
+    { t:'door', id:'I.5', core:true, kind:'fix',
+      q:'Кой ред е сгрешен?',
+      lines:['<section>','  <p>Това е <strong>текст</p></strong>','  <p>А това е наред.</p>','</section>'],
+      correct:1,
+      hint:'Матрьошките не се пресичат.',
+      explain:'Елементите се влагат един в друг, никога не се пресичат. Правилно е <p>Това е <strong>текст</strong></p>. Браузърът ще го поправи сам — точно това прави HTML „прощаващ“ — но какво точно ще реши да поправи, не е твое решение.',
+      teach:'Покажи в Inspect как браузърът е пренаредил DOM-а. Виждат разликата между това, което са написали, и това, което е излязло.'},
+
+    { t:'door', id:'I.6', kind:'choice',
+      q:'Кое от тези е <b>void</b> (празен) елемент?',
+      options:['&lt;p&gt;','&lt;div&gt;','&lt;img&gt;','&lt;span&gt;'],
+      correct:2,
+      hint:'Кой от тях не може да има нищо вътре в себе си?',
+      explain:'<img> няма съдържание и няма затварящ таг. Същото важи за br, hr, input, meta и link.',
+      teach:''},
+
+    { t:'door', id:'I.7', kind:'match',
+      q:'Свържи всеки термин с определението му.',
+      pairs:[['таг','това, което пишеш: <p>'],['елемент','отварящ + съдържание + затварящ'],['атрибут','име="стойност" в отварящия таг'],['void елемент','няма затварящ таг: <img>']],
+      hint:'Тагът е част от елемента, не самият елемент.',
+      explain:'Хората казват „таг“ за всичко. Разликата има значение точно тогава, когато четеш стандарта или съобщение за грешка.',
+      teach:''},
+
+    { t:'room', title:'Вид срещу значение', lead:'Две двойки тагове изглеждат еднакво и значат различно. Тук започва семантиката.',
+      code:'<b>удебелено</b>      → само вид\n<strong>важно</strong>  → важност, която машината разбира\n\n<i>наклонено</i>      → само вид\n<em>ударение</em>     → ударение, което четецът може да произнесе',
+      points:[
+        '<b> и <i> са чисто визуални — валидни, но семантично празни.',
+        '<strong> и <em> носят значение и стигат до дървото на достъпността.',
+        'Еднакви на екрана, различни за машината. Това е семантиката в едно изречение.'
+      ]},
+
+    { t:'door', id:'I.8', kind:'choice',
+      q:'Каква е разликата между <b>&lt;b&gt;</b> и <b>&lt;strong&gt;</b>?',
+      options:['В цвета на текста','Няма разлика, синоними са','&lt;strong&gt; носи значение, &lt;b&gt; е само външен вид','&lt;b&gt; е остарял и невалиден'],
+      correct:2,
+      hint:'И двата удебеляват. Питаме какво знае машината след това.',
+      explain:'<b> е напълно валиден и днес — просто не казва нищо освен „удебели“. <strong> казва „това е важно“ и това стига до екранния четец, който може да промени интонацията.',
+      teach:'Питай: ако изключим CSS-а, кое от двете още значи нещо?'}
+  ]
+},
+
+/* ═══════════════════════════ КРИЛО II ═══════════════════════════ */
+{
+  id:'semantics',
+  name:'Семантика',
+  icon:'🧭',
+  artifact:'Компасът на смисъла',
+  blurb:'Landmarks, заглавия, списъци, линкове срещу бутони, alt текст.',
+  secret:{
+    title:'spacer.gif — епохата на таблиците',
+    text:'От 1996 до 2005 целият уеб е построен с таблици за оформление и невидими GIF-ове с размер 1×1 пиксел, разтегляни до нужното разстояние. Цяло поколение разработчици е строило сайтове с инструмент за електронни таблици. Точно затова днес съществува role="presentation" — трябвал е начин да кажеш на четеца „тази таблица не е данни, игнорирай я“.',
+    code:'<table border="0" cellpadding="0">\n  <tr>\n    <td><img src="spacer.gif" width="1" height="20"></td>\n    <td>Съдържание</td>\n  </tr>\n</table>'
+  },
+  steps:[
+    { t:'room', title:'Семантика = избираш тага по смисъл', lead:'Двата блока може да изглеждат 1:1 еднакво на екрана. Разликата е за всички, които не гледат екрана.',
+      code:'<!-- дивсупа -->\n<div class="header">\n  <div class="nav">\n    <div class="item" onclick="go(\'/\')">Начало</div>\n  </div>\n</div>\n\n<!-- същото, семантично -->\n<header>\n  <nav>\n    <a href="/">Начало</a>\n  </nav>\n</header>',
+      points:[
+        'Семантичният вариант е по-къс и работи с клавиатура без нито ред JavaScript.',
+        '<div> и <span> са семантично празни — те са последният избор, не първият.',
+        'Разметката ти се чете от екранни четци, Google, reader mode, ботове и от колегата ти след 6 месеца.'
+      ]},
+
+    { t:'door', id:'II.1', core:true, kind:'choice',
+      q:'Кой елемент може да има само <b>един видим</b> екземпляр на страница?',
+      options:['&lt;nav&gt;','&lt;main&gt;','&lt;section&gt;','&lt;article&gt;'],
+      correct:1,
+      hint:'Кое от тях по дефиниция не може да е две неща едновременно?',
+      explain:'<main> маркира основното съдържание и е целта на skip link-а. Две основни съдържания няма как да има. Забавното е, че <main> е добавен последен в стандарта — чак 2013 — защото дотогава всички са ползвали <div id="content">.',
+      teach:''},
+
+    { t:'door', id:'II.2', core:true, kind:'match',
+      q:'Свържи всеки елемент с landmark ролята, която получава.',
+      pairs:[['<header>','banner'],['<nav>','navigation'],['<aside>','complementary'],['<footer>','contentinfo']],
+      hint:'Имената на ролите са английски и описват зоната, не тага.',
+      explain:'Екранният четец има отделен клавиш за скачане между landmarks. Потребителят прескача менюто и стига до съдържанието с едно натискане — вместо да минава през 40 линка.',
+      teach:'Покажи Landmarks панела в Accessibility Inspector на нечий сайт.'},
+
+    { t:'room', title:'Картата на страницата', lead:'HTML5 дава елементи, които описват зоните. Четецът ги ползва като карта.',
+      code:'┌────────────────────────────────────────┐\n│ <header>          (banner)             │\n│   <nav>           (navigation)         │\n├───────────────────────┬────────────────┤\n│ <main>    (main)      │ <aside>        │\n│   <article>           │ (complementary)│\n│     <h1> <p> ...      │                │\n├───────────────────────┴────────────────┤\n│ <footer>          (contentinfo)        │\n└────────────────────────────────────────┘',
+      points:[
+        '<article> — ако го изрежеш и сложиш другаде, още има смисъл.',
+        '<section> — част от нещо по-голямо, иска заглавие.',
+        '<div> — само когато ти трябва кука за CSS.',
+        '<header> и <footer> са landmarks само когато са директно в <body>.'
+      ]},
+
+    { t:'door', id:'II.3', core:true, kind:'fix',
+      q:'Кой ред е най-големият проблем за достъпността?',
+      lines:['<header>','  <nav>','    <div class="item" onclick="go(\'/\')">Начало</div>','  </nav>','</header>'],
+      correct:2,
+      hint:'Опитай се да стигнеш до този елемент само с клавиша Tab.',
+      explain:'<div> с onclick не е фокусируем, няма роля и не реагира на Enter. Един <a href="/">Начало</a> дава всичко това наготово — плюс десен бутон → „Отвори в нов таб“.',
+      teach:'Демонстрирай на живо: прибери мишката и се опитай да натиснеш този „бутон“.'},
+
+    { t:'room', title:'Заглавията са навигация', lead:'Заглавията не са размери на шрифта. Те са съдържанието на документа.',
+      code:'<h1>Курс по уеб технологии</h1>\n  <h2>Урок 2 — HTML и ARIA</h2>\n    <h3>Семантика</h3>\n    <h3>Форми</h3>\n  <h2>Урок 3 — CSS</h2>',
+      points:[
+        'Едно <h1> на страница.',
+        'Не прескачай нива: от h2 не се минава на h4.',
+        'Трябва ти по-малък шрифт? Това е работа на CSS, не на <h4>.',
+        'В анкетите на WebAIM заглавията са начин №1 за ориентиране в дълга страница.'
+      ]},
+
+    { t:'door', id:'II.4', kind:'choice',
+      q:'Защо не бива да скачаш от &lt;h2&gt; директно на &lt;h4&gt;?',
+      options:['Браузърът връща грешка','Чупи се структурата, по която четецът навигира','CSS-ът спира да се прилага','Google сваля сайта от индекса'],
+      correct:1,
+      hint:'Помисли за съдържанието на книга, в което липсва цяло ниво.',
+      explain:'Прескочено ниво значи „тук има подраздел, но на какво?“ Потребителят, който навигира с клавиша H, изгубва йерархията. Нищо не гърми — просто картата става грешна.',
+      teach:''},
+
+    { t:'door', id:'II.5', core:true, kind:'sr',
+      q:'Какво ще прочете екранният четец?',
+      code:'<img src="IMG_4821.jpg">',
+      options:['„картинка“ и нищо повече','Името на файла: „I M G 4 8 2 1 точка джей пег“','Нищо — прескача я','„снимка“'],
+      correct:1,
+      hint:'Липсващият alt не значи мълчание.',
+      explain:'Когато alt липсва изцяло, четецът се опитва да каже нещо полезно и чете името на файла. Затова празният alt="" е важен: той изрично казва „прескочи ме, аз съм декорация“.',
+      teach:'Питай класа как биха кръстили файла, ако знаеха, че някой ще го чете на глас.'},
+
+    { t:'door', id:'II.6', kind:'choice',
+      q:'Кога се използва <b>alt=""</b> (празен, но наличен)?',
+      options:['Никога — това е грешка','Когато не знаеш какво да напишеш','Когато картинката е чиста декорация','Когато картинката е логото'],
+      correct:2,
+      hint:'Има ли смисъл да чуеш описание на завъртулка?',
+      explain:'Декоративната картинка не носи информация — празният alt я скрива от четеца. Логото обаче обикновено е в линк към началната страница и тогава alt описва действието: alt="Начало".',
+      teach:''},
+
+    { t:'door', id:'II.7', core:true, kind:'choice',
+      q:'„Отвори модален прозорец“ — линк или бутон?',
+      options:['Линк, защото се кликва','Бутон','Няма значение','&lt;div&gt; с onclick'],
+      correct:1,
+      hint:'Променя ли се адресът в браузъра?',
+      explain:'Правилото е просто: ако се променя адресът — линк. Ако не — бутон. Линкът отива някъде, бутонът прави нещо. Освен това бутонът се задейства и с Enter, и с Space, а линкът — само с Enter.',
+      teach:'Питай: има ли смисъл да натиснеш десен бутон → „Отвори в нов таб“ върху това?'},
+
+    { t:'door', id:'II.8', kind:'sr',
+      q:'Екранните четци имат режим „изброй всички линкове на страницата“. Какво вижда потребителят тук?',
+      code:'<a href="/dostavka">натисни тук</a>\n<a href="/vrashtane">натисни тук</a>\n<a href="/kontakti">натисни тук</a>',
+      options:['Трите адреса','Списък от три еднакви реда „натисни тук“','Заглавията на страниците','Нищо'],
+      correct:1,
+      hint:'Режимът показва само текста на линка, изваден от изречението около него.',
+      explain:'Текстът на линка трябва да има смисъл сам за себе си, извън контекста. „Натисни тук“, „още“ и „прочети повече“ са безполезни в такъв списък.',
+      teach:''},
+
+    { t:'door', id:'II.9', kind:'tree',
+      q:'Попълни какво знае машината за този елемент.',
+      code:'<a href="/profil">Моят профил</a>',
+      role:{options:['link','button','heading','text'],correct:'link'},
+      name:{options:['(няма)','/profil','Моят профил','профил'],correct:'Моят профил'},
+      state:{options:['(няма)','checked','expanded','disabled'],correct:'(няма)'},
+      hint:'Името идва от текста вътре в елемента, не от href.',
+      explain:'Роля: link. Име: текстовото съдържание „Моят профил“. Състояние: няма — линкът няма състояние. Точно затова текстът на линка е толкова важен: той е името.',
+      teach:''}
+  ]
+},
+
+/* ═══════════════════════════ КРИЛО III ═══════════════════════════ */
+{
+  id:'forms',
+  name:'Форми',
+  icon:'🔏',
+  artifact:'Печатът на съгласието',
+  blurb:'Етикети, типове полета, групиране, грешки — мястото, където достъпността е най-скъпа.',
+  secret:{
+    title:'Защо label уголемява чекбокса',
+    text:'Кликването върху <label> фокусира и превключва свързаното поле. Това превръща чекбокс от 13×13 пиксела в цяло изречение за кликане. Безплатен UX бонус от един правилен атрибут — и единствената причина да не го направиш е, че не си знаел. На телефон разликата между 13px и 300px цел е разликата между работеща и дразнеща форма.',
+    code:'<label for="uslovia">\n  <input type="checkbox" id="uslovia">\n  Приемам общите условия\n</label>'
+  },
+  steps:[
+    { t:'room', title:'Етикетът не е по избор', lead:'Полето без етикет е кутия без надпис. Четецът казва „текстово поле“ и толкова.',
+      code:'<!-- for сочи id -->\n<label for="email">Имейл</label>\n<input type="email" id="email" name="email">\n\n<!-- или обвиване -->\n<label>\n  Имейл\n  <input type="email" name="email">\n</label>\n\n<!-- placeholder НЕ е label -->\n<input type="email" placeholder="Имейл">',
+      points:[
+        'placeholder изчезва точно когато започнеш да пишеш.',
+        'Контрастът му е нарочно нисък — често под изискванията за четимост.',
+        'Не можеш да кликнеш върху него, за да фокусираш полето.',
+        'Част от четците изобщо не го съобщават.'
+      ]},
+
+    { t:'door', id:'III.1', core:true, kind:'choice',
+      q:'Кое <b>не</b> е причина placeholder да не замества &lt;label&gt;?',
+      options:['Изчезва при писане','Има нисък контраст','Прави полето по-бавно','Не е кликаем'],
+      correct:2,
+      hint:'Три от тези са реални проблеми. Четвъртото просто не се случва.',
+      explain:'Производителността няма нищо общо. Проблемите са на разбираемост: изчезващ текст, нисък контраст, липсваща кликаема цел и непоследователно съобщаване.',
+      teach:''},
+
+    { t:'door', id:'III.2', core:true, kind:'fill',
+      q:'Свържи етикета с полето. Кой атрибут липсва?',
+      before:'<label ', after:'="email">Имейл</label>', accept:['for'],
+      hint:'Три букви. В JSX се пише htmlFor, ако това помага.',
+      explain:'for сочи към id на полето. Оттам нататък кликването върху текста фокусира полето, а четецът знае как се казва то.',
+      teach:''},
+
+    { t:'room', title:'Типовете вършат работа вместо теб', lead:'Един атрибут ти спестява валидация, клавиатура и джаджи.',
+      code:'<input type="email">   валидация + @ на клавиатурата\n<input type="tel">     цифрова клавиатура на телефона\n<input type="date">    вграден календар\n<input type="number">  стрелки, само числа\n<input type="file" accept="image/*">',
+      points:[
+        'Нативният тип носи поведение, което иначе пишеш на ръка и бъгваш.',
+        'autocomplete="email" кара браузъра да попълва — огромно за хора с моторни затруднения.',
+        'required дава валидация без нито ред JavaScript.'
+      ]},
+
+    { t:'door', id:'III.3', core:true, kind:'choice',
+      q:'Какъв е <b>type</b> по подразбиране на &lt;button&gt; вътре във &lt;form&gt;?',
+      options:['button','submit','reset','няма — трябва да се укаже'],
+      correct:1,
+      hint:'Класически бъг: кликаш „Покажи паролата“ и страницата се презарежда.',
+      explain:'Всеки <button> във форма е submit, докато не кажеш друго. За бутон, който прави нещо друго, пиши type="button" изрично.',
+      teach:'Това е бъгът, който всички са писали поне веднъж. Питай кой се е хващал.'},
+
+    { t:'door', id:'III.4', kind:'choice',
+      q:'Четецът казва: „Куриер, радио бутон, 1 от 2“. Какво липсва?',
+      code:'<label><input type="radio" name="dostavka"> Куриер</label>\n<label><input type="radio" name="dostavka"> До офис</label>',
+      options:['&lt;fieldset&gt; и &lt;legend&gt;','aria-label на всяко поле','&lt;form&gt; около всичко','value атрибути'],
+      correct:0,
+      hint:'Потребителят чува опциите. Но не чува въпроса.',
+      explain:'<fieldset> групира, а <legend> дава въпроса: „Начин на доставка“. Без него чуваш отговорите, без да знаеш на какво.',
+      teach:''},
+
+    { t:'room', title:'Помощен текст и грешки', lead:'Грешката трябва да е свързана с полето, а не просто да стои до него.',
+      code:'<label for="pass">Парола</label>\n<input type="password" id="pass"\n       aria-describedby="hint err"\n       aria-invalid="true" required>\n<p id="hint">Минимум 8 символа.</p>\n<p id="err" role="alert">Паролата е твърде къса.</p>',
+      points:[
+        'aria-describedby закача допълнителен текст към полето.',
+        'aria-invalid="true" казва, че полето е в грешка.',
+        'role="alert" обявява съобщението веднага щом се появи.',
+        'Червената рамка сама по себе си не е информация.'
+      ]},
+
+    { t:'door', id:'III.5', kind:'match',
+      q:'Свържи атрибута с това, което прави.',
+      pairs:[['aria-describedby','закача допълнителен текст'],['aria-invalid','полето е в грешка'],['required','задължително поле'],['autocomplete','браузърът попълва вместо теб']],
+      hint:'Един от тях няма нищо общо с ARIA и работи от години.',
+      explain:'Първите два са ARIA — те само съобщават. Другите два са нативни и реално променят поведението на браузъра.',
+      teach:''},
+
+    { t:'door', id:'III.6', kind:'choice',
+      q:'Защо &lt;input type="tel"&gt; е по-добър от type="text" за телефон?',
+      options:['Валидира телефонния номер','Телефонът показва цифрова клавиатура','Форматира номера автоматично','Няма разлика'],
+      correct:1,
+      hint:'Помисли какво вижда човек, който попълва формата от телефон.',
+      explain:'type="tel" не валидира (номерата са твърде различни по света), но вдига цифровата клавиатура. Един атрибут спестява на потребителя две натискания при всяко поле.',
+      teach:''},
+
+    { t:'door', id:'III.7', core:true, kind:'tab',
+      q:'Кликай полетата в реда, в който ще мине клавишът Tab.',
+      fields:[
+        {label:'Търсене', attr:''},
+        {label:'Име', attr:''},
+        {label:'Имейл', attr:'tabindex="1"'},
+        {label:'Съобщение', attr:''},
+        {label:'Изпрати', attr:''}
+      ],
+      correct:[2,0,1,3,4],
+      hint:'Положителният tabindex не се нарежда при другите. Той изкача пред всички.',
+      explain:'Елементите с положителен tabindex се обхождат ПЪРВИ, по големина на числото, и чак след тях идва естественият ред на документа. Затова „Имейл“ е първо, въпреки че е трето по ред. Ползвай само tabindex="0" и tabindex="-1".',
+      teach:'Питай: ако този сайт има 30 такива полета, къде ще се озове потребителят?'},
+
+    { t:'door', id:'III.8', kind:'choice',
+      q:'Съобщението за грешка е показано <b>само</b> с червена рамка. Какъв е проблемът?',
+      options:['Червеното е агресивен цвят','Цветът не е информация за всички','Рамките са остарял подход','Няма проблем'],
+      correct:1,
+      hint:'Кой няма да види червеното? Мисли поне за три различни човека.',
+      explain:'Далтонизъм, екранен четец, черно-бял печат, ярко слънце върху екрана. Информацията трябва да е кодирана поне двойно: цвят + текст + икона.',
+      teach:'Около 8% от мъжете имат някаква форма на цветна слепота. В клас от 30 души това е статистически поне един.'}
+  ]
+},
+
+/* ═══════════════════════════ КРИЛО IV ═══════════════════════════ */
+{
+  id:'aria',
+  name:'ARIA',
+  icon:'🔮',
+  artifact:'Призмата на ролите',
+  blurb:'Дървото на достъпността, роли, състояния, live regions и петте правила.',
+  secret:{
+    title:'Акордеон без нито ред JavaScript',
+    text:'<details> и <summary> дават работещ акордеон: отваря се, затваря се, реагира на клавиатура, съобщава състоянието си на екранния четец. Милиони редове JavaScript по света съществуват, за да пресъздадат нещо, което браузърът дава наготово — и обикновено го пресъздават по-зле.',
+    code:'<details>\n  <summary>Покажи повече</summary>\n  <p>Скритото съдържание.</p>\n</details>'
+  },
+  steps:[
+    { t:'room', title:'Дървото на достъпността', lead:'Браузърът не подава HTML-а на екранния четец. Той прави втора структура.',
+      code:'  HTML ──parse──▶ DOM ──▶ Accessibility Tree ──▶ 🔊 четец\n                   │                              ⌨️ глас\n                   └──▶ CSSOM ──▶ Render Tree ──▶ 🖥️ пиксели',
+      points:[
+        'Всеки възел има четири неща: роля, име, състояние, стойност.',
+        'Role — какво е това? Name — как се казва? State — в какво състояние е?',
+        'По същото дърво работят гласовото управление и автоматичните тестове.',
+        'Виж го сам: DevTools → Elements → Accessibility.'
+      ]},
+
+    { t:'door', id:'IV.1', core:true, kind:'choice',
+      q:'Какво <b>прави</b> ARIA?',
+      options:['Променя външния вид','Добавя клавиатурна поддръжка','Променя какво съобщава браузърът','Прави елемента фокусируем'],
+      correct:2,
+      hint:'ARIA е етикет, залепен върху кутията. Какво се променя в кутията?',
+      explain:'ARIA не променя нищо визуално, не добавя поведение, не прави елемента фокусируем и не носи клавиатура. Тя променя само какво пише в дървото на достъпността. Всичко останало остава твоя работа.',
+      teach:'Това е най-важният слайд в цялата секция. Кажи го два пъти.'},
+
+    { t:'room', title:'Откъде идва името', lead:'Браузърът търси по строг ред. Първото намерено печели.',
+      code:'1. aria-labelledby   сочи към id на друг елемент\n2. aria-label        текст, написан в атрибута\n3. нативното         <label>, alt, <legend>, <caption>\n4. съдържанието      текстът вътре в <button>Изпрати</button>\n5. title             последна надежда, ненадеждно',
+      points:[
+        'aria-labelledby бие всичко — включително видимия текст.',
+        'Затова грешен aria-label е по-опасен от липсващ: той заглушава верния текст.',
+        'Гласовото управление ползва същото име: „натисни Изпрати“.'
+      ]},
+
+    { t:'door', id:'IV.2', core:true, kind:'order',
+      q:'Подреди реда, по който браузърът изчислява достъпното име. Най-силното — най-отгоре.',
+      items:['aria-labelledby','aria-label','нативното (label / alt / legend)','текстовото съдържание','title'],
+      hint:'Най-отгоре е това, което може да заглуши всичко останало.',
+      explain:'ARIA атрибутите бият нативното, а title е последен и ненадежден. Оттук следва практическото правило: не слагай aria-label върху бутон, който вече има смислен текст — рискуваш да го замениш с по-лош.',
+      teach:''},
+
+    { t:'door', id:'IV.3', kind:'choice',
+      q:'Кои са четирите неща, които дървото на достъпността знае за един елемент?',
+      options:['таг, клас, id, стил','роля, име, състояние, стойност','ширина, височина, цвят, позиция','родител, дете, съсед, корен'],
+      correct:1,
+      hint:'Какво е това? Как се казва? В какво състояние е? Каква е стойността?',
+      explain:'Role, Name, State, Value. Ако ги знаеш и трите въпроса зад тях, знаеш как мисли всяка асистивна технология.',
+      teach:''},
+
+    { t:'door', id:'IV.4', core:true, kind:'sr',
+      q:'Какво съобщава екранният четец?',
+      code:'<button aria-expanded="false">Меню</button>',
+      options:['„Меню“','„Меню, бутон“','„Меню, бутон, свито“','„Меню, свито“'],
+      correct:2,
+      hint:'Три неща: име, роля, състояние. Кое откъде идва?',
+      explain:'Името „Меню“ идва от текста, ролята „бутон“ — от тага, състоянието „свито“ — от aria-expanded. Само третото е ARIA. Другите две ги има даром.',
+      teach:'Питай класа кое от трите идва от ARIA. Почти винаги казват „всичките“.'},
+
+    { t:'room', title:'Live regions', lead:'Ако JavaScript смени текст на екрана, четецът не забелязва. Трябва да му кажеш да гледа.',
+      code:'<div aria-live="polite" id="status"></div>\n<!-- по-късно: status.textContent = "Добавено в количката" -->\n\n<div role="alert">Плащането е отказано.</div>',
+      points:[
+        'polite — изчаква четецът да довърши. За „Запазено“, „3 резултата“.',
+        'assertive — прекъсва веднага. Само за грешки и изтичащи таймери.',
+        'role="alert" е готовото assertive.',
+        'Областта трябва да съществува в DOM-а ПРЕДИ да сложиш текста в нея.'
+      ]},
+
+    { t:'door', id:'IV.5', core:true, kind:'fix',
+      q:'Кой ред нарушава правило №4 на ARIA?',
+      lines:['<nav>','  <button aria-hidden="true">Изпрати</button>','  <span aria-hidden="true">🗑️</span>','</nav>'],
+      correct:1,
+      hint:'Едното е фокусируемо. Другото не е.',
+      explain:'aria-hidden върху фокусируем елемент създава фантом: бутонът се стига с Tab, но четецът няма какво да каже. Потребителят стои върху нищо. Върху декоративната иконка обаче е точно правилното нещо.',
+      teach:''},
+
+    { t:'door', id:'IV.6', kind:'choice',
+      q:'Кога се използва aria-live="assertive"?',
+      options:['При всяка промяна на екрана','Само при критично: грешка, изтичащ таймер','Никога','При зареждане на страницата'],
+      correct:1,
+      hint:'Какво значи да прекъснеш някого по средата на изречението?',
+      explain:'assertive прекъсва четеца веднага. Използван за всяка дреболия, превръща страницата в непрекъснато прекъсване. За всичко останало — polite.',
+      teach:''},
+
+    { t:'door', id:'IV.7', core:true, kind:'fill',
+      q:'Бутонът има само иконка. Дай му име.',
+      before:'<button aria-', after:'="Затвори">✕</button>', accept:['label'],
+      hint:'Пет букви. Текст, написан директно в атрибута.',
+      explain:'Без име четецът казва само „бутон“ и информацията свършва дотам. aria-label дава име там, където няма видим текст. Правило №5: всеки интерактивен елемент трябва да има достъпно име.',
+      teach:''},
+
+    { t:'room', title:'Петте правила на ARIA', lead:'Официалните Rules of ARIA Use. Ако запомниш само това — стига.',
+      code:'1. Не ползвай ARIA, ако има нативен елемент.\n2. Не променяй нативната семантика без причина.\n3. Всеки интерактивен ARIA елемент работи с клавиатура.\n4. Без role="presentation" и aria-hidden върху фокусируемо.\n5. Всеки интерактивен елемент има достъпно име.',
+      points:[
+        'Никаква ARIA е по-добре от лоша ARIA. — W3C',
+        'ARIA е скалпел, не лейкопласт.',
+        'Тя е нужна за табове, дървета, комбобокси, модали и live съобщения — неща, за които HTML няма елемент.'
+      ]},
+
+    { t:'door', id:'IV.8', kind:'choice',
+      q:'Формулирай правило №1 на ARIA.',
+      options:['Винаги добавяй role на всеки елемент','Ако има нативен HTML елемент със същата семантика — ползвай него','ARIA се пише преди class','Всеки div трябва да има aria-label'],
+      correct:1,
+      hint:'Кое е по-кратко: <button> или div с role, tabindex и два keydown handler-а?',
+      explain:'<button> носи фокус, Enter, Space, disabled и правилната роля наготово. Същото с div изисква около 30 реда JavaScript, които почти винаги са непълни.',
+      teach:''},
+
+    { t:'door', id:'IV.9', kind:'tree',
+      q:'Попълни възела в дървото на достъпността.',
+      code:'<label for="a">Съгласен съм</label>\n<input type="checkbox" id="a" checked>',
+      role:{options:['checkbox','textbox','button','switch'],correct:'checkbox'},
+      name:{options:['a','(няма)','Съгласен съм','checkbox'],correct:'Съгласен съм'},
+      state:{options:['(няма)','checked','expanded','invalid'],correct:'checked'},
+      hint:'Името идва от свързания етикет, а състоянието — от атрибута на полето.',
+      explain:'Роля: checkbox (от type). Име: „Съгласен съм“ (от <label for>). Състояние: checked. И трите идват от нативен HTML — нито един ред ARIA.',
+      teach:''},
+
+    { t:'door', id:'IV.10', kind:'choice',
+      q:'Според анализите на WebAIM страниците, които <b>използват</b> ARIA, средно имат <b>повече</b> грешки за достъпност от тези без. Защо?',
+      options:['ARIA е зле проектирана','Слага се като лепенка върху счупена разметка — и то грешно','Четците не я поддържат','Статистиката е грешна'],
+      correct:1,
+      hint:'Кой посяга към ARIA — човекът, който е написал <button>, или човекът, който е написал <div>?',
+      explain:'ARIA не е виновна. Виновно е това, че се стига до нея, когато разметката вече е счупена, и тогава тя се слага наслуки. Оттам и правилото: никаква ARIA е по-добре от лоша ARIA.',
+      teach:'Това е моментът да се върнеш към правило №1 и да затвориш кръга.'}
+  ]
+}
+],
+
+/* ═══════════════════════════ БОСЪТ ═══════════════════════════ */
+boss: {
+  intro: 'Четирите ключа се завъртат. Вратата се отваря и екранът изгасва.\n\nОттук нататък не виждаш нищо. Движиш се с Tab, задействаш с Enter, а всичко, което научаваш за страницата, идва от един глас.\n\nТочно така изглежда уебът за човек, който ползва екранен четец.',
+  stages: [
+    {
+      title:'Етап 1 — Страница без заглавия',
+      task:'Намери раздела „Доставка“.',
+      items:[
+        {say:'абзац, Добре дошли в нашия магазин за електроника с над 20 години опит'},
+        {say:'абзац, Работим с водещи марки и предлагаме гаранция на всички продукти'},
+        {say:'абзац, Нашият екип е на ваше разположение всеки делничен ден'},
+        {say:'абзац, Основан през 2004 година, магазинът започва като малък сервиз'},
+        {say:'абзац, Доставяме до всяка точка на страната с куриер до 48 часа', goal:true},
+        {say:'абзац, Следете ни в социалните мрежи за промоции'}
+      ],
+      lesson:'Без заглавия страницата е един безкраен абзац. Клавишът H в екранния четец скача от заглавие на заглавие — но само ако има заглавия. Ти току-що мина през всичко, за да намериш едно изречение.',
+      fixedTask:'Сега същото, с <h2>. Намери „Доставка“.',
+      fixedItems:[
+        {say:'заглавие ниво 2, За нас'},
+        {say:'заглавие ниво 2, Доставка', goal:true},
+        {say:'заглавие ниво 2, Гаранция'},
+        {say:'заглавие ниво 2, Контакти'}
+      ],
+      fix:'<h2>Доставка</h2>'
+    },
+    {
+      title:'Етап 2 — Линкове без текст',
+      task:'Отиди на страницата за връщане на стока.',
+      unknowable:true,
+      items:[
+        {say:'линк, натисни тук'},
+        {say:'линк, натисни тук'},
+        {say:'линк, натисни тук'},
+        {say:'линк, натисни тук'},
+        {say:'линк, натисни тук'},
+        {say:'линк, натисни тук'}
+      ],
+      wrongMsg:'Отвори се страница за бисквитки. Върни се назад.',
+      lesson:'Няма как да познаеш. Точно това е проблемът. Текстът на линка трябва да има смисъл сам за себе си — защото четецът има режим, в който изброява само линковете, изваден от изреченията около тях.',
+      fixedTask:'Сега със смислен текст. Намери връщането на стока.',
+      fixedItems:[
+        {say:'линк, Доставка и срокове'},
+        {say:'линк, Връщане на стока', goal:true},
+        {say:'линк, Гаранционни условия'},
+        {say:'линк, Контакти'}
+      ],
+      fix:'<a href="/vrashtane">Връщане на стока</a>'
+    },
+    {
+      title:'Етап 3 — Бутони без име',
+      task:'Добави продукта в количката.',
+      unknowable:true,
+      items:[
+        {say:'бутон'},
+        {say:'бутон'},
+        {say:'бутон'},
+        {say:'бутон'}
+      ],
+      wrongMsg:'Продуктът беше премахнат от списъка с желания.',
+      lesson:'Бутонът с иконка без име се съобщава просто като „бутон“. Информацията свършва дотам. aria-label="Добави в количката" е един атрибут и решава всичко.',
+      fixedTask:'Сега с имена. Добави в количката.',
+      fixedItems:[
+        {say:'бутон, Добави в списък с желания'},
+        {say:'бутон, Сравни'},
+        {say:'бутон, Добави в количката', goal:true},
+        {say:'бутон, Сподели'}
+      ],
+      fix:'<button aria-label="Добави в количката">🛒</button>'
+    },
+    {
+      title:'Етап 4 — Форма без етикети',
+      task:'Попълни имейла си.',
+      unknowable:true,
+      items:[
+        {say:'текстово поле'},
+        {say:'текстово поле'},
+        {say:'текстово поле'},
+        {say:'текстово поле'}
+      ],
+      wrongMsg:'Написа имейла си в полето за пощенски код.',
+      lesson:'Placeholder-ът не е етикет. Полето без <label> е кутия без надпис — а грешно попълнената форма е разликата между това човекът да си купи нещо и да се откаже.',
+      fixedTask:'Сега с етикети. Попълни имейла.',
+      fixedItems:[
+        {say:'текстово поле, Име'},
+        {say:'текстово поле, Имейл', goal:true},
+        {say:'текстово поле, Телефон'},
+        {say:'текстово поле, Пощенски код'}
+      ],
+      fix:'<label for="email">Имейл</label>\n<input id="email" type="email">'
+    },
+    {
+      title:'Етап 5 — Грешка, показана само с цвят',
+      task:'Изпрати формата.',
+      unknowable:true,
+      items:[
+        {say:'текстово поле, Имейл'},
+        {say:'бутон, Изпрати', silent:true},
+        {say:'линк, Общи условия'}
+      ],
+      wrongMsg:'Нищо не се случва. Тишина.',
+      lesson:'Формата не се изпраща, защото имейлът е невалиден — и това е показано само с червена рамка. За човек, който не вижда екрана, страницата просто мълчи. Затова съществува role="alert": съобщението се обявява в момента, в който се появи.',
+      fixedTask:'Сега с role="alert". Изпрати отново.',
+      fixedItems:[
+        {say:'текстово поле, Имейл, невалидна стойност'},
+        {say:'бутон, Изпрати', goal:true, onGoal:'внимание: Имейлът е невалиден. Проверете адреса.'},
+        {say:'линк, Общи условия'}
+      ],
+      fix:'<p role="alert">Имейлът е невалиден.</p>'
+    }
+  ],
+  outro:'Ти току-що мина през страница така, както през нея минават милиони хора всеки ден.\n\nРазликата между счупената и поправената версия беше осем атрибута.'
+}
+};
+
+</script>
+<script>
+/* Подземието на DOM-а — двигател.
+   Нула зависимости. Класически скрипт, за да работи и през file:// без сървър.
+
+   Кои полета в data.js се рендерират като HTML и кои се екранират:
+     q, options            → HTML (може да ползваш <b> и &lt;tag&gt;)
+     всичко останало       → чист текст (пиши <div> направо, екранира се само) */
+
+(function () {
+  'use strict';
+
+  var G = window.GAME;
+  var STORE = 'dom-dungeon-v1';
+
+  var stage = document.getElementById('stage');
+  var live = document.getElementById('live');
+  var keyring = document.getElementById('keyring');
+  var modebtn = document.getElementById('modebtn');
+  var footbar = document.getElementById('footbar');
+  var progress = document.getElementById('progress');
+
+  /* ───────────────────────── състояние ───────────────────────── */
+
+  var S = null;
+  function fresh() {
+    return {
+      mode: 'solo',
+      route: 'full',
+      screen: 'title',
+      wing: null,
+      step: 0,
+      keys: {},
+      answered: {},   // id на врата → 'first' | 'hint' | 'wrong'
+      secrets: {},    // id на крило → намерена скрита стая
+      pendingSecret: null,
+      returnTo: null,
+      boss: { stage: 0, phase: 'intro', tries: 0, log: [] },
+      ui: {}
+    };
+  }
+
+  function save() {
+    if (S.mode !== 'solo') return;
+    try {
+      var copy = JSON.parse(JSON.stringify(S));
+      copy.ui = {};
+      localStorage.setItem(STORE, JSON.stringify(copy));
+    } catch (e) { /* частен прозорец, блокирани бисквитки — играта върви и без запис */ }
+  }
+  function loadSave() {
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (!raw) return null;
+      var d = JSON.parse(raw);
+      if (!d || !d.boss) return null;
+      d.ui = {};
+      return d;
+    } catch (e) { return null; }
+  }
+  function wipe() {
+    try { localStorage.removeItem(STORE); } catch (e) {}
+  }
+
+  /* ───────────────────────── помощни ───────────────────────── */
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+  function announce(msg) { live.textContent = ''; setTimeout(function () { live.textContent = msg; }, 60); }
+  function wingById(id) {
+    for (var i = 0; i < G.wings.length; i++) if (G.wings[i].id === id) return G.wings[i];
+    return null;
+  }
+  function shuffle(a) {
+    var r = a.slice();
+    for (var i = r.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = r[i]; r[i] = r[j]; r[j] = t;
+    }
+    return r;
+  }
+  function steps(w) {
+    return w.steps.filter(function (s) {
+      return s.t === 'room' || S.route === 'full' || s.core;
+    });
+  }
+  function doorsOf(w) { return steps(w).filter(function (s) { return s.t === 'door'; }); }
+  function allDoors() {
+    var n = 0;
+    G.wings.forEach(function (w) { n += doorsOf(w).length; });
+    return n;
+  }
+  function answeredCount() { return Object.keys(S.answered).length; }
+  function doorsLeft(w) {
+    return steps(w).filter(function (st) { return st.t === 'door' && !S.answered[st.id]; });
+  }
+  function wingDone(w) { return doorsLeft(w).length === 0; }
+  function firstOpenIndex(w) {
+    var list = steps(w);
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].t === 'door' && !S.answered[list[i].id]) return i;
+    }
+    return 0;
+  }
+  function keyCount() {
+    return G.wings.filter(function (w) { return S.keys[w.id]; }).length;
+  }
+
+  var TYPE_LABEL = {
+    choice: 'Избери отговор', sr: 'Какво чете екранният четец', fix: 'Поправи разметката',
+    fill: 'Попълни атрибута', match: 'Свържи', order: 'Подреди',
+    tab: 'Пътят на Tab', tree: 'Дървото на достъпността'
+  };
+
+  /* ───────────────────────── рамка ───────────────────────── */
+
+  function paintChrome() {
+    document.documentElement.dataset.mode = S.mode;
+
+    var html = '';
+    G.wings.forEach(function (w) {
+      var has = S.keys[w.id];
+      html += '<span class="keyslot' + (has ? ' has' : '') + '" title="' + esc(w.artifact) + '">' +
+        (has ? '🔑' : '·') + '</span>';
+    });
+    keyring.innerHTML = html +
+      '<span class="sr-only">' + keyCount() + ' от 4 ключа</span>';
+
+    modebtn.textContent = S.mode === 'projector' ? '🎥 Проектор' : '💻 Соло';
+    modebtn.setAttribute('aria-label', 'Смени режима. Сега: ' +
+      (S.mode === 'projector' ? 'проектор' : 'соло'));
+
+    var pct = allDoors() ? Math.round(answeredCount() / allDoors() * 100) : 0;
+    progress.style.width = pct + '%';
+
+    footbar.innerHTML =
+      '<span><kbd>Tab</kbd> навигация</span>' +
+      '<span><kbd>1</kbd>–<kbd>4</kbd> отговор</span>' +
+      '<span><kbd>→</kbd> напред</span>' +
+      '<span><kbd>H</kbd> подсказка</span>' +
+      '<span><kbd>Esc</kbd> залата</span>' +
+      '<span><kbd>P</kbd> режим</span>' +
+      '<span><kbd>R</kbd> отначало</span>';
+  }
+
+  function paint(html, focusSel) {
+    stage.innerHTML = html;
+    paintChrome();
+    var f = null;
+    if (S.ui.focusId) f = document.getElementById(S.ui.focusId);
+    if (!f && focusSel) f = stage.querySelector(focusSel);
+    if (!f) f = stage.querySelector('h2');
+    if (f) f.focus();
+    S.ui.focusId = null;
+  }
+
+  /* ───────────────────────── екрани ───────────────────────── */
+
+  function render() {
+    if (S.screen === 'title') return renderTitle();
+    if (S.screen === 'hub') return renderHub();
+    if (S.screen === 'wing') return renderWing();
+    if (S.screen === 'secret') return renderSecret();
+    if (S.screen === 'boss') return renderBoss();
+    if (S.screen === 'end') return renderEnd();
+  }
+
+  function renderTitle() {
+    var core = 0, total = 0;
+    G.wings.forEach(function (w) {
+      w.steps.forEach(function (s) {
+        if (s.t === 'door') { total++; if (s.core) core++; }
+      });
+    });
+    var hasSave = !!loadSave();
+
+    paint(
+      '<div class="panel reveal">' +
+        '<div class="head">' +
+          '<p class="eyebrow">Урок 2 · интерактивна презентация</p>' +
+          '<h2 tabindex="-1">Слизаш в подземие, построено от лош HTML</h2>' +
+        '</div>' +
+        '<p class="lead">Четири крила, всяко заключено. Всяка врата иска отговор, всяко крило дава ключ. ' +
+        'Четирите ключа отварят последната стая — и там екранът изгасва.</p>' +
+        '<p class="muted">Нищо не се губи при грешка. Единственото, което се брои, е от кой опит си отворил вратата.</p>' +
+        '<hr class="divider">' +
+        '<p class="eyebrow">Избери маршрут</p>' +
+        '<div class="row">' +
+          '<button class="btn btn-primary" data-act="start" data-route="short" data-primary="1">' +
+            'Кратък · ' + core + ' врати <span class="muted">(за час от 45 мин)</span></button>' +
+          '<button class="btn" data-act="start" data-route="full">Пълен · ' + total + ' врати</button>' +
+          (hasSave ? '<button class="btn btn-ghost" data-act="resume">Продължи запазеното</button>' : '') +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderHub() {
+    var keys = keyCount();
+    var html = '<div class="panel reveal">' +
+      '<div class="head">' +
+        '<p class="eyebrow">Централна зала</p>' +
+        '<h2 tabindex="-1">Валидаторът те чака</h2>' +
+      '</div>' +
+      '<p class="lead">' +
+        (keys === 0 ? 'Четири крила. Ти избираш откъде да започнеш — редът е твой.' :
+         keys < 4 ? 'Имаш ' + keys + ' от 4 ключа. Последната врата още мълчи.' :
+         'Четирите ключа са у теб. Последната врата се отваря.') +
+      '</p>' +
+      '<button class="boss-door" data-act="boss" ' + (keys < 4 ? 'disabled' : 'data-primary="1"') + '>' +
+        '<span class="dn">' + (keys < 4 ? '🔒' : '🔓') + ' Последната стая — Четецът</span>' +
+        '<span class="dd">' + (keys < 4 ? 'Иска четири ключа. Имаш ' + keys + '.' : 'Екранът ще изгасне. Влизаш ли?') + '</span>' +
+      '</button>' +
+      '<div class="hub-grid">';
+
+    G.wings.forEach(function (w) {
+      var d = doorsOf(w);
+      var done = d.filter(function (x) { return S.answered[x.id]; }).length;
+      var got = S.keys[w.id];
+      html += '<button class="door' + (got ? ' done' : '') + '" data-act="wing" data-id="' + w.id + '">' +
+        '<span class="dn"><span aria-hidden="true">' + w.icon + '</span> ' + esc(w.name) + '</span>' +
+        '<span class="dd">' + esc(w.blurb) + '</span>' +
+        '<span class="dp">' + (got ? '🔑 ' + esc(w.artifact) : done + ' / ' + d.length + ' врати') +
+        (S.secrets[w.id] ? ' · 💡 тайна стая' : '') + '</span>' +
+      '</button>';
+    });
+
+    html += '</div></div>';
+    paint(html);
+    announce('Централна зала. ' + keys + ' от 4 ключа.');
+  }
+
+  /* ── карта на крилото: скок до всяка стая и всяка врата ── */
+
+  function renderMap(w, list) {
+    var h = '<nav class="map" aria-label="Карта на крилото ' + esc(w.name) + '">';
+    list.forEach(function (st, i) {
+      var cls = 'mapdot', label, mark = String(i + 1);
+      if (st.t === 'room') {
+        cls += ' room';
+        label = 'Стая ' + (i + 1) + ': ' + st.title;
+      } else {
+        var g = S.answered[st.id];
+        cls += g === 'first' ? ' ok' : g === 'hint' ? ' hint' : g === 'wrong' ? ' wr' : ' todo';
+        label = 'Врата ' + (i + 1) + ': ' + (
+          g === 'first' ? 'отворена от първи опит' :
+          g === 'hint' ? 'отворена с подсказка' :
+          g === 'wrong' ? 'отворена след грешка' : 'още заключена');
+      }
+      h += '<button class="' + cls + '" data-act="goto" data-i="' + i + '"' +
+        (i === S.step ? ' aria-current="step"' : '') +
+        ' aria-label="' + esc(label) + '">' + mark + '</button>';
+    });
+    if (wingDone(w)) {
+      h += '<button class="mapdot end ok" data-act="goto" data-i="' + list.length + '"' +
+        (S.step >= list.length ? ' aria-current="step"' : '') +
+        ' aria-label="Съкровищница в края на коридора' +
+        (S.keys[w.id] ? ': ключът е взет' : ': ключът те чака') + '">🔑</button>';
+    } else {
+      h += '<span class="mapdot end locked" aria-hidden="true">·</span>' +
+        '<span class="sr-only">Съкровищницата в края на коридора се отваря, ' +
+        'след като са отворени всички врати. Остават ' + doorsLeft(w).length + '.</span>';
+    }
+    h += '<span class="mapbreak" aria-hidden="true"></span>';
+    return h + '</nav>';
+  }
+
+  function navRow(extra) {
+    return '<div class="row">' + (extra || '') +
+      (S.step > 0 ? '<button class="btn btn-ghost" data-act="back">← Назад</button>' : '') +
+      '<button class="btn btn-ghost" data-act="hub">Обратно в залата</button></div>';
+  }
+
+  /* ── крило: стая, врата, съкровищница ── */
+
+  function renderWing() {
+    var w = wingById(S.wing);
+    var list = steps(w);
+    if (S.step >= list.length) return renderTreasure(w);
+    var s = list[S.step];
+    return s.t === 'room' ? renderRoom(w, s, list) : renderDoor(w, s, list);
+  }
+
+  function renderRoom(w, s, list) {
+    var html = '<div class="panel reveal">' +
+      '<div class="head">' +
+        '<p class="eyebrow">' + esc(w.name) + ' · стая ' + (S.step + 1) + ' от ' + list.length + '</p>' +
+        '<h2 tabindex="-1">' + esc(s.title) + '</h2>' +
+      '</div>' +
+      renderMap(w, list) +
+      '<p class="lead">' + esc(s.lead) + '</p>';
+    if (s.code) html += '<pre class="code">' + esc(s.code) + '</pre>';
+    if (s.points) {
+      html += '<ul class="points">';
+      s.points.forEach(function (p) { html += '<li>' + esc(p) + '</li>'; });
+      html += '</ul>';
+    }
+    html += navRow('<button class="btn btn-primary" data-act="next" data-primary="1">Напред →</button>') + '</div>';
+    paint(html);
+    announce(w.name + ', стая ' + (S.step + 1) + ' от ' + list.length + '. ' + s.title);
+  }
+
+  function renderDoor(w, s, list) {
+    var u = S.ui;
+    if (u.doorId !== s.id) {
+      var replay = !!u.replay;
+      u = S.ui = { doorId: s.id, tries: 0, hint: false, checked: false, ok: false, replay: replay };
+      if (s.kind === 'match') {
+        u.tokens = shuffle(s.pairs.map(function (p, i) { return { txt: p[1], idx: i }; }));
+        u.assign = s.pairs.map(function () { return null; });
+        u.sel = null;
+      }
+      if (s.kind === 'order') {
+        var idx = s.items.map(function (_, i) { return i; });
+        do { u.order = shuffle(idx); } while (u.order.every(function (v, i) { return v === i; }));
+      }
+      if (s.kind === 'tab') u.seq = [];
+      if (S.answered[s.id] && !replay) hydrateReview(s, u);
+    }
+
+    var html = '<div class="panel reveal">' +
+      '<div class="head">' +
+        '<p class="eyebrow">' + esc(w.name) + ' · врата ' + (S.step + 1) + ' от ' + list.length + '</p>' +
+        '<h2 tabindex="-1">' + (u.review ? '🗝️ Вече отворена врата' : '🚪 Вратата е заключена') + '</h2>' +
+      '</div>' +
+      renderMap(w, list) +
+      '<div class="doorframe">' +
+        '<span class="qtype">' + esc(TYPE_LABEL[s.kind] || '') + '</span>' +
+        '<p class="q">' + s.q + '</p>' +
+        (s.code ? '<pre class="code">' + esc(s.code) + '</pre>' : '') +
+        widget(s, u) +
+      '</div>';
+
+    if (u.hint && !u.checked && s.hint) {
+      html += '<div class="hintbox">💡 ' + esc(s.hint) + '</div>';
+    }
+
+    if (u.checked) {
+      html += verdict(s, u, w);
+    } else {
+      html += navRow(
+        '<button class="btn btn-primary" data-act="check" data-primary="1">Опитай вратата</button>' +
+        (s.hint && !u.hint ? '<button class="btn btn-ghost" data-act="hint">💡 Подсказка</button>' : ''));
+    }
+
+    html += '</div>';
+    paint(html, u.checked ? '.verdict h3' : null);
+    if (!u.announced) {
+      u.announced = true;
+      announce('Врата ' + (S.step + 1) + ' от ' + list.length + '. ' + TYPE_LABEL[s.kind] + '.');
+    }
+  }
+
+  /* вече отговорена врата се отваря с показан верен отговор, не празна */
+  function hydrateReview(s, u) {
+    u.checked = true;
+    u.review = true;
+    u.ok = S.answered[s.id] !== 'wrong';
+    switch (s.kind) {
+      case 'choice': case 'sr': case 'fix': u.pick = s.correct; break;
+      case 'fill': u.typed = s.accept[0]; break;
+      case 'match':
+        u.assign = s.pairs.map(function (_, i) {
+          for (var t = 0; t < u.tokens.length; t++) if (u.tokens[t].idx === i) return t;
+          return null;
+        });
+        break;
+      case 'order': u.order = s.items.map(function (_, i) { return i; }); break;
+      case 'tab': u.seq = s.correct.slice(); break;
+      case 'tree': u.tree = { role: s.role.correct, name: s.name.correct, state: s.state.correct }; break;
+    }
+  }
+
+  function renderTreasure(w) {
+    var left = doorsLeft(w);
+    if (left.length) {
+      paint(
+        '<div class="panel reveal">' +
+          '<div class="head">' +
+            '<p class="eyebrow">Край на коридора · ' + esc(w.name) + '</p>' +
+            '<h2 tabindex="-1">Тук би трябвало да има ключ</h2>' +
+          '</div>' +
+          renderMap(w, steps(w)) +
+          '<p class="lead">Нишата в стената е празна. Ключът се появява чак когато коридорът ' +
+          'е извървян докрай — а зад теб ' + (left.length === 1 ? 'е останала една незатворена врата.'
+            : 'са останали ' + left.length + ' незатворени врати.') + '</p>' +
+          '<div class="row">' +
+            '<button class="btn btn-primary" data-act="goto" data-i="' + firstOpenIndex(w) + '" data-primary="1">' +
+              'Към първата незатворена врата</button>' +
+            '<button class="btn btn-ghost" data-act="back">← Назад</button>' +
+            '<button class="btn btn-ghost" data-act="hub">Обратно в залата</button>' +
+          '</div>' +
+        '</div>'
+      );
+      announce('Съкровищницата е празна. Остават ' + left.length + ' незатворени врати.');
+      return;
+    }
+    if (!S.keys[w.id]) { S.keys[w.id] = true; save(); }
+    paint(
+      '<div class="panel secret reveal">' +
+        '<div class="head">' +
+          '<p class="eyebrow">Съкровищница · ' + esc(w.name) + '</p>' +
+          '<h2 tabindex="-1">Ключът е твой</h2>' +
+        '</div>' +
+        renderMap(w, steps(w)) +
+        '<p class="artifact" aria-hidden="true">🔑</p>' +
+        '<p class="lead">Взимаш <b>' + esc(w.artifact) + '</b>. ' +
+        (keyCount() === 4 ? 'Това беше четвъртият. Последната врата вече не е заключена.'
+                          : 'Остават още ' + (4 - keyCount()) + '.') + '</p>' +
+        '<div class="row"><button class="btn btn-primary" data-act="hub" data-primary="1">Обратно в залата</button>' +
+        '<button class="btn btn-ghost" data-act="back">← Назад в крилото</button></div>' +
+      '</div>'
+    );
+    announce('Получаваш ключ: ' + w.artifact + '. ' + keyCount() + ' от 4.');
+  }
+
+  function renderSecret() {
+    var w = wingById(S.pendingSecret);
+    var sec = w.secret;
+    paint(
+      '<div class="panel secret reveal">' +
+        '<div class="head">' +
+          '<p class="eyebrow">Скрита стая · ' + esc(w.name) + '</p>' +
+          '<h2 tabindex="-1">💡 ' + esc(sec.title) + '</h2>' +
+        '</div>' +
+        '<p class="lead">' + esc(sec.text) + '</p>' +
+        (sec.code ? '<pre class="code">' + esc(sec.code) + '</pre>' : '') +
+        '<div class="row"><button class="btn btn-primary" data-act="secret-close" data-primary="1">Обратно в коридора</button></div>' +
+      '</div>'
+    );
+    announce('Скрита стая. ' + sec.title);
+  }
+
+  /* ───────────────────────── джаджи по тип ───────────────────────── */
+
+  function widget(s, u) {
+    switch (s.kind) {
+      case 'choice': case 'sr': return wChoice(s, u);
+      case 'fix': return wFix(s, u);
+      case 'fill': return wFill(s, u);
+      case 'match': return wMatch(s, u);
+      case 'order': return wOrder(s, u);
+      case 'tab': return wTab(s, u);
+      case 'tree': return wTree(s, u);
+    }
+    return '';
+  }
+
+  var LETTERS = ['A', 'B', 'C', 'D', 'E'];
+
+  function wChoice(s, u) {
+    var h = '<div class="opts" role="group" aria-label="Възможни отговори">';
+    s.options.forEach(function (o, i) {
+      var cls = 'opt';
+      if (u.checked) {
+        if (i === s.correct) cls += ' good';
+        else if (i === u.pick) cls += ' bad';
+      }
+      h += '<button id="opt-' + i + '" class="' + cls + '" data-act="opt" data-i="' + i + '" ' +
+        'aria-pressed="' + (u.pick === i ? 'true' : 'false') + '"' + (u.checked ? ' disabled' : '') + '>' +
+        '<span class="chip" aria-hidden="true">' + LETTERS[i] + '</span><span>' + o + '</span></button>';
+    });
+    return h + '</div>';
+  }
+
+  function wFix(s, u) {
+    var h = '<div class="lines" role="group" aria-label="Редове от кода — избери сгрешения">';
+    s.lines.forEach(function (l, i) {
+      var cls = 'lineb';
+      if (u.checked) {
+        if (i === s.correct) cls += ' good';
+        else if (i === u.pick) cls += ' bad';
+      }
+      h += '<button id="opt-' + i + '" class="' + cls + '" data-act="opt" data-i="' + i + '" ' +
+        'aria-pressed="' + (u.pick === i ? 'true' : 'false') + '"' + (u.checked ? ' disabled' : '') + '>' +
+        '<span class="ln" aria-hidden="true">' + (i + 1) + '</span>' +
+        '<span>' + esc(l) + '</span></button>';
+    });
+    return h + '</div>';
+  }
+
+  function wFill(s, u) {
+    var cls = u.checked ? (u.ok ? 'good' : 'bad') : '';
+    return '<div class="fill-wrap">' +
+      '<label class="sr-only" for="fill">Попълни липсващото</label>' +
+      '<span>' + esc(s.before) + '</span>' +
+      '<input class="fill-in ' + cls + '" id="fill" type="text" autocomplete="off" autocapitalize="off" ' +
+      'spellcheck="false" value="' + esc(u.typed || '') + '"' + (u.checked ? ' disabled' : '') + '>' +
+      '<span>' + esc(s.after) + '</span></div>';
+  }
+
+  function wMatch(s, u) {
+    var h = '<div class="slots">';
+    s.pairs.forEach(function (p, i) {
+      var a = u.assign[i];
+      var cls = 'slot' + (a !== null ? ' filled' : '');
+      if (u.checked) cls += (a !== null && u.tokens[a].idx === i) ? ' good' : ' bad';
+      h += '<div class="slotrow">' +
+        '<div class="slotlabel">' + esc(p[0]) + '</div>' +
+        '<button id="slot-' + i + '" class="' + cls + '" data-act="slot" data-i="' + i + '"' +
+        (u.checked ? ' disabled' : '') + '>' +
+        (a !== null ? esc(u.tokens[a].txt) : '— пусни тук —') + '</button>' +
+      '</div>';
+    });
+    h += '</div><div class="tray"><span class="tray-label">Парчета — кликни едно, после кликни мястото му</span>';
+    u.tokens.forEach(function (t, i) {
+      var used = u.assign.indexOf(i) !== -1;
+      h += '<button id="token-' + i + '" class="token" data-act="token" data-i="' + i + '" ' +
+        'draggable="' + (!used && !u.checked) + '" aria-pressed="' + (u.sel === i ? 'true' : 'false') + '"' +
+        (used || u.checked ? ' disabled' : '') + '>' + esc(t.txt) + '</button>';
+    });
+    return h + '</div>';
+  }
+
+  function wOrder(s, u) {
+    var h = '<div class="orderlist" role="group" aria-label="Подреди с бутоните нагоре и надолу">';
+    u.order.forEach(function (it, pos) {
+      var cls = 'orderitem';
+      if (u.checked) cls += (it === pos ? ' good' : ' bad');
+      h += '<div class="' + cls + '">' +
+        '<span class="num" aria-hidden="true">' + (pos + 1) + '</span>' +
+        '<span class="txt">' + esc(s.items[it]) + '</span>' +
+        '<button id="up-' + pos + '" class="mini" data-act="up" data-i="' + pos + '" ' +
+        'aria-label="Премести „' + esc(s.items[it]) + '“ нагоре"' +
+        (pos === 0 || u.checked ? ' disabled' : '') + '>↑</button>' +
+        '<button id="down-' + pos + '" class="mini" data-act="down" data-i="' + pos + '" ' +
+        'aria-label="Премести „' + esc(s.items[it]) + '“ надолу"' +
+        (pos === u.order.length - 1 || u.checked ? ' disabled' : '') + '>↓</button>' +
+      '</div>';
+    });
+    return h + '</div>';
+  }
+
+  function wTab(s, u) {
+    var h = '<div class="formsim" role="group" aria-label="Кликай полетата в реда на клавиша Tab">';
+    s.fields.forEach(function (f, i) {
+      var pos = u.seq.indexOf(i);
+      var cls = 'fieldbtn' + (pos !== -1 ? ' picked' : '');
+      if (u.checked) cls += (s.correct[pos] === i && pos !== -1) ? ' good' : ' bad';
+      h += '<button id="field-' + i + '" class="' + cls + '" data-act="field" data-i="' + i + '"' +
+        (u.checked ? ' disabled' : '') + '>' +
+        '<span class="ord">' + (pos !== -1 ? pos + 1 : '·') + '</span>' +
+        '<span>' + esc(f.label) + '</span>' +
+        (f.attr ? '<span class="hintattr">' + esc(f.attr) + '</span>' : '') +
+      '</button>';
+    });
+    h += '</div>';
+    if (!u.checked && u.seq.length) {
+      h += '<div class="row"><button class="btn btn-ghost" data-act="tab-reset">Изчисти реда</button></div>';
+    }
+    return h;
+  }
+
+  function wTree(s, u) {
+    var parts = [['role', 'Роля', s.role], ['name', 'Име', s.name], ['state', 'Състояние', s.state]];
+    var h = '<div class="treegrid">';
+    parts.forEach(function (p) {
+      var key = p[0], got = u.checked ? (u.tree && u.tree[key]) : null;
+      var cls = u.checked ? (got === p[2].correct ? 'good' : 'bad') : '';
+      h += '<div><label for="tree-' + key + '">' + p[1] + '</label>' +
+        '<select class="tree-sel ' + cls + '" id="tree-' + key + '"' + (u.checked ? ' disabled' : '') + '>' +
+        '<option value="">— избери —</option>';
+      p[2].options.forEach(function (o) {
+        var sel = got === o ? ' selected' : '';
+        h += '<option value="' + esc(o) + '"' + sel + '>' + esc(o) + '</option>';
+      });
+      h += '</select></div>';
+    });
+    return h + '</div>';
+  }
+
+  /* ───────────────────────── проверка ───────────────────────── */
+
+  function norm(s) {
+    return String(s || '').toLowerCase().trim()
+      .replace(/["'`=]/g, '').replace(/\s+/g, '');
+  }
+
+  function evaluate(s, u) {
+    switch (s.kind) {
+      case 'choice': case 'sr': case 'fix':
+        if (u.pick == null) return null;
+        return u.pick === s.correct;
+      case 'fill':
+        var v = document.getElementById('fill');
+        u.typed = v ? v.value : '';
+        if (!norm(u.typed)) return null;
+        return s.accept.some(function (a) { return norm(a) === norm(u.typed); });
+      case 'match':
+        if (u.assign.indexOf(null) !== -1) return null;
+        return u.assign.every(function (t, i) { return u.tokens[t].idx === i; });
+      case 'order':
+        return u.order.every(function (v, i) { return v === i; });
+      case 'tab':
+        if (u.seq.length !== s.fields.length) return null;
+        return u.seq.every(function (v, i) { return v === s.correct[i]; });
+      case 'tree':
+        u.tree = {
+          role: document.getElementById('tree-role').value,
+          name: document.getElementById('tree-name').value,
+          state: document.getElementById('tree-state').value
+        };
+        if (!u.tree.role || !u.tree.name || !u.tree.state) return null;
+        return u.tree.role === s.role.correct &&
+               u.tree.name === s.name.correct &&
+               u.tree.state === s.state.correct;
+    }
+    return null;
+  }
+
+  var GRADE_TXT = {
+    first: 'Отвори я от първи опит.',
+    hint: 'Отвори я с подсказка.',
+    wrong: 'Отвори я след грешка.'
+  };
+
+  function verdict(s, u, w) {
+    var h = '<div class="verdict ' + (u.review ? 'rev' : u.ok ? 'ok' : 'no') + '">' +
+      '<h3 tabindex="-1">' + (u.review ? '🗝️ Тази врата вече е зад гърба ти'
+        : u.ok ? '✅ Вратата се отваря' : '❌ Вратата не помръдва') + '</h3>' +
+      (u.review ? '<p class="muted">' + GRADE_TXT[S.answered[s.id]] + ' Верният отговор е показан по-горе.</p>' : '') +
+      '<p>' + esc(s.explain) + '</p>';
+    if (S.mode === 'projector' && s.teach) {
+      h += '<p class="teach"><b>Бележка за водещия</b>' + esc(s.teach) + '</p>';
+    }
+    h += '</div>';
+
+    if (S.pendingSecret && !S.secrets[S.pendingSecret]) {
+      h += '<button class="crack" data-act="secret">🕳️ Забелязваш пукнатина в стената…</button>';
+    }
+    h += navRow('<button class="btn btn-primary" data-act="next" data-primary="1">Напред →</button>' +
+      (u.review ? '<button class="btn" data-act="retry">↻ Опитай наново</button>' : ''));
+    if (u.review) h += '<p class="muted note">Записаният резултат остава първият — повтарянето е за упражнение.</p>';
+    return h;
+  }
+
+  function check() {
+    var w = wingById(S.wing);
+    var s = steps(w)[S.step];
+    var u = S.ui;
+    var res = evaluate(s, u);
+
+    if (res === null) { announce('Дай отговор, преди да опиташ вратата.'); return; }
+
+    if (res) {
+      u.checked = true; u.ok = true;
+      var grade = u.tries === 0 ? (u.hint ? 'hint' : 'first') : 'wrong';
+      if (!S.answered[s.id]) {
+        S.answered[s.id] = grade;
+        if (grade === 'first' && !S.secrets[w.id]) S.pendingSecret = w.id;
+      }
+      announce('Вярно. ' + s.explain);
+    } else {
+      u.tries++;
+      if (u.tries >= 2) {
+        u.checked = true; u.ok = false;
+        if (!S.answered[s.id]) S.answered[s.id] = 'wrong';
+        announce('Грешно. Вратата се отваря така или иначе. ' + s.explain);
+      } else {
+        u.hint = true;
+        announce('Не още. Ето подсказка: ' + (s.hint || ''));
+        var p = stage.querySelector('.doorframe');
+        if (p) { p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); }
+      }
+    }
+    save();
+    render();
+  }
+
+  /* ───────────────────────── босът ───────────────────────── */
+
+  function bossLog(txt, cls) {
+    S.boss.log.push({ t: txt, c: cls || '' });
+    if (S.boss.log.length > 40) S.boss.log.shift();
+  }
+
+  function renderBoss() {
+    var b = S.boss;
+
+    if (b.phase === 'intro') {
+      paint(
+        '<div class="panel boss-stage reveal">' +
+          '<div class="head"><p class="eyebrow">Последната стая</p>' +
+          '<h2 tabindex="-1">🔊 Четецът</h2></div>' +
+          '<p class="lead">' + nl2br(G.boss.intro) + '</p>' +
+          '<div class="row"><button class="btn btn-primary" data-act="boss-begin" data-primary="1">Влез в тъмното</button>' +
+          '<button class="btn btn-ghost" data-act="hub">Не още</button></div>' +
+        '</div>'
+      );
+      return;
+    }
+
+    if (b.phase === 'done') {
+      var st0 = G.boss.stages[b.stage];
+      paint(
+        '<div class="panel boss-stage reveal">' +
+          '<div class="head"><p class="eyebrow">' + esc(st0.title) + '</p>' +
+          '<h2 tabindex="-1">Пет секунди</h2></div>' +
+          '<p class="lead">Същата задача. Същият човек. Разликата е в разметката.</p>' +
+          '<pre class="code">' + esc(st0.fix) + '</pre>' +
+          '<div class="row"><button class="btn btn-primary" data-act="boss-next" data-primary="1">' +
+          (b.stage + 1 < G.boss.stages.length ? 'Следващ етап →' : 'Излез на светло') + '</button></div>' +
+        '</div>'
+      );
+      return;
+    }
+
+    var st = G.boss.stages[b.stage];
+
+    if (b.phase === 'lesson') {
+      paint(
+        '<div class="panel boss-stage reveal">' +
+          '<div class="head"><p class="eyebrow">' + esc(st.title) + '</p>' +
+          '<h2 tabindex="-1">Ето защо</h2></div>' +
+          '<div class="boss-lesson"><h3>Какво се случи</h3><p>' + esc(st.lesson) + '</p></div>' +
+          '<div class="row"><button class="btn btn-primary" data-act="boss-fix" data-primary="1">Поправи страницата</button></div>' +
+        '</div>'
+      );
+      return;
+    }
+
+    var broken = b.phase === 'broken';
+    var items = broken ? st.items : st.fixedItems;
+    var task = broken ? st.task : st.fixedTask;
+
+    var h = '<div class="panel boss-stage">' +
+      '<div class="head"><p class="eyebrow">' + esc(st.title) + ' · етап ' + (b.stage + 1) + ' от ' + G.boss.stages.length + '</p>' +
+      '<h2 tabindex="-1" class="boss-task">' + esc(task) + '</h2></div>' +
+      '<div class="log" aria-hidden="true">';
+    if (!S.boss.log.length) bossLog('Екранът е тъмен. Движи се с Tab, задействай с Enter.', 'sys');
+    S.boss.log.forEach(function (l) {
+      h += '<p class="' + l.c + '">' + esc(l.t) + '</p>';
+    });
+    h += '</div><div class="blocks">';
+    items.forEach(function (it, i) {
+      h += '<button id="blk-' + i + '" class="blk" data-act="blk" data-i="' + i + '">' +
+        '<span class="shape" aria-hidden="true">▮▮▮▮▮▮▮▮▮▮▮▮</span>' +
+        '<span class="sr-only">' + esc(it.say) + '</span></button>';
+    });
+    h += '</div><div class="row"><button class="btn btn-ghost" data-act="hub">Излез от подземието</button></div></div>';
+
+    paint(h);
+  }
+
+  function bossActivate(i) {
+    var b = S.boss;
+    var st = G.boss.stages[b.stage];
+    var broken = b.phase === 'broken';
+    var it = (broken ? st.items : st.fixedItems)[i];
+
+    if (it.goal) {
+      if (broken) {
+        bossLog('✓ Намери го. Но мина през всичко останало, за да стигнеш дотук.', 'good');
+        b.phase = 'lesson';
+      } else {
+        if (it.onGoal) bossLog('🔊 ' + it.onGoal, 'good');
+        bossLog('✓ Готово. Отне пет секунди.', 'good');
+        b.phase = 'done';
+      }
+      save(); render();
+      announce(broken ? 'Намери целта.' : 'Готово за пет секунди.');
+      return;
+    }
+
+    b.tries++;
+    S.ui.focusId = 'blk-' + i;
+    bossLog('✗ ' + (st.wrongMsg || 'Нищо не се случва.'), 'bad');
+    var max = st.unknowable ? 2 : 6;
+    if (b.tries >= max) { b.phase = 'lesson'; b.tries = 0; }
+    save(); render();
+  }
+
+  function renderEnd() {
+    var first = 0, hinted = 0, wrong = 0;
+    Object.keys(S.answered).forEach(function (k) {
+      var v = S.answered[k];
+      if (v === 'first') first++; else if (v === 'hint') hinted++; else wrong++;
+    });
+    var total = first + hinted + wrong;
+    var ratio = total ? first / total : 0;
+    var rank = ratio === 1 ? '🏅 Майстор архитект'
+      : ratio >= 0.8 ? '🥈 Старши строител'
+      : ratio >= 0.55 ? '🥉 Чирак'
+      : '🧱 Зидар';
+    var secrets = Object.keys(S.secrets).length;
+
+    paint(
+      '<div class="panel reveal">' +
+        '<div class="head"><p class="eyebrow">Излезе на светло</p>' +
+        '<h2 tabindex="-1">Осем атрибута</h2></div>' +
+        '<p class="lead">' + nl2br(G.boss.outro) + '</p>' +
+        '<hr class="divider">' +
+        '<p class="rank">' + rank + '</p>' +
+        '<div class="score">' +
+          tile(total, 'отворени врати') +
+          tile(first, 'от първи опит') +
+          tile(hinted, 'с подсказка') +
+          tile(secrets + ' / 4', 'тайни стаи') +
+        '</div>' +
+        '<p class="muted">Трите въпроса, с които излизаш: <b>Какво е това?</b> (роля) · ' +
+        '<b>Как се казва?</b> (име) · <b>В какво състояние е?</b> (състояние)</p>' +
+        '<div class="row">' +
+          '<button class="btn btn-primary" data-act="hub" data-primary="1">Обратно в залата</button>' +
+          '<button class="btn btn-ghost" data-act="restart">Започни отначало</button>' +
+        '</div>' +
+      '</div>'
+    );
+    announce('Край. ' + rank + '. ' + first + ' от ' + total + ' врати от първи опит.');
+  }
+  function tile(n, l) {
+    return '<div class="scoretile"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>';
+  }
+
+  /* ───────────────────────── действия ───────────────────────── */
+
+  function handle(act, ds, node) {
+    var u = S.ui;
+    var i = ds.i !== undefined ? parseInt(ds.i, 10) : null;
+
+    switch (act) {
+      case 'start':
+        S.route = ds.route; S.screen = 'hub'; save(); return render();
+      case 'resume':
+        var d = loadSave(); if (d) { S = d; S.screen = 'hub'; } return render();
+      case 'restart':
+        wipe(); var m = S.mode; S = fresh(); S.mode = m; return render();
+      case 'hub':
+        S.screen = 'hub'; S.ui = {}; save(); return render();
+      case 'wing':
+        S.wing = ds.id; S.step = 0; S.screen = 'wing'; S.ui = {}; save(); return render();
+      case 'next':
+        S.step++; S.ui = {}; save(); return render();
+      case 'back':
+        if (S.step > 0) S.step--; S.ui = {}; save(); return render();
+      case 'goto': {
+        var gw = wingById(S.wing), glist = steps(gw);
+        S.step = (i >= glist.length && !wingDone(gw)) ? glist.length - 1 : i;
+        S.ui = {}; save(); return render();
+      }
+      case 'retry':
+        S.ui = { doorId: null, replay: true }; return render();
+      case 'check': return check();
+      case 'hint': u.hint = true; return render();
+
+      case 'opt': u.pick = i; S.ui.focusId = 'opt-' + i; return render();
+      case 'token':
+        u.sel = (u.sel === i ? null : i); S.ui.focusId = 'token-' + i; return render();
+      case 'slot':
+        if (u.sel !== null && u.sel !== undefined) { u.assign[i] = u.sel; u.sel = null; }
+        else if (u.assign[i] !== null) { u.assign[i] = null; }
+        S.ui.focusId = 'slot-' + i; return render();
+      case 'up':
+        swap(u.order, i, i - 1); S.ui.focusId = 'up-' + (i - 1); return render();
+      case 'down':
+        swap(u.order, i, i + 1); S.ui.focusId = 'down-' + (i + 1); return render();
+      case 'field':
+        var at = u.seq.indexOf(i);
+        if (at !== -1) u.seq.splice(at, 1); else u.seq.push(i);
+        S.ui.focusId = 'field-' + i; return render();
+      case 'tab-reset': u.seq = []; return render();
+
+      case 'secret': S.screen = 'secret'; return render();
+      case 'secret-close':
+        S.secrets[S.pendingSecret] = true; S.pendingSecret = null;
+        S.screen = 'wing'; save(); return render();
+
+      case 'boss':
+        S.screen = 'boss'; S.boss = { stage: 0, phase: 'intro', tries: 0, log: [] }; return render();
+      case 'boss-begin':
+        S.boss.phase = 'broken'; S.boss.log = []; return render();
+      case 'boss-fix':
+        S.boss.phase = 'fixed'; S.boss.tries = 0; S.boss.log = []; return render();
+      case 'boss-next':
+        if (S.boss.stage + 1 < G.boss.stages.length) {
+          S.boss.stage++; S.boss.phase = 'broken'; S.boss.tries = 0; S.boss.log = [];
+        } else { S.screen = 'end'; }
+        save(); return render();
+      case 'blk': return bossActivate(i);
+    }
+  }
+  function swap(a, i, j) { var t = a[i]; a[i] = a[j]; a[j] = t; }
+
+  /* ───────────────────────── вход ───────────────────────── */
+
+  stage.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b || b.disabled) return;
+    handle(b.dataset.act, b.dataset, b);
+  });
+
+  /* фокусът върху блок в стаята на боса „изговаря“ какво има там */
+  stage.addEventListener('focusin', function (e) {
+    var b = e.target.closest('.blk');
+    if (!b || S.screen !== 'boss') return;
+    var st = G.boss.stages[S.boss.stage];
+    var items = S.boss.phase === 'broken' ? st.items : st.fixedItems;
+    var it = items[parseInt(b.dataset.i, 10)];
+    if (!it) return;
+    b.classList.add('lit');
+    var logEl = stage.querySelector('.log');
+    if (!logEl) return;
+    var p = document.createElement('p');
+    p.textContent = '🔊 ' + it.say;
+    logEl.appendChild(p);
+    logEl.scrollTop = logEl.scrollHeight;
+    S.boss.log.push({ t: '🔊 ' + it.say, c: '' });
+    if (S.boss.log.length > 40) S.boss.log.shift();
+  });
+
+  /* drag & drop за свързването — клавиатурният път (клик → клик) остава водещ */
+  stage.addEventListener('dragstart', function (e) {
+    var t = e.target.closest('.token');
+    if (!t || t.disabled) return;
+    e.dataTransfer.setData('text/plain', t.dataset.i);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  stage.addEventListener('dragover', function (e) {
+    var s = e.target.closest('.slot');
+    if (!s || s.disabled) return;
+    e.preventDefault(); s.classList.add('over');
+  });
+  stage.addEventListener('dragleave', function (e) {
+    var s = e.target.closest('.slot');
+    if (s) s.classList.remove('over');
+  });
+  stage.addEventListener('drop', function (e) {
+    var s = e.target.closest('.slot');
+    if (!s || s.disabled) return;
+    e.preventDefault();
+    var tok = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (isNaN(tok)) return;
+    var slot = parseInt(s.dataset.i, 10);
+    var prev = S.ui.assign.indexOf(tok);
+    if (prev !== -1) S.ui.assign[prev] = null;
+    S.ui.assign[slot] = tok;
+    S.ui.sel = null;
+    S.ui.focusId = 'slot-' + slot;
+    render();
+  });
+
+  modebtn.addEventListener('click', toggleMode);
+  function toggleMode() {
+    S.mode = S.mode === 'solo' ? 'projector' : 'solo';
+    paintChrome();
+    render();
+    announce('Режим: ' + (S.mode === 'projector' ? 'проектор' : 'соло'));
+  }
+
+  document.addEventListener('keydown', function (e) {
+    var t = e.target;
+    var typing = t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA');
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    if (e.key === 'Escape' && S.screen !== 'title') {
+      e.preventDefault(); return handle('hub', {});
+    }
+    if (typing) {
+      if (e.key === 'Enter' && S.screen === 'wing') { e.preventDefault(); check(); }
+      return;
+    }
+
+    if (e.code === 'KeyP') { e.preventDefault(); return toggleMode(); }
+    if (e.code === 'KeyR') {
+      e.preventDefault();
+      if (confirm('Да започнем ли отначало? Прогресът се изтрива.')) handle('restart', {});
+      return;
+    }
+    if (e.code === 'KeyH') {
+      var hb = stage.querySelector('[data-act="hint"]');
+      if (hb) { e.preventDefault(); hb.click(); }
+      return;
+    }
+    var onChrome = (t === document.body || t === stage || t.tagName === 'H2');
+    if (e.key === 'ArrowLeft' && onChrome) {
+      var bb = stage.querySelector('[data-act="back"]');
+      if (bb) { e.preventDefault(); bb.click(); }
+      return;
+    }
+    if ((e.key === 'ArrowRight' && onChrome) || (e.key === 'Enter' && t === document.body)) {
+      var pb = stage.querySelector('[data-primary]');
+      if (pb && !pb.disabled) { e.preventDefault(); pb.click(); }
+      return;
+    }
+    var n = null;
+    if (/^[1-5]$/.test(e.key)) n = parseInt(e.key, 10) - 1;
+    else if (/^Key[A-E]$/.test(e.code)) n = e.code.charCodeAt(3) - 65;
+    if (n !== null) {
+      var o = stage.querySelector('[data-act="opt"][data-i="' + n + '"]');
+      if (o && !o.disabled) { e.preventDefault(); o.click(); }
+    }
+  });
+
+  /* ───────────────────────── старт ───────────────────────── */
+
+  S = fresh();
+  render();
+})();
+
+</script>
+</body>
+</html>

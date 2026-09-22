@@ -1,0 +1,389 @@
+/* Подземието на DOM-а — един ангажиран тъмен свят: камък, факла, руна.
+   Няма светла тема нарочно: играта е подземие. Всичко се рисува явно. */
+
+:root{
+  color-scheme: dark;
+
+  --ink:#0E0F14;
+  --ink-2:#0A0B0F;
+  --stone:#171922;
+  --stone-2:#1F2230;
+  --edge:#2C3040;
+  --edge-2:#3D4356;
+
+  --torch:#F0A836;
+  --torch-dim:#8A6423;
+  --rune:#6FD3C7;
+  --moss:#7ED694;
+  --ember:#FF9A8B;
+
+  --text:#EDE9E2;
+  --muted:#9A94A6;
+
+  --display:"Philosopher","Iowan Old Style",Georgia,serif;
+  --body:"Golos Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+
+  --scale:1;
+
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:calc(15px * var(--scale));
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+[data-mode="projector"]{--scale:1.4}
+[hidden]{display:none !important}
+h1,h2,h3{text-wrap:balance}
+
+/* ---------------- скелет ---------------- */
+.shell{
+  min-height:100%;
+  max-width:1080px;
+  margin-inline:auto;
+  padding-inline:16px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+main{flex:1 0 auto;padding-bottom:8px}
+main:focus{outline:none}
+
+/* ---------------- горна лента ---------------- */
+.topbar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;
+  padding-block:14px 12px;
+}
+.brand{
+  font-family:var(--display);font-weight:700;font-size:1.15rem;
+  letter-spacing:.02em;color:var(--torch);margin:0;line-height:1.25;
+}
+.brand small{
+  display:block;font-family:var(--body);font-weight:400;font-size:.62em;
+  color:var(--muted);letter-spacing:.08em;text-transform:uppercase;
+}
+.keyring{display:flex;gap:6px;margin-inline-start:auto;align-items:center}
+.keyslot{
+  width:2.2em;height:2.2em;display:grid;place-items:center;
+  border:1px solid var(--edge);background:var(--ink-2);font-size:.9em;
+  filter:grayscale(1) brightness(.45);
+}
+.keyslot.has{filter:none;border-color:var(--torch-dim);background:#2A2011}
+.modebtn{
+  font:inherit;font-size:.82em;color:var(--muted);background:transparent;
+  border:1px solid var(--edge);padding:.4em .8em;cursor:pointer;
+}
+.modebtn:hover{color:var(--text);border-color:var(--edge-2)}
+
+.progressbar{height:3px;background:var(--edge)}
+.progressbar span{display:block;height:100%;background:var(--torch);transition:width .3s}
+
+/* ---------------- панел ---------------- */
+.panel{
+  background:var(--stone);
+  border:1px solid var(--edge);
+  border-top:2px solid var(--torch-dim);
+  padding:clamp(18px,3.5vw,32px);
+  display:flex;flex-direction:column;gap:16px;
+}
+.panel h2{
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(1.45rem,3.6vw,1.9rem);line-height:1.15;margin:0;
+}
+.panel h2:focus{outline:none}
+.panel h2:focus-visible{outline:3px solid var(--torch);outline-offset:6px}
+.eyebrow{
+  font-size:.74em;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--torch);font-weight:600;margin:0;
+}
+.head{display:flex;flex-direction:column;gap:.35em}
+.lead,.panel p{max-width:64ch;margin:0}
+.muted{color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.divider{height:1px;background:var(--edge);border:0;margin:0}
+
+/* ---------------- код ---------------- */
+pre.code{
+  font-family:var(--mono);font-size:.92em;line-height:1.7;
+  background:var(--ink-2);border:1px solid var(--edge);border-left:3px solid var(--rune);
+  padding:14px 16px;margin:0;overflow-x:auto;color:#D9E6E3;
+}
+code{
+  font-family:var(--mono);font-size:.92em;background:#00000040;
+  padding:.1em .35em;border:1px solid var(--edge);color:#D9E6E3;
+}
+
+ul.points{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5em}
+ul.points li{padding-left:1.4em;position:relative;max-width:64ch}
+ul.points li::before{content:"▸";position:absolute;left:0;color:var(--torch)}
+
+/* ---------------- бутони ---------------- */
+.btn{
+  font:inherit;font-weight:500;
+  background:var(--stone-2);color:var(--text);
+  border:1px solid var(--edge-2);
+  padding:.65em 1.3em;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.btn:hover{background:#262A3A;border-color:var(--torch-dim)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-primary{background:#2A2011;border-color:var(--torch-dim);color:var(--torch)}
+.btn-primary:hover{background:#3A2C16;border-color:var(--torch)}
+.btn-ghost{background:transparent;border-color:var(--edge);color:var(--muted)}
+.btn-ghost:hover{color:var(--text);background:transparent}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+:focus-visible{outline:3px solid var(--torch);outline-offset:2px}
+
+/* ---------------- централната зала ---------------- */
+.hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:620px){.hub-grid{grid-template-columns:1fr}}
+.door{
+  display:block;width:100%;text-align:left;font:inherit;color:var(--text);
+  background:var(--stone-2);border:1px solid var(--edge);
+  border-left:3px solid var(--edge-2);
+  padding:1em 1.1em;cursor:pointer;
+}
+.door:hover{border-left-color:var(--torch);background:#232735}
+.door .dn{font-family:var(--display);font-weight:700;font-size:1.15em;display:flex;gap:.5em;align-items:baseline}
+.door .dd{color:var(--muted);font-size:.86em;margin-top:.3em;max-width:34ch}
+.door .dp{font-family:var(--mono);font-size:.76em;color:var(--torch);margin-top:.6em;letter-spacing:.06em}
+.door.done{border-left-color:var(--moss)}
+.door.done .dp{color:var(--moss)}
+.boss-door{
+  width:100%;text-align:left;font:inherit;color:var(--text);
+  background:linear-gradient(180deg,#221018,#16121A);
+  border:1px solid #4A2230;border-left:3px solid #7A3145;
+  padding:1em 1.1em;cursor:pointer;
+}
+.boss-door[disabled]{cursor:not-allowed;opacity:.55}
+.boss-door:not([disabled]):hover{border-left-color:var(--ember)}
+.boss-door .dn{font-family:var(--display);font-weight:700;font-size:1.15em}
+.boss-door .dd{color:var(--muted);font-size:.86em;margin-top:.3em}
+
+/* ---------------- карта на крилото ---------------- */
+.map{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mapdot{
+  font:inherit;font-family:var(--mono);font-size:.82em;line-height:1;
+  width:2.3em;height:2.3em;display:grid;place-items:center;cursor:pointer;
+  background:var(--ink-2);border:1px solid var(--edge);color:var(--muted);
+}
+.mapdot:hover{border-color:var(--edge-2);color:var(--text)}
+.mapdot.room{border-style:dotted}
+.mapdot.todo{border-color:var(--torch-dim);color:var(--torch)}
+.mapdot.ok{border-color:var(--moss);color:var(--moss)}
+.mapdot.hint{border-color:var(--torch);color:var(--torch)}
+.mapdot.wr{border-color:var(--ember);color:var(--ember)}
+.mapdot.end{margin-left:auto}
+.mapdot.end.locked{border-style:dashed;opacity:.45;cursor:default}
+.mapbreak{display:none}
+
+/* на тесен екран ключът се вдига на собствен ред НАД номерата,
+   иначе при пренасяне увисва вдясно до последния номер и се чете като част от него */
+@media (max-width:620px){
+  .mapdot.end{order:-1;margin-left:0}
+  .mapbreak{display:block;order:-1;flex-basis:100%;height:0}
+}
+.mapdot[aria-current="step"]{
+  background:var(--stone-2);color:var(--text);
+  box-shadow:inset 0 -3px 0 var(--torch);
+}
+
+/* ---------------- врата с въпрос ---------------- */
+.doorframe{
+  border:1px solid var(--edge);background:var(--ink-2);
+  padding:clamp(14px,2.5vw,22px);display:flex;flex-direction:column;gap:14px;
+}
+.qtype{font-size:.72em;letter-spacing:.12em;text-transform:uppercase;color:var(--rune);font-weight:600}
+.q{font-size:1.08em;font-weight:500;margin:0;max-width:60ch}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{
+  display:flex;gap:.8em;align-items:flex-start;text-align:left;
+  font:inherit;color:var(--text);background:var(--stone);
+  border:1px solid var(--edge);padding:.7em .9em;cursor:pointer;width:100%;
+}
+.opt:hover{border-color:var(--edge-2);background:var(--stone-2)}
+.opt .chip{
+  flex:0 0 auto;width:1.8em;height:1.8em;display:grid;place-items:center;
+  border:1px solid var(--edge-2);font-family:var(--mono);font-size:.8em;color:var(--muted);
+}
+.opt[aria-pressed="true"]{border-color:var(--torch);background:#241E12}
+.opt[aria-pressed="true"] .chip{border-color:var(--torch);color:var(--torch)}
+.opt.good{border-color:var(--moss);background:#16251B}
+.opt.bad{border-color:var(--ember);background:#2A1A18}
+.opt code{background:transparent;border:0;padding:0}
+
+/* ---------------- поправи разметката ---------------- */
+.lines{background:var(--ink-2);border:1px solid var(--edge);overflow-x:auto}
+.lineb{
+  display:flex;gap:1em;width:100%;text-align:left;
+  font-family:var(--mono);font-size:.9em;
+  background:transparent;color:#D9E6E3;border:0;border-left:3px solid transparent;
+  padding:.4em .8em;cursor:pointer;white-space:pre;
+}
+.lineb:hover{background:#151821}
+.lineb .ln{color:var(--muted);user-select:none}
+.lineb[aria-pressed="true"]{border-left-color:var(--torch);background:#241E12}
+.lineb.good{border-left-color:var(--moss);background:#16251B}
+.lineb.bad{border-left-color:var(--ember);background:#2A1A18}
+
+/* ---------------- попълване и дърво ---------------- */
+.fill-wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-family:var(--mono);font-size:.95em}
+.fill-in{
+  font:inherit;font-family:var(--mono);background:var(--ink-2);color:var(--torch);
+  border:1px solid var(--edge-2);padding:.5em .7em;min-width:12ch;max-width:100%;
+}
+.fill-in:focus{border-color:var(--torch);outline:none}
+.fill-in.good{border-color:var(--moss)}
+.fill-in.bad{border-color:var(--ember)}
+.treegrid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
+@media (max-width:620px){.treegrid{grid-template-columns:1fr}}
+.treegrid label{display:block;font-size:.74em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4em}
+select.tree-sel{
+  font:inherit;font-family:var(--mono);font-size:.9em;width:100%;
+  background:var(--ink-2);color:var(--text);border:1px solid var(--edge-2);padding:.5em .6em;
+}
+select.tree-sel.good{border-color:var(--moss)}
+select.tree-sel.bad{border-color:var(--ember)}
+
+/* ---------------- свързване (drag & drop) ---------------- */
+.slots{display:flex;flex-direction:column;gap:8px}
+.slotrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:620px){.slotrow{grid-template-columns:1fr}}
+.slotlabel{
+  background:var(--stone);border:1px solid var(--edge);padding:.6em .8em;
+  font-family:var(--mono);font-size:.88em;display:flex;align-items:center;
+}
+.slot{
+  font:inherit;text-align:left;width:100%;cursor:pointer;
+  background:var(--ink-2);border:1px dashed var(--edge-2);color:var(--muted);
+  padding:.6em .8em;min-height:2.9em;
+}
+.slot.filled{border-style:solid;color:var(--text);background:var(--stone-2)}
+.slot.over{border-color:var(--torch);background:#241E12}
+.slot.good{border-style:solid;border-color:var(--moss);background:#16251B;color:var(--text)}
+.slot.bad{border-style:solid;border-color:var(--ember);background:#2A1A18;color:var(--text)}
+.tray{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--edge)}
+.tray-label{width:100%;font-size:.76em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.token{
+  font:inherit;font-size:.92em;background:var(--stone-2);border:1px solid var(--edge-2);
+  color:var(--text);padding:.5em .8em;cursor:grab;
+}
+.token:active{cursor:grabbing}
+.token[aria-pressed="true"]{border-color:var(--torch);background:#241E12;color:var(--torch)}
+.token[disabled]{opacity:.25;cursor:default}
+
+/* ---------------- подреждане ---------------- */
+.orderlist{display:flex;flex-direction:column;gap:6px}
+.orderitem{display:flex;gap:10px;align-items:center;background:var(--stone-2);border:1px solid var(--edge);padding:.5em .7em}
+.orderitem .num{font-family:var(--mono);color:var(--torch);width:1.6em;flex:0 0 auto}
+.orderitem .txt{flex:1;font-family:var(--mono);font-size:.88em;min-width:0;overflow-wrap:anywhere}
+.orderitem.good{border-color:var(--moss)}
+.orderitem.bad{border-color:var(--ember)}
+.mini{
+  font:inherit;font-size:.85em;background:transparent;border:1px solid var(--edge);
+  color:var(--muted);cursor:pointer;width:2.1em;height:2.1em;line-height:1;flex:0 0 auto;
+}
+.mini:hover{color:var(--text);border-color:var(--edge-2)}
+.mini[disabled]{opacity:.3;cursor:not-allowed}
+
+/* ---------------- пътят на Tab ---------------- */
+.formsim{background:var(--stone);border:1px solid var(--edge);padding:1em;display:flex;flex-direction:column;gap:.6em}
+.fieldbtn{
+  display:flex;gap:.8em;align-items:center;font:inherit;text-align:left;width:100%;
+  background:var(--ink-2);border:1px solid var(--edge-2);color:var(--text);padding:.55em .8em;cursor:pointer;
+}
+.fieldbtn .ord{
+  width:1.9em;height:1.9em;display:grid;place-items:center;flex:0 0 auto;
+  border:1px solid var(--edge);font-family:var(--mono);font-size:.8em;color:var(--muted);
+}
+.fieldbtn.picked .ord{border-color:var(--torch);color:var(--torch);background:#241E12}
+.fieldbtn.good{border-color:var(--moss)}
+.fieldbtn.bad{border-color:var(--ember)}
+.fieldbtn .hintattr{font-family:var(--mono);font-size:.78em;color:var(--muted);margin-left:auto;flex:0 0 auto}
+
+/* ---------------- резултат ---------------- */
+.verdict{border:1px solid var(--edge);border-left:3px solid var(--edge-2);padding:1em 1.1em;background:var(--stone);display:flex;flex-direction:column;gap:.5em}
+.verdict.ok{border-left-color:var(--moss)}
+.verdict.rev{border-left-color:var(--rune)}
+.verdict.rev h3{color:var(--rune)}
+.note{font-size:.85em}
+.verdict.no{border-left-color:var(--ember)}
+.verdict h3{margin:0;font-family:var(--body);font-size:1em;font-weight:600;display:flex;gap:.5em;align-items:center}
+.verdict.ok h3{color:var(--moss)}
+.verdict.no h3{color:var(--ember)}
+.teach{margin-top:.3em;padding-top:.7em;border-top:1px dashed var(--edge);color:var(--torch);font-size:.94em}
+.teach b{font-family:var(--mono);font-size:.82em;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:.2em}
+.hintbox{border:1px dashed var(--torch-dim);padding:.7em .9em;color:var(--torch);background:#1D1810}
+.crack{
+  font:inherit;font-size:.92em;background:transparent;border:1px dashed var(--edge-2);
+  color:var(--muted);padding:.6em .9em;cursor:pointer;align-self:flex-start;
+}
+.crack:hover{color:var(--torch);border-color:var(--torch-dim);background:#1A1710}
+
+/* ---------------- скрита стая / съкровищница ---------------- */
+.secret{border:1px solid var(--torch-dim);background:#1B160E;border-top-width:2px}
+.secret h2{color:var(--torch)}
+.artifact{font-size:3rem;line-height:1}
+
+/* ---------------- босът ---------------- */
+.boss-stage{background:#06070A;border:1px solid #241A20;border-top:2px solid #7A3145;padding:clamp(16px,3vw,28px);display:flex;flex-direction:column;gap:16px}
+.boss-task{font-family:var(--display);font-size:1.2em;color:var(--ember);margin:0}
+.log{
+  font-family:var(--mono);font-size:.9em;background:#000;border:1px solid #1E1A24;
+  padding:.9em 1em;min-height:8em;max-height:15em;overflow-y:auto;
+  display:flex;flex-direction:column;gap:.35em;
+}
+.log p{margin:0;max-width:none;color:#9FE8DC;overflow-wrap:anywhere}
+.log p.sys{color:var(--muted)}
+.log p.bad{color:var(--ember)}
+.log p.good{color:var(--moss)}
+.blocks{display:flex;flex-direction:column;gap:6px}
+.blk{
+  font:inherit;font-family:var(--mono);font-size:.9em;text-align:left;width:100%;cursor:pointer;
+  background:#0C0D12;border:1px solid #191C26;color:#191C26;padding:.75em .9em;
+}
+.blk:hover{border-color:#2A2E3A}
+.blk:focus-visible{outline:3px solid var(--ember);outline-offset:2px;color:#454A58}
+.blk.lit{color:#454A58}
+.boss-lesson{border:1px solid #3A2028;border-left:3px solid var(--ember);background:#180F12;padding:1em 1.1em;display:flex;flex-direction:column;gap:.5em}
+.boss-lesson h3{margin:0;color:var(--ember);font-family:var(--body);font-size:1em}
+
+/* ---------------- финал ---------------- */
+.score{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.scoretile{background:var(--stone-2);border:1px solid var(--edge);padding:.9em 1em}
+.scoretile .n{font-family:var(--mono);font-size:1.8em;color:var(--torch);font-variant-numeric:tabular-nums;line-height:1.1}
+.scoretile .l{font-size:.76em;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:.2em}
+.rank{font-family:var(--display);font-size:clamp(1.6rem,4vw,2.2rem);color:var(--torch);margin:0}
+
+/* ---------------- долна лента ---------------- */
+.footbar{
+  border-top:1px solid var(--edge);padding-block:10px;
+  display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;
+  font-family:var(--mono);font-size:.74em;color:var(--muted);
+}
+.footbar kbd{
+  font-family:var(--mono);background:var(--stone-2);border:1px solid var(--edge-2);
+  padding:.15em .45em;color:var(--text);
+}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:-9999px;top:0;z-index:10;background:var(--torch);color:#111;padding:.6em 1em;font-weight:600}
+.skip-link:focus{left:8px;top:8px}
+
+.reveal{animation:reveal .3s ease-out}
+@keyframes reveal{from{opacity:.25;transform:translateY(6px)}to{opacity:1;transform:none}}
+.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Подземието на DOM-а</title>
+<meta name="description" content="Интерактивен урок по HTML, семантика и ARIA — подземие с четири крила, скрити стаи и финален бос.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230E0F14'/%3E%3Ctext y='24' x='4' font-size='22'%3E%F0%9F%8F%B0%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<a class="skip-link" href="#stage">Прескочи към съдържанието</a>
+
+<div class="shell">
+  <header class="topbar">
+    <h1 class="brand">Подземието на DOM-а<small>Урок 2 · HTML, семантика и ARIA</small></h1>
+    <div class="keyring" id="keyring" aria-label="Събрани ключове"></div>
+    <button class="modebtn" id="modebtn" type="button">Режим</button>
+  </header>
+
+  <div class="progressbar" aria-hidden="true"><span id="progress" style="width:0%"></span></div>
+
+  <main id="stage" tabindex="-1"></main>
+
+  <footer class="footbar" id="footbar"></footer>
+</div>
+
+<div class="sr-only" id="live" role="status" aria-live="polite"></div>
+
+<script src="./data.js"></script>
+<script src="./game.js"></script>
+</body>
+</html>

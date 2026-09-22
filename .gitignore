@@ -1,0 +1,32 @@
+# зависимости
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# сглобено — CI го прави наново при всеки деплой
+dist/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# редактори
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# среда
+.env
+.env.local
+.vercel

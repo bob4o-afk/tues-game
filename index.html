@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Интерактивни уроци</title>
+<meta name="description" content="Уроци, които се играят вместо да се гледат.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Philosopher:wght@400;700&family=Golos+Text:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --ink:#0E0F14; --stone:#171922; --stone-2:#1F2230;
+  --edge:#2C3040; --edge-2:#3D4356;
+  --torch:#F0A836; --torch-dim:#8A6423; --moss:#7ED694;
+  --text:#EDE9E2; --muted:#9A94A6;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--ink);color:var(--text);
+  font-family:"Golos Text","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.6;
+}
+.wrap{max-width:760px;margin-inline:auto;padding-inline:16px;padding-block:clamp(40px,10vh,90px)}
+h1{
+  font-family:"Philosopher",Georgia,serif;font-weight:700;
+  font-size:clamp(1.9rem,6vw,2.8rem);margin:0 0 .3em;color:var(--torch);
+  text-wrap:balance;line-height:1.15;
+}
+.sub{color:var(--muted);max-width:52ch;margin:0 0 2.5em}
+.eyebrow{font-size:.74em;letter-spacing:.14em;text-transform:uppercase;color:var(--torch);font-weight:600;margin:0 0 1em}
+.lessons{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.lesson{
+  display:block;text-decoration:none;color:var(--text);
+  background:var(--stone-2);border:1px solid var(--edge);border-left:3px solid var(--torch-dim);
+  padding:1.1em 1.2em;transition:border-color .15s,background .15s;
+}
+.lesson:hover,.lesson:focus-visible{border-left-color:var(--torch);background:#232735}
+.lesson .n{font-family:"Philosopher",Georgia,serif;font-weight:700;font-size:1.25em;display:block}
+.lesson .d{color:var(--muted);font-size:.92em;margin-top:.35em;display:block;max-width:48ch}
+.lesson .m{color:var(--moss);font-size:.8em;margin-top:.7em;display:block;letter-spacing:.04em}
+.soon{opacity:.5;border-left-color:var(--edge-2);cursor:default}
+footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--edge);color:var(--muted);font-size:.85em}
+footer a{color:var(--torch)}
+:focus-visible{outline:3px solid var(--torch);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main>
+    <p class="eyebrow">ТУЕС</p>
+    <h1>Уроци, които се играят</h1>
+    <p class="sub">Всеки урок е отделна игра в браузъра. Без инсталация, без регистрация —
+    отваряш и играеш. Работят и на телефон.</p>
+
+    <ul class="lessons">
+      <li>
+        <a class="lesson" href="./theory/">
+          <span class="n">🏰 Урок 2 — Подземието на DOM-а</span>
+          <span class="d">HTML, семантика и ARIA. Четири крила, 35 врати и финал,
+          в който екранът изгасва.</span>
+          <span class="m">Играй →</span>
+        </a>
+      </li>
+    </ul>
+  </main>
+  <footer>
+    Кодът и материалите са в <a href="https://github.com/bob4o-afk/tues-game">bob4o-afk/tues-game</a>.
+  </footer>
+</div>
+</body>
+</html>
